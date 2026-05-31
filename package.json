@@ -1,0 +1,15 @@
+{
+  "name": "getissues-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "check": "turbo run check"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.3"
+  }
+}

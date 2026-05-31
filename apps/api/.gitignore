@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# TypeScript Build Outputs
+dist/
+out/
+build/
+lib/
+*.tsbuildinfo
+.turbo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+
+# IDEs and Editors
+.vscode/*
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Environmental Variables
+.env
+.env.local
+.env.production.local
