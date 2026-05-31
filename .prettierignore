@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+generated
+.env
+.env.*
+*.lock
+pnpm-lock.yaml
+
+**/node_modules
+**/dist
+**/coverage
+**/generated
+**/.env
+**/.env.*
+**/*.lock
+**/pnpm-lock.yaml

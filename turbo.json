@@ -15,6 +15,9 @@
         "build/**"
       ]
     },
+    "format": {
+      "cache": true
+    },
     "lint": {},
     "check": {}
   }

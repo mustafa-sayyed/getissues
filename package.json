@@ -1,5 +1,5 @@
 {
-  "name": "getissues-monorepo",
+  "name": "@getissues",
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.22.0",
@@ -7,9 +7,11 @@
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "check": "turbo run check"
+    "check": "turbo run check",
+    "format": "turbo run format"
   },
   "devDependencies": {
+    "prettier": "^3.8.3",
     "turbo": "^2.1.3"
   }
 }
