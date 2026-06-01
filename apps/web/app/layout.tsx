@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Manrope, Allan } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import Header from "@/components/Header";
+
+const manropeHeading = Manrope({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
+
+const allan = Allan({
+  subsets: ["latin"],
+  variable: "--font-allan",
+  weight: ["400", "700"]
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +27,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "getissues - An AI agent that finds issues you can contribute to",
-  description: "Autonomous AI agents that find open issues you can contribute to while you sleep.",
+  description:
+    "Autonomous AI agents that find open issues you can contribute to while you sleep.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +42,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
+      className={cn(
+        "h-full",
+        "antialiased",
+        "scroll-smooth",
+        geistSans.variable,
+        geistMono.variable,
+        manropeHeading.variable,
+        allan.variable,
+      )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
