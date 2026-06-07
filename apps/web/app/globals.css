@@ -102,7 +102,7 @@ body {
   --accent-wash-2: 0.96 0.05 210;
 }
 
-.d {
+.dark {
   --background: oklch(0.16 0.02 250);
   --foreground: oklch(0.95 0.01 240);
   --card: oklch(0.22 0.02 255);
