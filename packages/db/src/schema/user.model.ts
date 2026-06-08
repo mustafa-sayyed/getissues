@@ -6,7 +6,7 @@ export const user = pgTable("user", {
   name: t.text().notNull(),
   email: t.varchar({ length: 255 }).unique().notNull(),
   avatarUrl: t.text("avatar_url").notNull(),
-  emailVerified: t.boolean("email_verified").notNull().default(true),
+  emailVerified: t.boolean("email_verified").notNull(),
   createdAt: t.timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: t.timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -34,6 +34,7 @@ export const account = pgTable("account", {
   accountId: t.text("account_id").notNull(),
   providerId: t.text("provider_id").notNull(),
   accessToken: t.text("access_token"),
+  scope: t.text("scope"),
   createdAt: t.timestamp("created_at", { withTimezone: true }).notNull(),
   updatedAt: t.timestamp("updated_at", { withTimezone: true }).notNull(),
 });

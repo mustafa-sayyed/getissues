@@ -1,4 +1,4 @@
-import { betterAuth, verificationSchema } from "better-auth";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "@packages/db";
 
@@ -22,7 +22,7 @@ export const auth = betterAuth({
   usePlural: true,
   user: {
     fields: {
-      image: "avatar_url",
+      image: "avatarUrl",
     },
   },
   socialProviders: {
@@ -30,7 +30,7 @@ export const auth = betterAuth({
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
       mapProfileToUser: (profile) => ({
-        avatar_url: profile.avatar_url,
+        avatarUrl: profile.avatar_url,
       }),
     },
   },
