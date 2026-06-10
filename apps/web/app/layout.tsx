@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Allan } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Header from "@/components/Header";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const manropeHeading = Manrope({
   subsets: ["latin"],
@@ -12,7 +12,7 @@ const manropeHeading = Manrope({
 const allan = Allan({
   subsets: ["latin"],
   variable: "--font-allan",
-  weight: ["400", "700"]
+  weight: ["400", "700"],
 });
 
 const geistSans = Geist({
@@ -53,8 +53,7 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
   );

@@ -4,9 +4,10 @@ import { useSearchParams } from "next/navigation";
 
 function LoginHeader() {
   const params = useSearchParams();
-  const error = params.get("error");
-  return error ? (
-    <h2 className="text-2xl font-semibold text-red-500">
+  const hasAuthError = params.has("error");
+
+  return hasAuthError ? (
+    <h2 className="text-2xl font-semibold text-destructive">
       Error while signing in with GitHub. Please try again.
     </h2>
   ) : (
