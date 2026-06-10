@@ -7,7 +7,7 @@ const allan = Allan({
   weight: ["400", "700"],
 });
 
-function Logo({ fontSize = 60, fillColor = "#000" }) {
+function Logo({ fontSize = 60, fillColor = "#000", className }: { fontSize?: number; fillColor?: string; className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -18,6 +18,7 @@ function Logo({ fontSize = 60, fillColor = "#000" }) {
     >
       <text
         fill={fillColor}
+        className={className}
         style={{
           fontSize: fontSize,
           whiteSpace: "pre",
