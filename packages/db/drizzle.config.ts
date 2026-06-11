@@ -6,6 +6,7 @@ export default defineConfig({
   schema: "./src/schema",
   out: "./drizzle",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
-  }
+    // for migration using non-pooled postgres connection
+    url: process.env.MIGRATION_DATABASE_URL!,
+  },
 });
