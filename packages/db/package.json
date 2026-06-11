@@ -4,26 +4,32 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "format": "prettier --write \"src/**/*.{js,ts,json}\"",
     "drizzle:push": "drizzle-kit push",
     "drizzle:generate": "drizzle-kit generate",
     "drizzle:migrate": "drizzle-kit migrate",
     "drizzle:pull": "drizzle-kit pull"
   },
   "exports": {
-    "default": "./src/index.ts"
+    "types": "./src/index.ts",
+    "default": "./dist/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.22.0",
   "dependencies": {
-    "@types/node": "^25.9.2",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.21.0"
   },
   "devDependencies": {
+    "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^0.31.10"
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^6.0.3"
   }
 }

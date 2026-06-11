@@ -105,7 +105,11 @@ function getGssocResponse(input: string): string {
   if (lower.includes("point") || lower.includes("score")) {
     return "GSSoC scoring system:\n\n- **Easy issues** = 25 points\n- **Medium issues** = 50 points\n- **Hard issues** = 100 points\n\nYou currently have **0 points**. Complete issues to climb the leaderboard! 🏆";
   }
-  if (lower.includes("how") || lower.includes("start") || lower.includes("apply")) {
+  if (
+    lower.includes("how") ||
+    lower.includes("start") ||
+    lower.includes("apply")
+  ) {
     return "To participate in **Girlscript Summer of Code**:\n\n1. Register at **gssoc.girlscript.tech**\n2. Browse participating projects\n3. Pick issues labeled `gssoc`\n4. Submit PRs and get them merged\n5. Earn points and climb the leaderboard!\n\nThe event runs **May–August** every year. 🌱";
   }
   return `🌿 Found **${gssocIssues.length} GSSoC issues** for you!\n\nI recommend starting with easy issues to get familiar with the codebase, then moving to medium ones for more points.\n\nWould you like to filter by difficulty or points?`;
@@ -291,7 +295,7 @@ export default function GirlscriptPage() {
                     key={msg.id}
                     className={cn(
                       "flex gap-2 items-start",
-                      msg.role === "user" && "flex-row-reverse"
+                      msg.role === "user" && "flex-row-reverse",
                     )}
                   >
                     <Avatar className="size-7 shrink-0">
@@ -300,7 +304,7 @@ export default function GirlscriptPage() {
                           "text-xs",
                           msg.role === "assistant"
                             ? "bg-emerald-500/15 text-emerald-500"
-                            : "bg-muted text-muted-foreground"
+                            : "bg-muted text-muted-foreground",
                         )}
                       >
                         {msg.role === "assistant" ? (
@@ -315,7 +319,7 @@ export default function GirlscriptPage() {
                         "max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed",
                         msg.role === "assistant"
                           ? "bg-muted/60 text-foreground rounded-tl-sm"
-                          : "bg-emerald-500 text-white rounded-tr-sm"
+                          : "bg-emerald-500 text-white rounded-tr-sm",
                       )}
                     >
                       {msg.content.split("\n").map((line, i) => {
@@ -323,7 +327,7 @@ export default function GirlscriptPage() {
                           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
                           .replace(
                             /`(.*?)`/g,
-                            '<code class="bg-black/10 px-1 rounded text-xs font-mono">$1</code>'
+                            '<code class="bg-black/10 px-1 rounded text-xs font-mono">$1</code>',
                           );
                         return (
                           <span

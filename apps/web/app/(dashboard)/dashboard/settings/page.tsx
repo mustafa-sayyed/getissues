@@ -2,7 +2,13 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -43,13 +49,13 @@ function Toggle({
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-        checked ? "bg-primary" : "bg-muted-foreground/30"
+        checked ? "bg-primary" : "bg-muted-foreground/30",
       )}
     >
       <span
         className={cn(
           "size-3.5 rounded-full bg-white shadow transition-transform",
-          checked ? "translate-x-4" : "translate-x-0.5"
+          checked ? "translate-x-4" : "translate-x-0.5",
         )}
       />
     </button>
@@ -77,7 +83,7 @@ export default function SettingsPage() {
   });
 
   const [appearance, setAppearance] = useState<"light" | "dark" | "system">(
-    "system"
+    "system",
   );
 
   const handleSave = () => {
@@ -108,7 +114,7 @@ export default function SettingsPage() {
                 "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left",
                 activeSection === s.id
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
               )}
             >
               <s.icon className="size-3.5 shrink-0" />
@@ -127,7 +133,7 @@ export default function SettingsPage() {
                 "flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
                 activeSection === s.id
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground bg-muted/60 hover:text-foreground"
+                  : "text-muted-foreground bg-muted/60 hover:text-foreground",
               )}
             >
               <s.icon className="size-3 shrink-0" />
@@ -257,7 +263,9 @@ export default function SettingsPage() {
                       <p className="text-sm font-medium text-foreground">
                         {item.label}
                       </p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
                     <Toggle
                       checked={notifications[item.key]}
@@ -311,7 +319,9 @@ export default function SettingsPage() {
                       <p className="text-sm font-medium text-foreground">
                         {item.label}
                       </p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
                     <Toggle
                       checked={aiPrefs[item.key]}
@@ -371,7 +381,7 @@ export default function SettingsPage() {
                         "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
                         appearance === theme
                           ? "border-primary bg-primary/5"
-                          : "border-border/60 hover:border-primary/40"
+                          : "border-border/60 hover:border-primary/40",
                       )}
                     >
                       <div
@@ -381,10 +391,12 @@ export default function SettingsPage() {
                             ? "bg-white border border-gray-200"
                             : theme === "dark"
                               ? "bg-gray-900 border border-gray-700"
-                              : "bg-gradient-to-br from-white to-gray-900"
+                              : "bg-gradient-to-br from-white to-gray-900",
                         )}
                       />
-                      <span className="text-xs font-medium capitalize">{theme}</span>
+                      <span className="text-xs font-medium capitalize">
+                        {theme}
+                      </span>
                       {appearance === theme && (
                         <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0">
                           Active
@@ -430,7 +442,9 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.desc}
+                      </p>
                     </div>
                     {item.connected ? (
                       <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 gap-1">
@@ -438,7 +452,11 @@ export default function SettingsPage() {
                         Connected
                       </Badge>
                     ) : (
-                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                      >
                         Connect
                       </Button>
                     )}
@@ -494,11 +512,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="gap-1.5"
-                  >
+                  <Button variant="destructive" size="sm" className="gap-1.5">
                     <Trash2 className="size-3.5" />
                     Delete Account
                   </Button>

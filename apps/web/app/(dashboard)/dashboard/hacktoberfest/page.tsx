@@ -112,7 +112,11 @@ function getHacktoberfestResponse(input: string): string {
   const lower = input.toLowerCase();
   if (lower.includes("easy") || lower.includes("beginner"))
     return hacktoberfestResponses.easy;
-  if (lower.includes("how") || lower.includes("participate") || lower.includes("help"))
+  if (
+    lower.includes("how") ||
+    lower.includes("participate") ||
+    lower.includes("help")
+  )
     return hacktoberfestResponses.help;
   return `🎃 Found **${hacktoberfestIssues.length} Hacktoberfest issues** for you!\n\nTop pick: **${hacktoberfestIssues[0]?.repo}** — ${hacktoberfestIssues[0]?.title}\n\nWant me to filter by difficulty or language?`;
 }
@@ -131,7 +135,11 @@ export default function HacktoberfestPage() {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text.trim() };
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: text.trim(),
+    };
     setMessages((p) => [...p, userMsg]);
     setInput("");
     setIsTyping(true);
@@ -161,7 +169,9 @@ export default function HacktoberfestPage() {
           </h1>
           <p className="text-muted-foreground max-w-lg text-sm md:text-base">
             Complete{" "}
-            <span className="text-orange-500 font-semibold">4 pull requests</span>{" "}
+            <span className="text-orange-500 font-semibold">
+              4 pull requests
+            </span>{" "}
             in October and earn exclusive Hacktoberfest rewards. Your AI agent
             finds the best matching issues.
           </p>
@@ -177,7 +187,9 @@ export default function HacktoberfestPage() {
               <Trophy className="size-4 text-orange-500" />
               <div>
                 <p className="text-xs text-muted-foreground">Reward</p>
-                <p className="text-sm font-bold text-foreground">Digital Badge</p>
+                <p className="text-sm font-bold text-foreground">
+                  Digital Badge
+                </p>
               </div>
             </div>
           </div>
@@ -218,9 +230,15 @@ export default function HacktoberfestPage() {
                         {issue.repo}
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
-                        <div className={`size-2 rounded-full ${langColor[issue.language] ?? "bg-gray-400"}`} />
-                        <span className="text-xs text-muted-foreground">{issue.language}</span>
-                        <Badge className={`text-[10px] px-1.5 py-0 ${difficultyColor[issue.difficulty]}`}>
+                        <div
+                          className={`size-2 rounded-full ${langColor[issue.language] ?? "bg-gray-400"}`}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {issue.language}
+                        </span>
+                        <Badge
+                          className={`text-[10px] px-1.5 py-0 ${difficultyColor[issue.difficulty]}`}
+                        >
                           {issue.difficulty}
                         </Badge>
                         <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
@@ -256,20 +274,58 @@ export default function HacktoberfestPage() {
             </Badge>
           </div>
 
-          <div className="flex-1 flex flex-col rounded-2xl border border-border/60 bg-card overflow-hidden" style={{ minHeight: 360 }}>
+          <div
+            className="flex-1 flex flex-col rounded-2xl border border-border/60 bg-card overflow-hidden"
+            style={{ minHeight: 360 }}
+          >
             <ScrollArea className="flex-1 p-3">
               <div className="space-y-3 pb-2">
                 {messages.map((msg) => (
-                  <div key={msg.id} className={cn("flex gap-2 items-start", msg.role === "user" && "flex-row-reverse")}>
+                  <div
+                    key={msg.id}
+                    className={cn(
+                      "flex gap-2 items-start",
+                      msg.role === "user" && "flex-row-reverse",
+                    )}
+                  >
                     <Avatar className="size-7 shrink-0">
-                      <AvatarFallback className={cn("text-xs", msg.role === "assistant" ? "bg-orange-500/15 text-orange-500" : "bg-muted text-muted-foreground")}>
-                        {msg.role === "assistant" ? <Flame className="size-3.5" /> : "U"}
+                      <AvatarFallback
+                        className={cn(
+                          "text-xs",
+                          msg.role === "assistant"
+                            ? "bg-orange-500/15 text-orange-500"
+                            : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {msg.role === "assistant" ? (
+                          <Flame className="size-3.5" />
+                        ) : (
+                          "U"
+                        )}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={cn("max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed", msg.role === "assistant" ? "bg-muted/60 text-foreground rounded-tl-sm" : "bg-orange-500 text-white rounded-tr-sm")}>
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-xl px-3 py-2 text-sm leading-relaxed",
+                        msg.role === "assistant"
+                          ? "bg-muted/60 text-foreground rounded-tl-sm"
+                          : "bg-orange-500 text-white rounded-tr-sm",
+                      )}
+                    >
                       {msg.content.split("\n").map((line, i) => {
-                        const formatted = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/`(.*?)`/g, '<code class="bg-black/10 px-1 rounded text-xs font-mono">$1</code>');
-                        return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} className="block leading-5" />;
+                        const formatted = line
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(
+                            /`(.*?)`/g,
+                            '<code class="bg-black/10 px-1 rounded text-xs font-mono">$1</code>',
+                          );
+                        return (
+                          <span
+                            key={i}
+                            dangerouslySetInnerHTML={{ __html: formatted }}
+                            className="block leading-5"
+                          />
+                        );
                       })}
                     </div>
                   </div>
@@ -297,8 +353,16 @@ export default function HacktoberfestPage() {
             {/* Quick prompts */}
             {messages.length <= 1 && (
               <div className="px-3 pb-2 flex flex-wrap gap-1.5">
-                {["Find easy issues", "How to participate?", "TypeScript issues"].map((s) => (
-                  <button key={s} onClick={() => sendMessage(s)} className="text-xs px-2.5 py-1 rounded-full bg-muted/60 hover:bg-orange-500/10 hover:text-orange-600 border border-border/60 hover:border-orange-500/30 transition-colors text-muted-foreground">
+                {[
+                  "Find easy issues",
+                  "How to participate?",
+                  "TypeScript issues",
+                ].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => sendMessage(s)}
+                    className="text-xs px-2.5 py-1 rounded-full bg-muted/60 hover:bg-orange-500/10 hover:text-orange-600 border border-border/60 hover:border-orange-500/30 transition-colors text-muted-foreground"
+                  >
                     {s}
                   </button>
                 ))}
@@ -311,11 +375,18 @@ export default function HacktoberfestPage() {
                   placeholder="Ask about Hacktoberfest..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") sendMessage(input); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") sendMessage(input);
+                  }}
                   className="flex-1 h-8 text-sm bg-muted/40 border-border/60 focus-visible:ring-orange-500/40"
                   disabled={isTyping}
                 />
-                <Button size="icon" className="size-8 bg-orange-500 hover:bg-orange-600 text-white" onClick={() => sendMessage(input)} disabled={!input.trim() || isTyping}>
+                <Button
+                  size="icon"
+                  className="size-8 bg-orange-500 hover:bg-orange-600 text-white"
+                  onClick={() => sendMessage(input)}
+                  disabled={!input.trim() || isTyping}
+                >
                   <Send className="size-3.5" />
                 </Button>
               </div>

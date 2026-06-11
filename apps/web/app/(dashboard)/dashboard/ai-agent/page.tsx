@@ -111,11 +111,11 @@ export default function AIAgentPage() {
     return content.split("\n").map((line, i) => {
       const boldFormatted = line.replace(
         /\*\*(.*?)\*\*/g,
-        '<strong>$1</strong>'
+        "<strong>$1</strong>",
       );
       const codeFormatted = boldFormatted.replace(
         /`(.*?)`/g,
-        '<code class="bg-muted px-1 py-0.5 rounded text-xs font-mono">$1</code>'
+        '<code class="bg-muted px-1 py-0.5 rounded text-xs font-mono">$1</code>',
       );
       return (
         <span
@@ -159,7 +159,7 @@ export default function AIAgentPage() {
                 key={msg.id}
                 className={cn(
                   "flex gap-3 items-start",
-                  msg.role === "user" && "flex-row-reverse"
+                  msg.role === "user" && "flex-row-reverse",
                 )}
               >
                 <Avatar className="size-8 shrink-0">
@@ -168,7 +168,7 @@ export default function AIAgentPage() {
                       "text-xs font-semibold",
                       msg.role === "assistant"
                         ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
+                        : "bg-muted text-muted-foreground",
                     )}
                   >
                     {msg.role === "assistant" ? (
@@ -183,7 +183,7 @@ export default function AIAgentPage() {
                     "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
                     msg.role === "assistant"
                       ? "bg-muted/60 text-foreground rounded-tl-sm"
-                      : "bg-primary text-primary-foreground rounded-tr-sm"
+                      : "bg-primary text-primary-foreground rounded-tr-sm",
                   )}
                 >
                   <div className="space-y-0.5">
@@ -192,7 +192,7 @@ export default function AIAgentPage() {
                   <p
                     className={cn(
                       "text-[10px] mt-2 opacity-60",
-                      msg.role === "user" ? "text-right" : "text-left"
+                      msg.role === "user" ? "text-right" : "text-left",
                     )}
                   >
                     {msg.timestamp.toLocaleTimeString([], {

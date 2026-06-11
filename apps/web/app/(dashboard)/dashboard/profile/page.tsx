@@ -1,11 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   User,
   MapPin,
@@ -61,16 +57,15 @@ const contributions = [
   },
 ];
 
-const statusConfig: Record<
-  string,
-  { color: string; label: string }
-> = {
+const statusConfig: Record<string, { color: string; label: string }> = {
   merged: {
-    color: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/20",
+    color:
+      "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/20",
     label: "Merged",
   },
   open: {
-    color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    color:
+      "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
     label: "Open",
   },
   closed: {
@@ -99,17 +94,20 @@ export default function ProfilePage() {
                   <h1 className="text-xl font-bold text-foreground">
                     User Name
                   </h1>
-                  <p className="text-sm text-muted-foreground">
-                    @username
-                  </p>
+                  <p className="text-sm text-muted-foreground">@username</p>
                 </div>
-                <Button variant="outline" size="sm" className="shrink-0 gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 gap-1.5"
+                >
                   <Edit3 className="size-3.5" />
                   Edit Profile
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">
-                Open source enthusiast | TypeScript & React developer | Love building things that matter
+                Open source enthusiast | TypeScript & React developer | Love
+                building things that matter
               </p>
               <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -133,14 +131,36 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Issues Matched", value: "128", icon: CircleDot, color: "text-primary bg-primary/10" },
-          { label: "PRs Submitted", value: "12", icon: GitPullRequest, color: "text-violet-500 bg-violet-500/10" },
-          { label: "Repos Starred", value: "247", icon: Star, color: "text-yellow-500 bg-yellow-500/10" },
-          { label: "Languages", value: "8", icon: Code2, color: "text-blue-500 bg-blue-500/10" },
+          {
+            label: "Issues Matched",
+            value: "128",
+            icon: CircleDot,
+            color: "text-primary bg-primary/10",
+          },
+          {
+            label: "PRs Submitted",
+            value: "12",
+            icon: GitPullRequest,
+            color: "text-violet-500 bg-violet-500/10",
+          },
+          {
+            label: "Repos Starred",
+            value: "247",
+            icon: Star,
+            color: "text-yellow-500 bg-yellow-500/10",
+          },
+          {
+            label: "Languages",
+            value: "8",
+            icon: Code2,
+            color: "text-blue-500 bg-blue-500/10",
+          },
         ].map((s) => (
           <Card key={s.label} className="border-border/60">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className={`flex size-9 items-center justify-center rounded-xl ${s.color.split(" ")[1]}`}>
+              <div
+                className={`flex size-9 items-center justify-center rounded-xl ${s.color.split(" ")[1]}`}
+              >
                 <s.icon className={`size-4 ${s.color.split(" ")[0]}`} />
               </div>
               <div>
@@ -173,7 +193,11 @@ export default function ProfilePage() {
                 </Badge>
               ))}
             </div>
-            <Button variant="ghost" size="sm" className="mt-3 h-7 text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3 h-7 text-xs text-muted-foreground"
+            >
               + Add skills
             </Button>
           </CardContent>
@@ -195,13 +219,24 @@ export default function ProfilePage() {
                 { label: "Followers", value: "128" },
                 { label: "Following", value: "89" },
               ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between py-1 border-b border-border/40 last:border-0">
-                  <span className="text-sm text-muted-foreground">{item.label}</span>
-                  <span className="text-sm font-semibold text-foreground">{item.value}</span>
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between py-1 border-b border-border/40 last:border-0"
+                >
+                  <span className="text-sm text-muted-foreground">
+                    {item.label}
+                  </span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {item.value}
+                  </span>
                 </div>
               ))}
             </div>
-            <Button variant="outline" size="sm" className="mt-3 w-full gap-1.5 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 w-full gap-1.5 text-xs"
+            >
               <FaGithub className="size-3.5" />
               View on GitHub
             </Button>
@@ -246,7 +281,9 @@ export default function ProfilePage() {
                   >
                     {statusConfig[c.status]?.label}
                   </Badge>
-                  <span className="text-[10px] text-muted-foreground">{c.date}</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {c.date}
+                  </span>
                 </div>
               </div>
             ))}

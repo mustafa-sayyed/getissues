@@ -137,8 +137,7 @@ const difficultyColor: Record<string, string> = {
 };
 
 const labelColor: Record<string, string> = {
-  "good first issue":
-    "bg-primary/10 text-primary border-primary/20",
+  "good first issue": "bg-primary/10 text-primary border-primary/20",
   bug: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20",
   enhancement:
     "bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20",
@@ -146,8 +145,7 @@ const labelColor: Record<string, string> = {
     "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   documentation:
     "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-  suggestion:
-    "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+  suggestion: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
 };
 
 const langColor: Record<string, string> = {
@@ -167,8 +165,7 @@ export default function IssuesPage() {
     const matchSearch =
       issue.title.toLowerCase().includes(search.toLowerCase()) ||
       issue.repo.toLowerCase().includes(search.toLowerCase());
-    const matchDiff =
-      difficulty === "All" || issue.difficulty === difficulty;
+    const matchDiff = difficulty === "All" || issue.difficulty === difficulty;
     return matchSearch && matchDiff;
   });
 
@@ -201,7 +198,9 @@ export default function IssuesPage() {
                 <Filter className="size-3.5" />
                 Difficulty
                 {difficulty !== "All" && (
-                  <Badge className={`ml-1 text-[10px] px-1 py-0 ${difficultyColor[difficulty]}`}>
+                  <Badge
+                    className={`ml-1 text-[10px] px-1 py-0 ${difficultyColor[difficulty]}`}
+                  >
                     {difficulty}
                   </Badge>
                 )}
