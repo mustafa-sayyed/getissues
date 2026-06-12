@@ -21,8 +21,8 @@ export default function LoginPage() {
     try {
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "http://localhost:3000/dashboard",
-        errorCallbackURL: "http://localhost:3000/login",
+        callbackURL: "https://getissues.tech/dashboard",
+        errorCallbackURL: "https://getissues.tech/login",
       });
     } catch {
       setSignInError("We could not start GitHub sign-in. Please try again.");
