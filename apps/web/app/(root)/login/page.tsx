@@ -11,6 +11,7 @@ import LoginHeader from "./LoginHeader";
 export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
   const handleSignInWithGithub = async () => {
     if (isSigningIn) return;
@@ -21,8 +22,8 @@ export default function LoginPage() {
     try {
       await authClient.signIn.social({
         provider: "github",
-        callbackURL: "https://getissues.tech/dashboard",
-        errorCallbackURL: "https://getissues.tech/login",
+        callbackURL: `${baseUrl}/dashboard?success=true`,
+        errorCallbackURL: `${baseUrl}/login`,
       });
     } catch {
       setSignInError("We could not start GitHub sign-in. Please try again.");
