@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Manrope, Allan } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "next-themes";
 
 const manropeHeading = Manrope({
   subsets: ["latin"],
@@ -51,9 +52,12 @@ export default function RootLayout({
         manropeHeading.variable,
         allan.variable,
       )}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <TooltipProvider>{children}</TooltipProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

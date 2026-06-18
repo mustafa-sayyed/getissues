@@ -12,11 +12,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Sun, Moon, LogOut, User, Settings } from "lucide-react";
+import { Search, LogOut, User, Settings, Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { authClient, type Session } from "@/lib/auth-client";
+import ThemeSwitcher from "../ThemeSwitcher";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Home",
@@ -29,13 +30,9 @@ const routeLabels: Record<string, string> = {
 };
 export function DashboardNavbar() {
   const pathname = usePathname();
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const pageTitle = routeLabels[pathname] ?? "Dashboard";
   const [userSession, setUserSession] = useState<Session | null>(null);
-  const toggleTheme = () => {
-    setIsDark((prev) => !prev);
-    document.documentElement.classList.toggle("dark");
-  };
 
   useEffect(() => {
     const fetchUserSession = async () => {
@@ -77,15 +74,7 @@ export function DashboardNavbar() {
       </div>
 
       {/* Theme toggle */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-8 rounded-full"
-        onClick={toggleTheme}
-        aria-label="Toggle theme"
-      >
-        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      </Button>
+      <ThemeSwitcher />
 
       {/* User avatar dropdown */}
       <DropdownMenu>
