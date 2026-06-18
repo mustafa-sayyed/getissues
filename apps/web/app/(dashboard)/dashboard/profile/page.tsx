@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  User,
   MapPin,
   Link as LinkIcon,
   Code2,
@@ -15,7 +14,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
-import { authClient } from "@/lib/auth-client";
+import { authClient, User  } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
 
 const skills = [
@@ -78,12 +77,14 @@ const statusConfig: Record<string, { color: string; label: string }> = {
 };
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState<User | null>(null);
 
   useEffect(() => {
     (async () => {
-      const session = await authClient.getSession();
-      setUser(session.data?.user);
+      const { data: session } = await authClient.getSession();
+      if (session && session.user) {
+        setUserData(session?.user);
+      }
     })();
   }, []);
 
@@ -95,18 +96,17 @@ export default function ProfilePage() {
         <CardContent className="pt-0 px-6 pb-6">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10">
             <Avatar className="size-20 ring-4 ring-background">
-              <AvatarImage src={user?.image as string} alt="User" />
+              <AvatarImage src={userData?.image as string} alt="User" />
               <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
-                {user?.name[0] ?? "U"}
+                {userData?.name[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start mt-10 justify-between gap-2">
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    {user?.name}
+                  <h1 className="text-2xl text-foreground">
+                    {userData?.name}
                   </h1>
-                  <p className="text-sm text-muted-foreground">{user?.name}</p>
                 </div>
                 <Button
                   variant="outline"

@@ -18,7 +18,11 @@
     "format": {
       "cache": true
     },
-    "lint": {},
-    "check": {}
+    "lint": {
+      "cache": true
+    },
+    "typecheck": {
+      "cache": true
+    }
   }
 }
