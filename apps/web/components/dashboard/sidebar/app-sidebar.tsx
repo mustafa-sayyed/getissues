@@ -63,24 +63,6 @@ const dashboardRoutes: Route[] = [
     link: "/dashboard/issues",
   },
   {
-    id: "ai-agent",
-    title: "AI Agent",
-    icon: <Bot className="size-4" />,
-    link: "/dashboard/ai-agent",
-  },
-  {
-    id: "hacktoberfest",
-    title: "Hacktoberfest",
-    icon: <Flame className="size-4" />,
-    link: "/dashboard/hacktoberfest",
-  },
-  {
-    id: "girlscript",
-    title: "Girlscript SoC",
-    icon: <Sprout className="size-4" />,
-    link: "/dashboard/girlscript",
-  },
-  {
     id: "profile",
     title: "Profile",
     icon: <User className="size-4" />,
