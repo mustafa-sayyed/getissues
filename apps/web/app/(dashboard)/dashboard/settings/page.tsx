@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   Settings,
-  User,
   Bell,
   Shield,
   Palette,
@@ -25,9 +24,10 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { FaGithub } from "react-icons/fa6";
+import { Switch } from "@/components/ui/switch";
+import { SiNotion } from "react-icons/si";
 
 const sections = [
-  { id: "account", label: "Account", icon: User },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "ai", label: "AI Preferences", icon: Bot },
   { id: "appearance", label: "Appearance", icon: Palette },
@@ -35,39 +35,12 @@ const sections = [
   { id: "security", label: "Security", icon: Shield },
 ];
 
-function Toggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <button
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-        checked ? "bg-primary" : "bg-muted-foreground/30",
-      )}
-    >
-      <span
-        className={cn(
-          "size-3.5 rounded-full bg-white shadow transition-transform",
-          checked ? "translate-x-4" : "translate-x-0.5",
-        )}
-      />
-    </button>
-  );
-}
-
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState("account");
+  const [activeSection, setActiveSection] = useState("notifications");
   const [saved, setSaved] = useState(false);
 
   const [notifications, setNotifications] = useState({
-    newIssues: true,
+    newIssues: false,
     aiMatches: true,
     hacktoberfest: false,
     gssoc: true,
@@ -99,7 +72,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your account, notifications, and preferences
+          Manage your notifications, and preferences
         </p>
       </div>
 
@@ -144,75 +117,6 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 space-y-4">
-          {/* Account */}
-          {activeSection === "account" && (
-            <Card className="border-border/60">
-              <CardHeader>
-                <CardTitle className="text-base">Account Information</CardTitle>
-                <CardDescription>
-                  Update your personal details and public profile
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Display Name
-                    </label>
-                    <Input
-                      defaultValue="User Name"
-                      className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Username
-                    </label>
-                    <Input
-                      defaultValue="username"
-                      className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Email
-                    </label>
-                    <Input
-                      defaultValue="user@example.com"
-                      type="email"
-                      className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Bio
-                    </label>
-                    <Input
-                      defaultValue="Open source enthusiast | TypeScript & React developer"
-                      className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
-                    />
-                  </div>
-                </div>
-                <Separator />
-                <div className="flex justify-end">
-                  <Button size="sm" onClick={handleSave} className="gap-1.5">
-                    {saved ? (
-                      <>
-                        <Check className="size-3.5" />
-                        Saved!
-                      </>
-                    ) : (
-                      <>
-                        <Save className="size-3.5" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Notifications */}
           {activeSection === "notifications" && (
             <Card className="border-border/60">
@@ -267,10 +171,14 @@ export default function SettingsPage() {
                         {item.desc}
                       </p>
                     </div>
-                    <Toggle
+                    <Switch
+                      className="cursor-pointer"
                       checked={notifications[item.key]}
-                      onChange={(v) =>
-                        setNotifications((prev) => ({ ...prev, [item.key]: v }))
+                      onClick={() =>
+                        setNotifications((prev) => ({
+                          ...prev,
+                          [item.key]: !prev[item.key],
+                        }))
                       }
                     />
                   </div>
@@ -323,10 +231,14 @@ export default function SettingsPage() {
                         {item.desc}
                       </p>
                     </div>
-                    <Toggle
+                    <Switch
+                      className="cursor-pointer"
                       checked={aiPrefs[item.key]}
-                      onChange={(v) =>
-                        setAiPrefs((prev) => ({ ...prev, [item.key]: v }))
+                      onClick={() =>
+                        setAiPrefs((prev) => ({
+                          ...prev,
+                          [item.key]: !prev[item.key],
+                        }))
                       }
                     />
                   </div>
@@ -427,9 +339,9 @@ export default function SettingsPage() {
                     connected: true,
                   },
                   {
-                    name: "GitLab",
-                    icon: FaGithub,
-                    desc: "Connect your GitLab account",
+                    name: "Notion",
+                    icon: SiNotion,
+                    desc: "Connect your Notion account",
                     connected: false,
                   },
                 ].map((item) => (
@@ -469,39 +381,6 @@ export default function SettingsPage() {
           {/* Security */}
           {activeSection === "security" && (
             <div className="space-y-4">
-              <Card className="border-border/60">
-                <CardHeader>
-                  <CardTitle className="text-base">Password</CardTitle>
-                  <CardDescription>Update your password</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Current Password
-                    </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      className="h-9 bg-muted/40 border-border/60"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">
-                      New Password
-                    </label>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      className="h-9 bg-muted/40 border-border/60"
-                    />
-                  </div>
-                  <Button size="sm" className="gap-1.5">
-                    <Shield className="size-3.5" />
-                    Update Password
-                  </Button>
-                </CardContent>
-              </Card>
-
               <Card className="border-destructive/20 bg-destructive/5">
                 <CardHeader>
                   <CardTitle className="text-base text-destructive">

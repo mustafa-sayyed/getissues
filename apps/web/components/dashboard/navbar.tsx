@@ -86,7 +86,7 @@ export function DashboardNavbar() {
             <Avatar className="size-8">
               <AvatarImage src={userSession?.user?.image ?? ""} alt="User" />
               <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
-                {userSession?.user?.name[0] ?? "Test"}
+                {userSession?.user?.name[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
           </Button>
