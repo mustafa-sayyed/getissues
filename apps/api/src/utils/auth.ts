@@ -16,6 +16,7 @@ export const auth = betterAuth({
     database: {
       generateId: false,
     },
+    cookiePrefix: "getissues",
   },
   usePlural: true,
   user: {
