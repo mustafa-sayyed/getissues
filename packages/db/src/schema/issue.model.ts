@@ -6,7 +6,7 @@ import { repoAnalysis } from "./repoAnalysis.model";
 // CREATE EXTENSION IF NOT EXISTS vector; 
 // add this in SQL migartion file to use the pgvector
 
-const statusEnum = t.pgEnum("status_enum", ["open", "closed", "assigned"]);
+export const statusEnum = t.pgEnum("issue_status", ["open", "closed", "assigned"]);
 
 export const issue = pgTable(
   "issue",
@@ -15,7 +15,7 @@ export const issue = pgTable(
     title: t.text().notNull(),
     description: t.text(),
     body: t.text(),
-    status: statusEnum().default("open").notNull(),
+    status: statusEnum("status").default("open").notNull(),
     url: t.text().notNull(),
     repoAnalysisId: t
       .uuid("repo_analysis_id")

@@ -8,6 +8,13 @@
       "when": 1781176953145,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782035948852,
+      "tag": "0001_add issue and repo_analysis table",
+      "breakpoints": true
     }
   ]
 }
