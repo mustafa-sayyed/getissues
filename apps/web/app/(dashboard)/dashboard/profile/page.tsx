@@ -1,4 +1,3 @@
-"use client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,12 +10,12 @@ import {
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
 import { authClient, User } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
 import { GithubUserData, IssueOrPullRequestResponse } from "@/types";
 import Link from "next/link";
 import { SlUserFollow, SlUserFollowing } from "react-icons/sl";
 import { GoRepo } from "react-icons/go";
-import { Spinner } from "@/components/ui/spinner";
+import axios from "axios";
+import { headers } from "next/headers";
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   merged: {
@@ -45,44 +44,34 @@ const getStatus = (issue: IssueOrPullRequestResponse): string => {
   return "closed";
 };
 
-export default function ProfilePage() {
-  const [userData, setUserData] = useState<User | null>(null);
-  const [githubData, setGithubData] = useState<GithubUserData | null>(null);
-  const [loading, setLoading] = useState(true);
+export default async function ProfilePage() {
+  let user: User;
+  let githubData: GithubUserData;
+  let error;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data: session } = await authClient.getSession();
-        if (session && session.user) {
-          setUserData(session?.user);
-        }
-
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          },
-        );
-        const githubData = await res.json();
-        setGithubData(githubData);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
+  try {
+    const { data: session } = await authClient.getSession({
+      fetchOptions: {
+        headers: await headers()
       }
-    })();
-  }, []);
+    });
+    if (session && session.user) {
+      user = session.user;
 
-  if (loading) {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`);
+      githubData = res.data;
+    }
+  } catch (err) {
+    console.log(err);
+    error =
+      err instanceof Error ? err.message : "Failed to fetch user data.";
+  }
+
+  if (error) {
     return (
-      <div className="flex items-center gap-2 justify-center h-full">
-        <Spinner />
-        <p className="text-muted-foreground">Loading Profile...</p>
+      <div className="p-6 bg-red-50 text-red-700 rounded-md">
+        <h2 className="text-lg font-semibold">Error</h2>
+        <p className="mt-2">{error}</p>
       </div>
     );
   }
@@ -94,15 +83,15 @@ export default function ProfilePage() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <Avatar className="size-30 ring-3 ring-background">
-              <AvatarImage src={userData?.image as string} alt="User" />
+              <AvatarImage src={user?.image as string} alt="User" />
               <AvatarFallback className="bg-primary/20 text-primary text-2xl font-bold">
-                {userData?.name[0] ?? "U"}
+                {user?.name[0] ?? "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h1 className="text-2xl text-foreground">{userData?.name}</h1>
+                  <h1 className="text-2xl text-foreground">{user?.name}</h1>
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mt-2 max-w-md">
@@ -224,10 +213,10 @@ export default function ProfilePage() {
                   <span className="text-[10px] text-muted-foreground">
                     {issue.created_at
                       ? new Date(issue.created_at).toLocaleDateString("en-US", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })
                       : "N/A"}
                   </span>
                 </div>
