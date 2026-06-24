@@ -1,0 +1,28 @@
+{
+  "name": "@packages/workflows",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "task": "tsx src/task.ts",
+    "start": "ndoe dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.22.0",
+  "dependencies": {
+    "@packages/db": "workspace:*",
+    "@renderinc/sdk": "^0.6.0",
+    "drizzle-orm": "^0.45.2",
+    "octokit": "^5.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "dotenv": "^17.4.2",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3"
+  }
+}
