@@ -16,20 +16,22 @@ Workflow Steps:
 # Flow: 
 ```mermaid
 graph TD
+    START[Cron runs every 1/2 hr] --> A
     A[Fetch Issues from Github]
     A --> B[For each issue]
-    B --> C[Store the fetched issue in db]
-    C --> I[End Workflow]
-    B --> D[Extract Relevant Information of the issue]
-    D --> E[Create Embeddings]
-    E --> F[Store Embeddings]
-    F --> I[End Workflow]
-    B --> G[Check the repo of the issue in db]
-    G --> H{Is repo present in db?}
-    H -- Yes --> I[End Workflow]
-    H -- No --> J[Fetch Repo Information]
-    J --> K[Store Repo Information]
-    K --> I[End Workflow]
+    B --> C[Check Deduplication?]
+    C -- Yes --> D[End Workflow]
+    C -- No --> E[Store the fetched issues in db]
+    C -- No --> I[Check the repositry of the issue in db]
+    E --> F[Extract Relevant Information of the issue]
+    F --> G[Create Embeddings]
+    G --> H[Store Embeddings]
+    H --> D[End Workflow]
+    I --> J{Is repo present in db?}
+    J -- Yes --> D[End Workflow]
+    J -- No --> K[Fetch Repo Information]
+    K --> L[Store Repo Information]
+    L --> D[End Workflow]
 ```
 
 
@@ -47,6 +49,10 @@ Workflow Steps:
 # Flow: 
 ```mermaid
 graph TD
+    START[Cron runs based on user configuration eg. every 2 hr, 4hr]
+    START --> CHECK[Check user plan and ratelimits and Cron dues?]
+    CHECK -- If User not reached limit and Cron is due --> A
+    CHECK -- IF user has reached limit and Cron isn't due --> G
     A[Fetch User Preferences and Skills from db]
     A --> B[Fetch Issues from db based on user preferences and skills]
     B --> C[Pass the fetched issues to AI Agent for scoring]
