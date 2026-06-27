@@ -4,7 +4,7 @@ import { userSlice } from "./features/userSlice";
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      user: userSlice,
+      user: userSlice.reducer,
     },
   });
 };

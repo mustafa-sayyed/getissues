@@ -45,8 +45,8 @@ const getStatus = (issue: IssueOrPullRequestResponse): string => {
 };
 
 export default async function ProfilePage() {
-  let user: User;
-  let githubData: GithubUserData;
+  let user: User | null = null;
+  let githubData: GithubUserData | null = null;
   let error;
 
   try {

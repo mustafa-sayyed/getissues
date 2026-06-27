@@ -1,31 +1,7 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createGroq } from "@ai-sdk/groq";
-import { openai } from "@ai-sdk/openai";
-import type { LanguageModelV4, LanguageModelV3 } from "@ai-sdk/provider";
+import { LLMModel } from "../types/common.types.js";
 
-/**
- * Supported LLM providers.
- */
-export type LLMProvider = "openai" | "groq" | "anthropic" | "google";
-
-/**
- * Returns a Vercel AI SDK language model instance based on environment variables.
- *
- * Required env vars:
- * - LLM_PROVIDER  — one of: openai (default) | groq | anthropic | google
- * - LLM_MODEL     — model name e.g. "gpt-4o", "llama-3.3-70b-versatile", "claude-sonnet-4-5", "gemini-2.0-flash"
- * - The API key for the selected provider (see table below)
- *
- * | LLM_PROVIDER | API Key env var                 | Default model              |
- * | openai       | OPENAI_API_KEY                  | gpt-4o                     |
- * | groq         | GROQ_API_KEY                    | llama-3.3-70b-versatile    |
- * | anthropic    | ANTHROPIC_API_KEY               | claude-sonnet-4-5          |
- * | google       | GOOGLE_GENERATIVE_AI_API_KEY    | gemini-2.0-flash           |
- */
-
-export function getLLMModel(): LanguageModelV3 | LanguageModelV4 {
-  const provider = (process.env.LLM_PROVIDER ?? "openai") as LLMProvider;
+export function getLLMModel(): LLMModel {
+  const provider = (process.env.LLM_PROVIDER ?? "openai");
   const modelName = process.env.LLM_MODEL;
 
   switch (provider) {
@@ -34,7 +10,10 @@ export function getLLMModel(): LanguageModelV3 | LanguageModelV4 {
       if (!process.env.OPENAI_API_KEY) {
         throw new Error("OPENAI_API_KEY is required when LLM_PROVIDER=openai");
       }
-      return openai(model);
+      return {
+        id: `openai/${model}`,
+        apiKey: process.env.OPENAI_API_KEY,
+      };
     }
 
     case "groq": {
@@ -42,8 +21,10 @@ export function getLLMModel(): LanguageModelV3 | LanguageModelV4 {
       if (!process.env.GROQ_API_KEY) {
         throw new Error("GROQ_API_KEY is required when LLM_PROVIDER=groq");
       }
-      const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
-      return groq(model);
+      return {
+        id: `groq/${model}`,
+        apiKey: process.env.GROQ_API_KEY,
+      };
     }
 
     case "anthropic": {
@@ -53,10 +34,10 @@ export function getLLMModel(): LanguageModelV3 | LanguageModelV4 {
           "ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic",
         );
       }
-      const anthropic = createAnthropic({
+      return {
+        id: `anthropic/${model}`,
         apiKey: process.env.ANTHROPIC_API_KEY,
-      });
-      return anthropic(model);
+      };
     }
 
     case "google": {
@@ -64,17 +45,21 @@ export function getLLMModel(): LanguageModelV3 | LanguageModelV4 {
       if (!process.env.GEMINI_API_KEY) {
         throw new Error("GEMINI_API_KEY is required when LLM_PROVIDER=google");
       }
-      const google = createGoogleGenerativeAI({
+      return {
+        id: `google/${model}`,
         apiKey: process.env.GEMINI_API_KEY,
-      });
-      return google(model);
+      };
     }
 
     default: {
-      throw new Error(
-        `Unsupported LLM_PROVIDER: "${provider}". ` +
-          `Supported values are: openai, groq, anthropic, google`,
-      );
+      if(provider && modelName && process.env.LLM_API_KEY) {
+        return {
+          id: `${provider}/${modelName}`,
+          apiKey: process.env.LLM_API_KEY,
+        };
+      }
+
+      throw new Error("NO LLM_PROVIDER or LLM_MODEL or LLM_API_KEY is set. Please set these environment variables to use a custom LLM provider.");
     }
   }
 }
