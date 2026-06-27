@@ -2,6 +2,7 @@
   "name": "@packages/db",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -14,22 +15,25 @@
     "drizzle:pull": "drizzle-kit pull"
   },
   "exports": {
-    "types": "./src/index.ts",
-    "default": "./dist/index.js"
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.22.0",
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.21.0"
+  "peerDependencies": {
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
+    "drizzle-orm": "^0.45.2",
     "typescript": "^6.0.3"
   }
 }

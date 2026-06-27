@@ -9,6 +9,8 @@ export const user = pgTable(
     email: t.varchar({ length: 255 }).unique().notNull(),
     avatarUrl: t.text("avatar_url").notNull(),
     emailVerified: t.boolean("email_verified").notNull(),
+    githubId: t.text("github_id"),
+    lastActiveAt: t.timestamp("last_active_at", { withTimezone: true }),
     createdAt: t.timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: t
       .timestamp("updated_at", { withTimezone: true })

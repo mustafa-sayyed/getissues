@@ -3,7 +3,7 @@ import { pgTable } from "drizzle-orm/pg-core";
 import * as t from "drizzle-orm/pg-core";
 
 export const repoAnalysis = pgTable("repo_analysis", {
-  id: t.uuid().primaryKey().defaultRandom(),
+  githubRepoId: t.text("github_repo_id").primaryKey(),
   name: t.text("name").notNull(),
   repoUrl: t.text("repo_url").notNull(),
   languages: t
@@ -12,7 +12,9 @@ export const repoAnalysis = pgTable("repo_analysis", {
     .notNull()
     .default(sql`ARRAY[]::text[]`),
   stars: t.integer("stars").notNull().default(0),
-  summary: t.text("summary"),
+  description: t.text("description"),
+  documentationScore: t.integer("documentation_score"),
+  contributorFriendliness: t.integer("contributor_friendliness"),
   maintainerResponsiveness: t.integer("maintainer_responsiveness"),
   lastActivityAt: t.timestamp("last_activity_at"),
   isActive: t.boolean("is_active"),
@@ -23,4 +25,4 @@ export const repoAnalysis = pgTable("repo_analysis", {
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
     .$onUpdate(() => new Date()),
-}, (table) => [t.index("repo_id_idx").on(table.id)]);
+}, (table) => [t.index("repo_github_id_idx").on(table.githubRepoId)]);

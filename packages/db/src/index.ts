@@ -1,14 +1,20 @@
-import "dotenv/config";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { account, session, user, verification } from "./schema/user.model.js";
-
-export const db = drizzle(process.env.DATABASE_URL!, {
-  casing: "snake_case",
-});
+import { issue } from "./schema/issue.model.js";
+import { repoAnalysis } from "./schema/repoAnalysis.model.js";
+import { recommendations } from "./schema/recommendation.model.js";
+import { skills } from "./schema/skills.model.js";
+import { agentRuns } from "./schema/agentRuns.model.js";
+import { agentConfig } from "./schema/agentConfig.model.js";
 
 export const schema = {
   user,
   session,
   account,
   verification,
+  issue,
+  repoAnalysis,
+  recommendations,
+  skills,
+  agentRuns,
+  agentConfig,
 };
