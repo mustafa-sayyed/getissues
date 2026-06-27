@@ -23,6 +23,9 @@ importers:
       '@packages/workflows':
         specifier: workspace:*
         version: link:../../packages/workflows
+      '@renderinc/sdk':
+        specifier: ^0.6.0
+        version: 0.6.0
       better-auth:
         specifier: ^1.6.14
         version: 1.6.14(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@types/pg@8.20.0)(kysely@0.29.2)(pg@8.21.0))(next@16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(pg@8.21.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
