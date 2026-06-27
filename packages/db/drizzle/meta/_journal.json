@@ -15,6 +15,13 @@
       "when": 1782035948852,
       "tag": "0001_add issue and repo_analysis table",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782581436801,
+      "tag": "0002_add agentRun, agentConfig, reocmmendation, skills table",
+      "breakpoints": true
     }
   ]
 }
