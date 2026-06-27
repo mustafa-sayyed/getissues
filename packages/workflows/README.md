@@ -21,16 +21,14 @@ graph TD
     A --> B[For each issue]
     B --> C[Check Deduplication?]
     C -- Yes --> D[End Workflow]
-    C -- No --> E[Store the fetched issues in db]
-    C -- No --> I[Check the repositry of the issue in db]
-    E --> F[Extract Relevant Information of the issue]
-    F --> G[Create Embeddings]
-    G --> H[Store Embeddings]
-    H --> D[End Workflow]
-    I --> J{Is repo present in db?}
-    J -- Yes --> D[End Workflow]
-    J -- No --> K[Fetch Repo Information]
-    K --> L[Store Repo Information]
+    C -- No --> E[Check the repositry of the issue in db]
+    E --> F{Is repo present in db?}
+    F -- Yes --> G[Extract Relevant Information of the issue]
+    G --> I[Create Embeddings of the issue]
+    F -- No --> H[Fetch Repo Information]
+    H --> J[Store Repo Information]
+    J --> I
+    I --> L[Store the fetched issues in db, with Embeddings]
     L --> D[End Workflow]
 ```
 

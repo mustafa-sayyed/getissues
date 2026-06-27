@@ -1,7 +1,6 @@
 import { task } from "@renderinc/sdk/workflows";
-import { db, schema } from "../../lib/db.js";
+import { db, eq, schema } from "../../lib/db.js";
 import type { GitHubIssueSearchItem } from "../../types/github.types.js";
-import { eq } from "drizzle-orm";
 import { ensureRepoTask } from "./ensureRepo.task.js";
 
 /**
