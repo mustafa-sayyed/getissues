@@ -30,7 +30,7 @@ function parseRepoUrl(repositoryUrl: string): RepoIdentifier {
  * Responsibility: ONE — ensure repo exists in DB.
  */
 export const ensureRepoTask = task(
-  { name: "ensureRepoTask" },
+  { name: "ensureRepoTask", plan: "starter" },
   async (item: GitHubIssueSearchItem) => {
     let repoDetails: RepoDetails = {
       name: "",

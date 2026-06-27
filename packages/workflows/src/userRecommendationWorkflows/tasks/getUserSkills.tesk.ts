@@ -2,7 +2,7 @@ import { task } from "@renderinc/sdk/workflows";
 import { db, eq, schema } from "../../lib/db.js";
 
 export const getUserSkillsTask = task(
-  { name: "getUserSkillsTask" },
+  { name: "getUserSkillsTask", plan: "starter" },
   async (
     userId: string,
   ): Promise<{

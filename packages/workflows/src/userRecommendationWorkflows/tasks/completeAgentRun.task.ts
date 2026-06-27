@@ -12,7 +12,7 @@ export type AgentRunStatus = "success" | "failed";
  * Responsibility: ONE — update agent run status in DB.
  */
 export const completeAgentRunTask = task(
-  { name: "completeAgentRunTask" },
+  { name: "completeAgentRunTask", plan: "starter" },
   async (agentRunId: string, status: AgentRunStatus = "success"): Promise<void> => {
     await db
       .update(schema.agentRuns)
@@ -20,5 +20,11 @@ export const completeAgentRunTask = task(
       .where(eq(schema.agentRuns.id, agentRunId));
 
     console.log(`Agent run ${agentRunId} marked as "${status}".`);
+
+    return {
+      success: true,
+      agentRunId,
+      status,
+    };
   }
 );

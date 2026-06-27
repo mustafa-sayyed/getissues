@@ -14,7 +14,7 @@ const SCORE_THRESHOLD = 0.7;
  * Responsibility: ONE — conditionally store a recommendation.
  */
 export const storeRecommendationTask = task(
-  { name: "storeRecommendationTask" },
+  { name: "storeRecommendationTask", plan: "starter" },
   async (
     userId: string,
     agentRunId: string,
@@ -39,5 +39,11 @@ export const storeRecommendationTask = task(
     console.log(
       `Recommendation stored for issue "${issue.title}" (score: ${matchScore}).`,
     );
+
+    return {
+      success: true,
+      issueTitle: issue.title,
+      userId,
+    };
   },
 );

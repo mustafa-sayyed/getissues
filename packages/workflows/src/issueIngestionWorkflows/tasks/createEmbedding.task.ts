@@ -16,7 +16,7 @@ import { storeIssueTask } from "./storeIssue.task.js";
  * Responsibility: ONE — create the issue embedding via VoyageAI.
  */
 export const createIssueEmbeddingTask = task(
-  { name: "createIssueEmbeddingTask" },
+  { name: "createIssueEmbeddingTask", plan: "starter" },
   async (
     item: GitHubIssueSearchItem,
     githubRepoId: string,

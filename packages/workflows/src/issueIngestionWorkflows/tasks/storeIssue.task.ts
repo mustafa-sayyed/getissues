@@ -8,8 +8,12 @@ import type { GitHubIssueSearchItem } from "../../types/github.types.js";
  * Responsibility: ONE — store the issue in the DB.
  */
 export const storeIssueTask = task(
-  { name: "storeIssueTask" },
-  async (item: GitHubIssueSearchItem, githubRepoId: string, embedding: number[]) => {
+  { name: "storeIssueTask", plan: "starter" },
+  async (
+    item: GitHubIssueSearchItem,
+    githubRepoId: string,
+    embedding: number[],
+  ) => {
     await db.insert(schema.issue).values({
       githubRepoId,
       title: item.title,
@@ -20,5 +24,12 @@ export const storeIssueTask = task(
     });
 
     console.log(`Issue #${item.number} — "${item.title}" stored successfully.`);
-  }
+
+    return {
+      success: true,
+      issueNumber: item.number,
+      issueTitle: item.title,
+      issueUrl: item.html_url,
+    };
+  },
 );

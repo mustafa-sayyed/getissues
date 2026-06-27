@@ -24,7 +24,7 @@ import { getUserSkillsTask } from "./tasks/getUserSkills.tesk.js";
  * Responsibility: orchestration only — delegates all work to focused sub-tasks.
  */
 export const userAgentRunsWorkflow = task(
-  { name: "userAgentRunsWorkflow" },
+  { name: "userAgentRunsWorkflow", plan: "starter" },
   async (userId: string) => {
     let agentRunId: string | undefined;
 
@@ -48,6 +48,12 @@ export const userAgentRunsWorkflow = task(
       await completeAgentRunTask(agentRunId, "success");
 
       console.log(`User recommendation workflow completed for user ${userId}.`);
+
+      return {
+        success: true,
+        message: `User recommendation workflow completed for user ${userId}.`,
+        agentRunId,
+      };
     } catch (error) {
       // Mark the run as failed so the UI can surface the error
       if (agentRunId) {

@@ -11,7 +11,7 @@ import { issue } from "../../types/common.types.js";
  * Responsibility: ONE — LLM scoring of a single issue.
  */
 export const scoreIssueTask = task(
-  { name: "scoreIssueTask" },
+  { name: "scoreIssueTask", plan: "starter" },
   async (issue: issue, userSkillsText: string): Promise<number> => {
     const prompt =
       `Evaluate this GitHub issue as a task for a developer:\n\n` +

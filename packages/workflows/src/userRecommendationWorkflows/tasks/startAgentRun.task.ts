@@ -10,7 +10,7 @@ import { db, schema } from "../../lib/db.js";
  * Responsibility: ONE — create the agent run record.
  */
 export const startAgentRunTask = task(
-  { name: "startAgentRunTask" },
+  { name: "startAgentRunTask", plan: "starter" },
   async (userId: string): Promise<string> => {
     const [agentRun] = await db
       .insert(schema.agentRuns)

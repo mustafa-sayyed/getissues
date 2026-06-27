@@ -10,7 +10,7 @@ import { getVoyageClient } from "../../lib/voyage.js";
  * Responsibility: ONE — embed the preferences text.
  */
 export const embedPreferencesTask = task(
-  { name: "embedPreferencesTask" },
+  { name: "embedPreferencesTask", plan: "starter" },
   async (preferencesText: string): Promise<number[]> => {
     const voyage = getVoyageClient();
 

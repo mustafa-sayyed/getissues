@@ -8,7 +8,7 @@ import { deduplicateIssueTask } from "./deduplicateIssue.task.js";
  * Responsibility: ONE — fetch issues from GitHub and fan out.
  */
 export const ingestIssuesWorkflow = task(
-  { name: "ingestIssuesWorkflow" },
+  { name: "ingestIssuesWorkflow", plan: "starter" },
   async () => {
     console.log("Starting issue ingestion workflow...");
 

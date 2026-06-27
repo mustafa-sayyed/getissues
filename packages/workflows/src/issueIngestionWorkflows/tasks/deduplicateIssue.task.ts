@@ -13,7 +13,7 @@ import { ensureRepoTask } from "./ensureRepo.task.js";
  * Responsibility: ONE — deduplicate issues.
  */
 export const deduplicateIssueTask = task(
-  { name: "deduplicateIssueTask" },
+  { name: "deduplicateIssueTask", plan: "starter" },
   async (item: GitHubIssueSearchItem) => {
     const existingIssue = await db.query.issue.findFirst({
       where: eq(schema.issue.url, item.html_url),

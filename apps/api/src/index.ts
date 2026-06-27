@@ -34,7 +34,7 @@ cron.schedule("*/30 * * * *", async () => {
   console.log("Triggering ingestIssuesWorkflow via cron...");
   try {
     const ingestIssuesWorkflows = await render.workflows.startTask(
-      "getissues/ingestIssuesWorkflow",
+      "getissues-workflows/ingestIssuesWorkflow",
       [],
     );
     console.log("[ingestIssuesWorkflow] task started:", ingestIssuesWorkflows.taskRunId);
@@ -57,7 +57,7 @@ cron.schedule("0 */2 * * *", async () => {
     for(const user of users) {
       try {
         const userAgentWorkflow = await render.workflows.startTask(
-          "getissues/userAgentRunsWorkflow",
+          "getissues-workflows/userAgentRunsWorkflow",
           [user.id],
         );
         console.log(

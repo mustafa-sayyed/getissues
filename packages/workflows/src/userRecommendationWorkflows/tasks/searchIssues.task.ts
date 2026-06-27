@@ -11,7 +11,7 @@ import { issue } from "../../types/common.types.js";
  * Responsibility: ONE — run the pgvector similarity search.
  */
 export const semanticSearchIssuesTask = task(
-  { name: "semanticSearchIssuesTask" },
+  { name: "semanticSearchIssuesTask", plan: "starter" },
   async (userEmbedding: number[]): Promise<issue[]> => {
     const embeddingStr = `[${userEmbedding.join(",")}]`;
 
