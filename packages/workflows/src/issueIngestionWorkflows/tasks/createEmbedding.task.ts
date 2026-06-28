@@ -42,6 +42,11 @@ export const createIssueEmbeddingTask = task(
       }
 
       await storeIssueTask(item, githubRepoId, embedding);
+
+      return {
+        success: true,
+        message: `Embedding created and issue #${item.number} stored successfully.`,  
+      }
     } catch (error) {
       console.log(
         "[Voyage AI]: An error occured while creating embeddings",

@@ -27,5 +27,10 @@ export const deduplicateIssueTask = task(
     }
 
     await ensureRepoTask(item);
+
+    return {
+      success: true,
+      message: `Issue #${item.number} is new and has passed to other tasks for further processing.`,
+    };
   },
 );

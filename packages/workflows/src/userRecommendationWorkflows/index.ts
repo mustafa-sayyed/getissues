@@ -55,7 +55,7 @@ export const userAgentRunsWorkflow = task(
         agentRunId,
       };
     } catch (error) {
-      // Mark the run as failed so the UI can surface the error
+      // Mark the run as failed
       if (agentRunId) {
         await completeAgentRunTask(agentRunId, "failed");
       }

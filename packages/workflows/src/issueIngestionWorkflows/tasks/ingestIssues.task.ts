@@ -28,5 +28,10 @@ export const ingestIssuesWorkflow = task(
     }
 
     console.log("Issue ingestion tasks dispatched.");
+
+    return {
+      success: true,
+      message: `Ingested ${issues.length} issues and dispatched deduplication tasks.`,
+    };
   },
 );

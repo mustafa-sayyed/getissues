@@ -86,5 +86,10 @@ export const ensureRepoTask = task(
     }
 
     await createIssueEmbeddingTask(item, githubRepoId, repoDetails);
+
+    return {
+      success: true,
+      message: `Repo ${githubRepoId} ensured in DB and issue #${item.number} passed to embedding task.`,
+    };
   },
 );
