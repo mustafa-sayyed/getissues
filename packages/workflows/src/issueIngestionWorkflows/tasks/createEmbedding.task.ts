@@ -16,7 +16,15 @@ import { storeIssueTask } from "./storeIssue.task.js";
  * Responsibility: ONE — create the issue embedding via VoyageAI.
  */
 export const createIssueEmbeddingTask = task(
-  { name: "createIssueEmbeddingTask", plan: "starter"},
+  {
+    name: "createIssueEmbeddingTask",
+    plan: "starter",
+    retry: {
+      maxRetries: 3,
+      waitDurationMs: 20000, // higher retry delay to avoid voyage ai ratelimits
+      backoffScaling: 1.5,
+    },
+  },
   async (
     item: GitHubIssueSearchItem,
     githubRepoId: string,
