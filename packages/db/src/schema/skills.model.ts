@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 
 export const skills = pgTable("skills", {
   userId: t
-    .uuid()
+    .uuid("user_id")
     .primaryKey()
     .notNull()
     .references(() => user.id),

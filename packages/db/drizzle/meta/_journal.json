@@ -22,6 +22,13 @@
       "when": 1782581436801,
       "tag": "0002_add agentRun, agentConfig, reocmmendation, skills table",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782652373806,
+      "tag": "0003_reanme userId column in skills table",
+      "breakpoints": true
     }
   ]
 }
