@@ -5,6 +5,7 @@ import type {
   RepoDetails,
 } from "../../types/github.types.js";
 import { storeIssueTask } from "./storeIssue.task.js";
+import { getEmbeddings } from "../../lib/embeddings.js";
 
 /**
  * Task: Generate a vector embedding for a GitHub issue.
@@ -36,11 +37,8 @@ export const createIssueEmbeddingTask = task(
       `${item.title}\n\n${item.body ?? ""} \n\n ${repo.name} ${repo.description} \n ${repo.languages}`.trim();
 
     try {
-      const embedRes = await voyage.embed({
-        input: [textToEmbed],
-        model: "voyage-code-2",
-      });
-      const embedding: number[] = embedRes.data?.[0]?.embedding ?? [];
+      const embedRes = await getEmbeddings(textToEmbed);
+      const embedding: number[] = embedRes.embeddings;
 
       if (embedding.length === 0) {
         console.warn(
