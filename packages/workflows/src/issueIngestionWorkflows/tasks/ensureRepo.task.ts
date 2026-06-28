@@ -85,7 +85,11 @@ export const ensureRepoTask = task(
       console.log(`Repo ${githubRepoId} inserted into repo_analysis.`);
     }
 
-    await createIssueEmbeddingTask(item, githubRepoId, repoDetails);
+    createIssueEmbeddingTask(
+      item,
+      githubRepoId,
+      repoDetails,
+    );
 
     return {
       success: true,

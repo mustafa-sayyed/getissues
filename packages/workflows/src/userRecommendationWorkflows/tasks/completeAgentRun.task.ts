@@ -13,7 +13,7 @@ export type AgentRunStatus = "success" | "failed";
  */
 export const completeAgentRunTask = task(
   { name: "completeAgentRunTask", plan: "starter" },
-  async (agentRunId: string, status: AgentRunStatus = "success"): Promise<void> => {
+  async (agentRunId: string, status: AgentRunStatus = "success") => {
     await db
       .update(schema.agentRuns)
       .set({ status, endedAt: new Date() })

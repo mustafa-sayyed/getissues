@@ -23,10 +23,16 @@ export const deduplicateIssueTask = task(
       console.log(
         `Issue #${item.number} (${item.html_url}) already exists — skipping.`,
       );
-      return;
+      return {
+        success: true,
+        skipped: true,
+        reason: "duplicate_issue",
+        issueNumber: item.number,
+        issueUrl: item.html_url,
+      };
     }
 
-    await ensureRepoTask(item);
+    ensureRepoTask(item);
 
     return {
       success: true,

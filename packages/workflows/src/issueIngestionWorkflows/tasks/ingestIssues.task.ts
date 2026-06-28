@@ -24,7 +24,7 @@ export const ingestIssuesWorkflow = task(
     );
 
     for (const item of issues) {
-      await deduplicateIssueTask(item);
+      deduplicateIssueTask(item);
     }
 
     console.log("Issue ingestion tasks dispatched.");

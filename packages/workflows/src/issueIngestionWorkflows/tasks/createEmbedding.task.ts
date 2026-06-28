@@ -16,7 +16,7 @@ import { storeIssueTask } from "./storeIssue.task.js";
  * Responsibility: ONE — create the issue embedding via VoyageAI.
  */
 export const createIssueEmbeddingTask = task(
-  { name: "createIssueEmbeddingTask", plan: "starter" },
+  { name: "createIssueEmbeddingTask", plan: "starter"},
   async (
     item: GitHubIssueSearchItem,
     githubRepoId: string,
@@ -38,15 +38,20 @@ export const createIssueEmbeddingTask = task(
         console.warn(
           `VoyageAI returned an empty embedding for issue #${item.number}. Skipping store.`,
         );
-        return;
+        return {
+          success: true,
+          skipped: true,
+          reason: "empty_embedding",
+          issueNumber: item.number,
+        };
       }
 
-      await storeIssueTask(item, githubRepoId, embedding);
+      storeIssueTask(item, githubRepoId, embedding);
 
       return {
         success: true,
-        message: `Embedding created and issue #${item.number} stored successfully.`,  
-      }
+        message: `Embedding created and issue #${item.number} stored successfully.`,
+      };
     } catch (error) {
       console.log(
         "[Voyage AI]: An error occured while creating embeddings",

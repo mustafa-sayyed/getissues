@@ -20,12 +20,18 @@ export const storeRecommendationTask = task(
     agentRunId: string,
     issue: issue,
     matchScore: number,
-  ): Promise<void> => {
+  ) => {
     if (matchScore < SCORE_THRESHOLD) {
       console.log(
         `Issue "${issue.title}" scored ${matchScore} — below threshold, skipping.`,
       );
-      return;
+      return {
+        success: true,
+        skipped: true,
+        reason: "below_score_threshold",
+        issueTitle: issue.title,
+        matchScore,
+      };
     }
 
     await db.insert(schema.recommendations).values({
