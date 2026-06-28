@@ -30,7 +30,7 @@ app.get("/health", (_request, response) => {
 
 // Setup Cron Jobs
 // Workflow 1: Issues Ingestion (runs every 30 mins)
-cron.schedule("*/30 * * * *", async () => {
+cron.schedule("* */2 * * *", async () => {
   console.log("Triggering ingestIssuesWorkflow via cron...");
   try {
     const ingestIssuesWorkflows = await render.workflows.startTask(
@@ -50,7 +50,7 @@ cron.schedule("*/30 * * * *", async () => {
 
 // Workflow 2: User Specific Agent Runs
 // To keep it simple, we run it every 2 hours and check limits inside or assume a base interval
-cron.schedule("0 */2 * * *", async () => {
+cron.schedule("0 */4 * * *", async () => {
   console.log("Triggering userAgentRunsWorkflow via cron...");
   try {
     const users = await db.select().from(schema.user);
