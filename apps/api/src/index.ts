@@ -30,7 +30,7 @@ app.get("/health", (_request, response) => {
 
 // Setup Cron Jobs
 // Workflow 1: Issues Ingestion (runs every 30 mins)
-cron.schedule("* */2 * * *", async () => {
+cron.schedule("0 */2 * * *", async () => {
   console.log("Triggering ingestIssuesWorkflow via cron...");
   try {
     const ingestIssuesWorkflows = await render.workflows.startTask(
