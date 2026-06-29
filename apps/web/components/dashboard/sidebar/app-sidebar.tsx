@@ -8,6 +8,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -24,6 +25,7 @@ import type { Route } from "./nav-main";
 import DashboardNavigation from "./nav-main";
 import { NotificationsPopover } from "./nav-notifications";
 import Icon from "./Icon";
+import { authClient } from "@/lib/auth-client";
 
 const sampleNotifications = [
   {
@@ -79,6 +81,7 @@ const dashboardRoutes: Route[] = [
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { data: session } = authClient.useSession();
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -125,16 +128,19 @@ export function DashboardSidebar() {
             isCollapsed && "justify-center"
           )}
         >
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary font-semibold text-sm">
-            U
-          </div>
+          <Avatar className="size-8 shrink-0">
+            <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "User"} />
+            <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
+              {session?.user?.name?.[0]}
+            </AvatarFallback>
+          </Avatar>
           {!isCollapsed && (
             <div className="flex flex-col min-w-0">
               <span className="truncate text-sm font-medium text-foreground">
-                User Name
+                {session?.user?.name}
               </span>
               <span className="truncate text-xs text-muted-foreground">
-                user@example.com
+                {session?.user?.email}
               </span>
             </div>
           )}
