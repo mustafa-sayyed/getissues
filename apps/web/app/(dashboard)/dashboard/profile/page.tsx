@@ -61,6 +61,9 @@ export default async function ProfilePage() {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`);
       githubData = res.data;
     }
+    console.log("user session: ", session);
+    console.log("user GIthub Data: ", githubData);
+    
   } catch (err) {
     console.log(err);
     error =

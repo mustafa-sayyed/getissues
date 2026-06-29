@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.{js,ts,json}\""
   },
   "dependencies": {
+    "@google/genai": "^2.10.0",
     "@packages/db": "workspace:*",
     "@packages/workflows": "workspace:*",
     "@renderinc/sdk": "^0.6.0",
@@ -22,7 +23,9 @@
     "express": "^5.1.0",
     "node-cron": "^4.4.1",
     "octokit": "^5.0.5",
-    "pg": "^8.21.0"
+    "pg": "^8.21.0",
+    "voyageai": "^0.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

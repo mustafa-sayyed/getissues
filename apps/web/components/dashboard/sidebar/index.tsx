@@ -1,6 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "./app-sidebar";
 import { DashboardNavbar } from "@/components/dashboard/navbar";
+import { OnboardingDialog } from "@/components/dashboard/OnboardingDialog";
 
 export default function DashboardShell({
   children,
@@ -13,7 +14,10 @@ export default function DashboardShell({
         <DashboardSidebar />
         <SidebarInset className="flex flex-1 flex-col min-w-0">
           <DashboardNavbar />
-          <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-4 md:p-6">
+            {children}
+            <OnboardingDialog />
+          </main>
         </SidebarInset>
       </div>
     </SidebarProvider>
