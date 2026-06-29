@@ -1,10 +1,15 @@
-import { eq, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { schema } from "@packages/db";
+import postgres from "postgres";
 
-export { eq, schema, sql };
+const client = postgres(process.env.DATABASE_URL!, {
+  connect_timeout: 5,
+  idle_timeout: 60,
+  max: 10,
+});
 
-export const db = drizzle(process.env.DATABASE_URL!, {
-  casing: "snake_case",
+export const db = drizzle({
+  client,
   schema,
+  casing: "snake_case",
 });
