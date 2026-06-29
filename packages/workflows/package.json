@@ -21,6 +21,7 @@
   "dependencies": {
     "@google/genai": "^2.10.0",
     "@mastra/core": "^1.46.0",
+    "@neondatabase/serverless": "^1.1.0",
     "@packages/db": "workspace:*",
     "@renderinc/sdk": "^0.6.0",
     "drizzle-orm": "^0.45.2",
