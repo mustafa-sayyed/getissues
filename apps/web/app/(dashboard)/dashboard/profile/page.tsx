@@ -52,22 +52,27 @@ export default async function ProfilePage() {
   try {
     const { data: session } = await authClient.getSession({
       fetchOptions: {
-        headers: await headers()
-      }
+        headers: await headers(),
+      },
     });
     if (session && session.user) {
       user = session.user;
 
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`);
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`,
+        {
+          headers: {
+            cookie: (await headers()).get("cookie")
+          }
+        }
+      );
       githubData = res.data;
     }
     console.log("user session: ", session);
     console.log("user GIthub Data: ", githubData);
-    
   } catch (err) {
     console.log(err);
-    error =
-      err instanceof Error ? err.message : "Failed to fetch user data.";
+    error = err instanceof Error ? err.message : "Failed to fetch user data.";
   }
 
   if (error) {
@@ -216,10 +221,10 @@ export default async function ProfilePage() {
                   <span className="text-[10px] text-muted-foreground">
                     {issue.created_at
                       ? new Date(issue.created_at).toLocaleDateString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                       : "N/A"}
                   </span>
                 </div>
