@@ -11,10 +11,14 @@ import { Render } from "@renderinc/sdk";
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
 const render = new Render();
+const corsOrigins =
+  process.env.CORS_ORIGIN?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? [];
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: corsOrigins,
     credentials: true,
   }),
 );

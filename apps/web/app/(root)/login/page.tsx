@@ -7,13 +7,10 @@ import { Suspense, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
 import LoginHeader from "./LoginHeader";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-  const router = useRouter();
 
   const handleSignInWithGithub = async () => {
     if (isSigningIn) return;
@@ -22,6 +19,8 @@ export default function LoginPage() {
     setSignInError(null);
 
     try {
+      const baseUrl = window.location.origin;
+
       await authClient.signIn.social({
         provider: "github",
         callbackURL: `${baseUrl}/login?success=true`,

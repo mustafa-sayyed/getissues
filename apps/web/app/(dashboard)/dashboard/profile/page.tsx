@@ -14,8 +14,8 @@ import { GithubUserData, IssueOrPullRequestResponse } from "@/types";
 import Link from "next/link";
 import { SlUserFollow, SlUserFollowing } from "react-icons/sl";
 import { GoRepo } from "react-icons/go";
-import axios from "axios";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   merged: {
@@ -48,28 +48,39 @@ export default async function ProfilePage() {
   let user: User | null = null;
   let githubData: GithubUserData | null = null;
   let error;
+  
+  const requestHeaders = await headers();
+  const cookie = requestHeaders.get("cookie") ?? "";
+  const { data: session } = await authClient.getSession({
+    fetchOptions: {
+      headers: requestHeaders,
+    },
+  });
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  user = session.user;
 
   try {
-    const { data: session } = await authClient.getSession({
-      fetchOptions: {
-        headers: await headers(),
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/users/github/${session.user.id}`,
+      {
+        headers: {
+          cookie,
+        },
+        cache: "no-store",
       },
-    });
-    if (session && session.user) {
-      user = session.user;
+    );
 
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/github/${session?.user.id}`,
-        {
-          headers: {
-            cookie: (await headers()).get("cookie")
-          }
-        }
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch GitHub profile data (${res.status} ${res.statusText})`,
       );
-      githubData = res.data;
     }
-    console.log("user session: ", session);
-    console.log("user GIthub Data: ", githubData);
+
+    githubData = await res.json();
   } catch (err) {
     console.log(err);
     error = err instanceof Error ? err.message : "Failed to fetch user data.";
