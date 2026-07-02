@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, schema } from "../lib/db.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
@@ -80,4 +80,40 @@ const getRecommendations = asyncHandler(async (req, res) => {
   });
 });
 
-export { getRecommendations };
+const getRecommendationStats = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res
+      .status(httpStatusCodes.UNAUTHORIZED)
+      .json({ error: "Unauthorized" });
+  }
+
+  const [stats] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+      newCount: sql<number>`count(*) filter (where ${schema.recommendations.status} = 'notviewed')::int`,
+      bookmarkedCount: sql<number>`count(*) filter (where ${schema.recommendations.status} = 'bookmarked')::int`,
+      averageMatchScore: sql<number>`avg(${schema.recommendations.matchScore})::real`,
+    })
+    .from(schema.recommendations)
+    .where(
+      and(
+        eq(schema.recommendations.userId, req.user.id),
+        inArray(schema.recommendations.status, [
+          "notviewed",
+          "viewed",
+          "bookmarked",
+        ]),
+      ),
+    );
+
+  return res.status(httpStatusCodes.OK).json({
+    stats: {
+      total: stats?.total ?? 0,
+      newCount: stats?.newCount ?? 0,
+      bookmarkedCount: stats?.bookmarkedCount ?? 0,
+      averageMatchScore: stats?.averageMatchScore ?? null,
+    },
+  });
+});
+
+export { getRecommendations, getRecommendationStats };

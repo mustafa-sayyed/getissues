@@ -6,6 +6,8 @@ import cors from "cors";
 import userRouter from "./routes/user.route.js";
 import issueRouter from "./routes/issue.route.js";
 import recommendationRouter from "./routes/recommendation.route.js";
+import agentRunRouter from "./routes/agentRun.route.js";
+import agentConfigRouter from "./routes/agentConfig.route.js";
 import cron from "node-cron";
 import { db, schema } from "./lib/db.js";
 import { Render } from "@renderinc/sdk";
@@ -31,6 +33,8 @@ app.use(express.json());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/issues", issueRouter);
 app.use("/api/v1/recommendations", recommendationRouter);
+app.use("/api/v1/agent-runs", agentRunRouter);
+app.use("/api/v1/agent-config", agentConfigRouter);
 
 app.get("/health", (_request, response) => {
   response.json({ status: "ok" });
