@@ -59,8 +59,8 @@ const dashboardRoutes: Route[] = [
     link: "/dashboard",
   },
   {
-    id: "issues",
-    title: "Issues",
+    id: "DiscoverIssues",
+    title: "Discover Issues",
     icon: <CircleDot className="size-4" />,
     link: "/dashboard/issues",
   },
