@@ -10,27 +10,32 @@ import LoginHeader from "./LoginHeader";
 
 export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const [signInError, setSignInError] = useState<string | null>(null);
+  const [isSignInError, setIsSignInError] = useState<boolean>(false);
 
   const handleSignInWithGithub = async () => {
     if (isSigningIn) return;
 
     setIsSigningIn(true);
-    setSignInError(null);
+    setIsSignInError(false);
 
     try {
       const baseUrl = window.location.origin;
 
-      await authClient.signIn.social({
+      const res = await authClient.signIn.social({
         provider: "github",
         callbackURL: `${baseUrl}/login?success=true`,
         errorCallbackURL: `${baseUrl}/login`,
         newUserCallbackURL: `${baseUrl}/dashboard?newUser=true`,
       });
-    } catch (error) {
-      setSignInError("We could not start GitHub sign-in. Please try again.");
-      console.log("Sign in errro: ", error);
 
+      if (res.error) {
+        setIsSigningIn(false);
+        setIsSignInError(true);
+      }
+    } catch (error) {
+      console.log("Sign in errro: ", error);
+      setIsSignInError(true);
+    } finally {
       setIsSigningIn(false);
     }
   };
@@ -53,7 +58,13 @@ export default function LoginPage() {
                   </h2>
                 }
               >
-                <LoginHeader />
+                {isSignInError ? (
+                  <h2 className="text-2xl font-semibold text-destructive">
+                    Error while signing in with GitHub. Please try again.
+                  </h2>
+                ) : (
+                  <LoginHeader />
+                )}
               </Suspense>
               <p className="text-sm text-foreground/60">
                 Sign in with your GitHub account to let our AI agents find the
@@ -78,14 +89,6 @@ export default function LoginPage() {
                   ? "Signing in with GitHub..."
                   : "Sign in with GitHub"}
               </Button>
-              <p className="mt-3 text-center text-xs text-foreground/50">
-                You will be redirected to GitHub to approve access.
-              </p>
-              {signInError ? (
-                <p className="mt-3 text-center text-sm text-destructive">
-                  {signInError}
-                </p>
-              ) : null}
             </div>
             <p className="mt-6 text-sm text-foreground/50">
               By continuing you agree to our{" "}

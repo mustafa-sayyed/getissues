@@ -6,9 +6,12 @@ import { FiMenu, FiX } from "react-icons/fi";
 
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
+import { authClient } from "@/lib/auth-client";
+import { Skeleton } from "./ui/skeleton";
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data, isPending } = authClient.useSession();
 
   return (
     <header className="border-b border-border/60 bg-background/90 backdrop-blur">
@@ -27,9 +30,21 @@ function Header() {
           <Link href="/#waitlist" className="transition hover:text-primary">
             Early Access
           </Link>
-          <Button className="text-white dark:text-black">
-            <Link href={"/login"}>Login</Link>
-          </Button>
+          {isPending ? (
+            <Skeleton className="rounded-none w-25 h-9" />
+          ) : data ? (
+            <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
+              <Button className="text-white dark:text-black p-4 rounded-none">
+                Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link href={"/login"} onClick={() => setIsOpen(false)}>
+              <Button className="text-white dark:text-black-4 p-4 rounded-none">
+                Login
+              </Button>
+            </Link>
+          )}
         </nav>
 
         <Button
@@ -67,9 +82,21 @@ function Header() {
             >
               Early Access
             </Link>
-            <Link href={"/login"} className="w-full">
-              <Button className="text-white w-full">Login</Button>
-            </Link>
+            {isPending ? (
+              <Skeleton className="rounded-none w-full h-9" />
+            ) : data ? (
+              <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
+                <Button className="text-white dark:text-black p-4 rounded-none">
+                  Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link href={"/login"} onClick={() => setIsOpen(false)}>
+                <Button className="text-white dark:text-black-4 p-4 rounded-none">
+                  Login
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
