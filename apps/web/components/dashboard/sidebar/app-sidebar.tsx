@@ -65,6 +65,12 @@ const dashboardRoutes: Route[] = [
     link: "/dashboard/issues",
   },
   {
+    id: "recommendations",
+    title: "AI Recommendations",
+    icon: <Bot className="size-4" />,
+    link: "/dashboard/recommendations",
+  },
+  {
     id: "profile",
     title: "Profile",
     icon: <User className="size-4" />,
@@ -90,7 +96,7 @@ export function DashboardSidebar() {
           "flex md:pt-3.5",
           isCollapsed
             ? "flex-row items-center justify-between gap-y-4 md:flex-col md:items-start md:justify-start"
-            : "flex-row items-center justify-between"
+            : "flex-row items-center justify-between",
         )}
       >
         <a href="/dashboard" className="flex items-center gap-2 ml-0.5">
@@ -106,7 +112,7 @@ export function DashboardSidebar() {
           key={isCollapsed ? "header-collapsed" : "header-expanded"}
           className={cn(
             "flex items-center gap-2",
-            isCollapsed ? "flex-row md:flex-col-reverse" : "flex-row"
+            isCollapsed ? "flex-row md:flex-col-reverse" : "flex-row",
           )}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -125,11 +131,14 @@ export function DashboardSidebar() {
         <div
           className={cn(
             "flex items-center gap-3 rounded-lg p-2 bg-sidebar-accent/50",
-            isCollapsed && "justify-center"
+            isCollapsed && "justify-center",
           )}
         >
           <Avatar className="size-8 shrink-0">
-            <AvatarImage src={session?.user?.image ?? ""} alt={session?.user?.name ?? "User"} />
+            <AvatarImage
+              src={session?.user?.image ?? ""}
+              alt={session?.user?.name ?? "User"}
+            />
             <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
               {session?.user?.name?.[0]}
             </AvatarFallback>
