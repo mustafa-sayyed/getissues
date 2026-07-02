@@ -10,6 +10,7 @@ const parseOrigins = (value?: string) =>
 
 const authBaseURL = process.env.BETTER_AUTH_URL;
 const trustedOrigins = parseOrigins(process.env.CORS_ORIGIN);
+const cookieDomain = process.env.BETTER_AUTH_COOKIE_DOMAIN;
 
 export const auth = betterAuth({
   baseURL: authBaseURL,
@@ -28,14 +29,13 @@ export const auth = betterAuth({
     },
     cookiePrefix: "getissues",
     crossSubDomainCookies: {
-      enabled: true,
-      domain: "getissues.tech",
+      enabled: Boolean(cookieDomain),
+      domain: cookieDomain,
     },
     defaultCookieAttributes: {
-      sameSite: "none",
+      sameSite: "None",
       secure: true,
-      domain: "getissues.tech",
-      httpOnly: true
+      domain: cookieDomain,
     }
   },
   usePlural: true,
