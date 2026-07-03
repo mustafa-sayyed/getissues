@@ -27,7 +27,8 @@
     "drizzle-orm": "^0.45.2",
     "octokit": "^5.0.5",
     "pg": "^8.21.0",
-    "voyageai": "^0.4.0"
+    "voyageai": "^0.4.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@octokit/types": "^16.0.0",
