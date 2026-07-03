@@ -21,14 +21,12 @@ export const ingestIssuesWorkflow = task(
       });
 
       issues = searchRes.data.items;
-      
+
       console.log(
         `Found ${issues.length} issues for ${searchQuery.query}. Dispatching deduplication tasks...`,
       );
 
-      for (const item of issues) {
-        deduplicateIssueTask(item);
-      }
+      deduplicateIssueTask(issues);
     }
 
     console.log("Issue ingestion tasks dispatched.");
