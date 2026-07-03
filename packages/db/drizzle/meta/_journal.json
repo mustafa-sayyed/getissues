@@ -29,6 +29,13 @@
       "when": 1782652373806,
       "tag": "0003_reanme userId column in skills table",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783079921461,
+      "tag": "0004_add agent issue eval table",
+      "breakpoints": true
     }
   ]
 }

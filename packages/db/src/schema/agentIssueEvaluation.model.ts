@@ -22,8 +22,7 @@ export const agentIssueEvaluation = pgTable("agent_issue_evaluation", {
   matchScore: t.integer("match_score").notNull(),
   createdAt: t
     .timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+    .defaultNow(),
   updatedAt: t
     .timestamp("updated_at", { withTimezone: true })
     .defaultNow()
