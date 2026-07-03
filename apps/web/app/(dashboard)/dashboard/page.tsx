@@ -337,7 +337,7 @@ export default function DashboardHomePage() {
                   </p>
                 </div>
                 <div
-                  className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${stat.bg} group-hover:scale-105 transition-transform`}
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${stat.bg} group-hover:scale-105 transition-transform -mt-6 md:-mt-1`}
                 >
                   <stat.icon className={`size-4 ${stat.color}`} />
                 </div>

@@ -13,43 +13,16 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
   Bot,
-  Flame,
   Home,
   Settings,
   CircleDot,
   User,
-  Sprout,
 } from "lucide-react";
 
 import type { Route } from "./nav-main";
 import DashboardNavigation from "./nav-main";
-import { NotificationsPopover } from "./nav-notifications";
 import Icon from "./Icon";
 import { authClient } from "@/lib/auth-client";
-
-const sampleNotifications = [
-  {
-    id: "1",
-    avatar: "/avatars/01.png",
-    fallback: "OM",
-    text: "New issue matched your profile.",
-    time: "10m ago",
-  },
-  {
-    id: "2",
-    avatar: "/avatars/02.png",
-    fallback: "AI",
-    text: "AI Agent found 3 new issues.",
-    time: "1h ago",
-  },
-  {
-    id: "3",
-    avatar: "/avatars/03.png",
-    fallback: "GS",
-    text: "Girlscript SoC application open.",
-    time: "2h ago",
-  },
-];
 
 const dashboardRoutes: Route[] = [
   {
@@ -118,7 +91,6 @@ export function DashboardSidebar() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <NotificationsPopover notifications={sampleNotifications} />
           <SidebarTrigger className="cursor-pointer" />
         </motion.div>
       </SidebarHeader>
