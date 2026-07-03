@@ -2,7 +2,18 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db, schema } from "../lib/db.js";
 
+const parseOrigins = (value?: string) =>
+  value
+    ?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) ?? [];
+
+const authBaseURL = process.env.BETTER_AUTH_URL;
+const trustedOrigins = parseOrigins(process.env.CORS_ORIGIN);
+const cookieDomain = process.env.BETTER_AUTH_COOKIE_DOMAIN;
+
 export const auth = betterAuth({
+  baseURL: authBaseURL,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -17,6 +28,15 @@ export const auth = betterAuth({
       generateId: false,
     },
     cookiePrefix: "getissues",
+    crossSubDomainCookies: {
+      enabled: Boolean(cookieDomain),
+      domain: cookieDomain,
+    },
+    defaultCookieAttributes: {
+      sameSite: "None",
+      secure: true,
+      domain: cookieDomain,
+    }
   },
   usePlural: true,
   user: {
@@ -33,5 +53,5 @@ export const auth = betterAuth({
       }),
     },
   },
-  trustedOrigins: [process.env.CORS_ORIGIN as string],
+  trustedOrigins,
 });

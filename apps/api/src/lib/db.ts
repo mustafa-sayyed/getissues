@@ -4,9 +4,9 @@ import postgres from "postgres";
 import { eq, sql } from "drizzle-orm";
 
 const client = postgres(process.env.DATABASE_URL!, {
-  connect_timeout: 5,
+  connect_timeout: 10,
   idle_timeout: 60,
-  max: 10,
+  max: 20,
 });
 
 export const db = drizzle({

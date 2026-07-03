@@ -79,15 +79,6 @@ export function DashboardNavbar() {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Search */}
-      <div className="relative hidden md:flex items-center">
-        <Search className="absolute left-2.5 size-3.5 text-muted-foreground" />
-        <Input
-          placeholder="Search issues..."
-          className="pl-8 h-8 w-52 text-sm bg-muted/50 border-border/60 focus-visible:ring-primary/40"
-        />
-      </div>
-
       {/* Theme toggle */}
       <ThemeSwitcher />
 
@@ -161,7 +152,7 @@ export function DashboardNavbar() {
           </DialogHeader>
           <DialogFooter className="flex gap-2 mt-4">
             <Button
-              variant="outline"
+              variant="destructive"
               className="cursor-pointer"
               onClick={() => setShowLogoutDialog(false)}
               disabled={isLoggingOut}

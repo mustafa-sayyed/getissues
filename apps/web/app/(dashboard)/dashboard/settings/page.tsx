@@ -10,54 +10,31 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import {
-  Settings,
-  Bell,
-  Shield,
-  Palette,
-  Bot,
-  Trash2,
-  Save,
-  Check,
-} from "lucide-react";
+import { Settings, Shield, Palette, Trash2, Save, Check } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { FaGithub } from "react-icons/fa6";
-import { Switch } from "@/components/ui/switch";
 import { SiNotion } from "react-icons/si";
+import { NotebookPen } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useTheme } from "next-themes";
+import { GrConnect } from "react-icons/gr";
 
 const sections = [
-  { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "ai", label: "AI Preferences", icon: Bot },
+  // sections to be added in future
+  // { id: "notifications", label: "Notifications", icon: Bell },
+  // { id: "ai", label: "AI Preferences", icon: Bot },
+  { id: "skills", label: "Skills", icon: NotebookPen },
   { id: "appearance", label: "Appearance", icon: Palette },
-  { id: "integrations", label: "Integrations", icon: FaGithub },
+  { id: "integrations", label: "Integrations", icon: GrConnect },
   { id: "security", label: "Security", icon: Shield },
 ];
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState("notifications");
+  const [activeSection, setActiveSection] = useState("skills");
   const [saved, setSaved] = useState(false);
 
-  const [notifications, setNotifications] = useState({
-    newIssues: false,
-    aiMatches: true,
-    hacktoberfest: false,
-    gssoc: true,
-    weeklyDigest: true,
-    email: false,
-  });
-
-  const [aiPrefs, setAiPrefs] = useState({
-    autoMatch: true,
-    suggestBeginner: true,
-    hacktoberFilter: false,
-    smartSummary: true,
-  });
-
-  const [appearance, setAppearance] = useState<"light" | "dark" | "system">(
-    "system",
-  );
+  const { setTheme, theme: currentTheme } = useTheme();
 
   const handleSave = () => {
     setSaved(true);
@@ -76,7 +53,7 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 flex-col sm:flex-row">
         {/* Sidebar Nav */}
         <nav className="hidden sm:flex flex-col gap-1 w-44 shrink-0">
           {sections.map((s) => (
@@ -97,13 +74,13 @@ export default function SettingsPage() {
         </nav>
 
         {/* Mobile nav */}
-        <div className="sm:hidden flex gap-2 overflow-x-auto pb-1 w-full">
+        <div className="sm:hidden flex gap-2 flex-wrap pb-1 w-full">
           {sections.map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
               className={cn(
-                "flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                "flex items-center gap-1.5 shrink-0 rounded-full px-3 py-2 text-xs font-medium transition-colors cursor-pointer",
                 activeSection === s.id
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground bg-muted/60 hover:text-foreground",
@@ -117,148 +94,45 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 space-y-4">
-          {/* Notifications */}
-          {activeSection === "notifications" && (
+          {/* Skills */}
+          {activeSection === "skills" && (
             <Card className="border-border/60">
               <CardHeader>
-                <CardTitle className="text-base">Notifications</CardTitle>
+                <CardTitle className="text-base">Skills</CardTitle>
                 <CardDescription>
-                  Choose what you want to be notified about
+                  Add your skills, languages you work on and what issues you
+                  want to work on
+                  <br />
+                  It will help AI Agent to improve resomendations
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    key: "newIssues" as const,
-                    label: "New Matched Issues",
-                    desc: "When AI finds new issues for you",
-                  },
-                  {
-                    key: "aiMatches" as const,
-                    label: "AI Agent Matches",
-                    desc: "When the agent runs a new scan",
-                  },
-                  {
-                    key: "hacktoberfest" as const,
-                    label: "Hacktoberfest Alerts",
-                    desc: "New hacktoberfest eligible issues",
-                  },
-                  {
-                    key: "gssoc" as const,
-                    label: "GSSoC Updates",
-                    desc: "Girlscript SoC issue notifications",
-                  },
-                  {
-                    key: "weeklyDigest" as const,
-                    label: "Weekly Digest",
-                    desc: "Summary of top issues every Monday",
-                  },
-                  {
-                    key: "email" as const,
-                    label: "Email Notifications",
-                    desc: "Receive updates via email",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center justify-between py-1"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.desc}
-                      </p>
-                    </div>
-                    <Switch
-                      className="cursor-pointer"
-                      checked={notifications[item.key]}
-                      onClick={() =>
-                        setNotifications((prev) => ({
-                          ...prev,
-                          [item.key]: !prev[item.key],
-                        }))
-                      }
-                    />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* AI Preferences */}
-          {activeSection === "ai" && (
-            <Card className="border-border/60">
-              <CardHeader>
-                <CardTitle className="text-base">AI Preferences</CardTitle>
-                <CardDescription>
-                  Customize how the AI Agent works for you
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    key: "autoMatch" as const,
-                    label: "Auto-matching",
-                    desc: "Automatically scan for new issues daily",
-                  },
-                  {
-                    key: "suggestBeginner" as const,
-                    label: "Beginner Filter",
-                    desc: "Prioritize good first issue labels",
-                  },
-                  {
-                    key: "hacktoberFilter" as const,
-                    label: "Hacktoberfest Only",
-                    desc: "Show only hacktoberfest eligible issues",
-                  },
-                  {
-                    key: "smartSummary" as const,
-                    label: "Smart Summaries",
-                    desc: "AI generates issue summaries for you",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.key}
-                    className="flex items-center justify-between py-1"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.desc}
-                      </p>
-                    </div>
-                    <Switch
-                      className="cursor-pointer"
-                      checked={aiPrefs[item.key]}
-                      onClick={() =>
-                        setAiPrefs((prev) => ({
-                          ...prev,
-                          [item.key]: !prev[item.key],
-                        }))
-                      }
-                    />
-                  </div>
-                ))}
-
-                <Separator />
-
-                <div className="space-y-1.5">
+              <CardContent className="flex flex-col space-y-4">
+                <div className="flex flex-col space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">
-                    Preferred Languages
+                    Your Skills
                   </label>
                   <Input
-                    defaultValue="TypeScript, JavaScript, Python"
+                    defaultValue="TypeScript, React, Node.js"
                     className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
                     placeholder="e.g. TypeScript, Rust, Go"
                   />
                 </div>
+                <div className="flex flex-col space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Tell about what issues you want to work on
+                  </label>
+                  <Textarea
+                    className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md"
+                    placeholder="e.g. I want to work on open source issues related to web development, especially in JavaScript and TypeScript. I am also interested in contributing to projects that focus on accessibility and performance optimization."
+                  />
+                </div>
 
                 <div className="flex justify-end">
-                  <Button size="sm" onClick={handleSave} className="gap-1.5">
+                  <Button
+                    size="lg"
+                    onClick={handleSave}
+                    className="flex items-center px-4 gap-1.5"
+                  >
                     {saved ? (
                       <>
                         <Check className="size-3.5" />
@@ -288,10 +162,10 @@ export default function SettingsPage() {
                   {(["light", "dark", "system"] as const).map((theme) => (
                     <button
                       key={theme}
-                      onClick={() => setAppearance(theme)}
+                      onClick={() => setTheme(theme)}
                       className={cn(
                         "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                        appearance === theme
+                        currentTheme === theme
                           ? "border-primary bg-primary/5"
                           : "border-border/60 hover:border-primary/40",
                       )}
@@ -309,7 +183,7 @@ export default function SettingsPage() {
                       <span className="text-xs font-medium capitalize">
                         {theme}
                       </span>
-                      {appearance === theme && (
+                      {currentTheme === theme && (
                         <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] px-1.5 py-0">
                           Active
                         </Badge>
@@ -335,7 +209,7 @@ export default function SettingsPage() {
                   {
                     name: "GitHub",
                     icon: FaGithub,
-                    desc: "Import your repos, stars, and PR history",
+                    desc: "Use to personalize issue recommendations",
                     connected: true,
                   },
                   {
@@ -347,7 +221,7 @@ export default function SettingsPage() {
                 ].map((item) => (
                   <div
                     key={item.name}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-border/60 hover:border-primary/30 transition-colors"
+                    className={`flex items-center gap-3 p-3 rounded-xl border border-border/60 hover:border-primary/30 transition-colors ${item.name === "Notion" ? "opacity-50" : ""}`}
                   >
                     <div className="flex size-9 items-center justify-center rounded-lg bg-muted">
                       <item.icon className="size-4" />
@@ -369,7 +243,7 @@ export default function SettingsPage() {
                         variant="outline"
                         className="h-7 text-xs"
                       >
-                        Connect
+                        Coming Soon...
                       </Button>
                     )}
                   </div>

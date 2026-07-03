@@ -6,3 +6,9 @@ export type LLMModel = {
   id: `${string}/${string}`;
   apiKey: string;
 };
+
+export type IssueEvaluation = {
+  issueId: string;
+  score: number;
+  reason: string;
+};

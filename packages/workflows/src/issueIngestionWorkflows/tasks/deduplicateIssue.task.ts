@@ -2,6 +2,7 @@ import { task } from "@renderinc/sdk/workflows";
 import { db, eq, schema } from "../../lib/db.js";
 import type { GitHubIssueSearchItem } from "../../types/github.types.js";
 import { ensureRepoTask } from "./ensureRepo.task.js";
+import { inArray } from "drizzle-orm";
 
 /**
  * Task: Deduplication Check
@@ -14,29 +15,34 @@ import { ensureRepoTask } from "./ensureRepo.task.js";
  */
 export const deduplicateIssueTask = task(
   { name: "deduplicateIssueTask", plan: "starter" },
-  async (item: GitHubIssueSearchItem) => {
-    const existingIssue = await db.query.issue.findFirst({
-      where: eq(schema.issue.url, item.html_url),
+  async (issues: GitHubIssueSearchItem[]) => {
+    const issuesUrl = issues.map((item) => item.html_url);
+
+    const existingIssue = await db.query.issue.findMany({
+      where: inArray(schema.issue.url, issuesUrl),
     });
 
+    const uniqueIssue = issues.filter((issue) =>
+      existingIssue.find((existing) => existing.url === issue.html_url),
+    );
+
     if (existingIssue) {
-      console.log(
-        `Issue #${item.number} (${item.html_url}) already exists — skipping.`,
-      );
+      console.log(`Issue #${existingIssue.length} already exists — skipping.`);
       return {
         success: true,
         skipped: true,
         reason: "duplicate_issue",
-        issueNumber: item.number,
-        issueUrl: item.html_url,
+        existingIssues: existingIssue.length,
       };
     }
 
-    ensureRepoTask(item);
+    for (const item of uniqueIssue) {
+      await ensureRepoTask(item);
+    }
 
     return {
       success: true,
-      message: `Issue #${item.number} is new and has passed to other tasks for further processing.`,
+      message: `Issue #${uniqueIssue.length} is new and has passed to other tasks for further processing.`,
     };
   },
 );

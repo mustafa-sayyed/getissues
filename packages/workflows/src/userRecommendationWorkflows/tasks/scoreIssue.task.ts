@@ -1,32 +1,74 @@
 import { task } from "@renderinc/sdk/workflows";
+import z from "zod";
+import { issue, IssueEvaluation } from "../../types/common.types.js";
 import { scoringAgent } from "../../lib/agent.js";
-import { issue } from "../../types/common.types.js";
 
-/**
- * Task: Score a single GitHub issue against a user's skills using the LLM.
- *
- * Calls the Mastra scoring agent with the issue details and user skills text,
- * then parses the response into a numeric score (0.0 – 1.0).
- *
- * Responsibility: ONE — LLM scoring of a single issue.
- */
+const EvaluationSchema = z.object({
+  evaluations: z.array(
+    z.object({
+      issueId: z.string(),
+      score: z.number().min(0).max(1),
+      reason: z.string(),
+    }),
+  ),
+});
+
 export const scoreIssueTask = task(
   { name: "scoreIssueTask", plan: "starter" },
-  async (issue: issue, userSkillsText: string): Promise<number> => {
-    const prompt =
-      `Evaluate this GitHub issue as a task for a developer:\n\n` +
-      `Title: ${issue.title}\n` +
-      `Description: ${issue.body ?? "(no description)"}\n\n` +
-      `Developer skills: ${userSkillsText}\n\n` +
-      `Return ONLY a decimal number between 0.0 and 1.0.`;
+  async (
+    issues: issue[],
+    userSkillsText: string,
+  ): Promise<IssueEvaluation[]> => {
+    const issuesList = issues
+      .map(
+        (issue, idx) =>
+          `Issue ${idx + 1}:
+           ID: ${issue.id}
+           Title: ${issue.title}
+           Description: ${issue.body?.slice(0, 200) ?? "(no description provided)"}`,
+      )
+      .join("\n\n");
 
-    const result = await scoringAgent.generate(prompt);
-    const score = parseFloat(result.text.trim());
+    const prompt = `
+        Developer skills:
+        ${userSkillsText}
 
-    // Fallback to neutral score if the model returns non-numeric output
-    const matchScore = Number.isFinite(score) ? score : 0.5;
+        Evaluate the following ${issues.length} GitHub issue(s) for this developer:
 
-    console.log(`Issue "${issue.title}" scored: ${matchScore}`);
-    return matchScore;
+        ${issuesList}
+
+        Return a structured evaluation for EVERY issue. Use the exact issue ID provided.
+            `.trim();
+
+    const result = await scoringAgent.generate(prompt, {
+      structuredOutput: {
+        schema: EvaluationSchema,
+      },
+    });
+
+    const evaluations = result.object.evaluations;
+
+    // Safety net: if agent missed any issue, assign neutral score
+    const evaluatedIds = new Set(evaluations.map((e) => e.issueId));
+    for (const issue of issues) {
+      if (!evaluatedIds.has(issue.id)) {
+        console.warn(
+          `Agent missed issue ${issue.id} — assigning neutral score`,
+        );
+        evaluations.push({
+          issueId: issue.id,
+          score: 0.5,
+          reason: "Could not be evaluated — assigned neutral score",
+        });
+      }
+    }
+
+    evaluations.forEach((e) =>
+      console.log(
+        `Issue ${e.issueId} → score: ${e.score} | ${e.reason}`,
+      ),
+    );
+
+    return evaluations;
   },
 );

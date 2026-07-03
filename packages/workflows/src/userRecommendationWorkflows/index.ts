@@ -23,6 +23,9 @@ import { getUserSkillsTask } from "./tasks/getUserSkills.tesk.js";
  *
  * Responsibility: orchestration only — delegates all work to focused sub-tasks.
  */
+
+const BATCH_SIZE = 3; // 3 issues per LLM call
+
 export const userAgentRunsWorkflow = task(
   { name: "userAgentRunsWorkflow", plan: "starter" },
   async (userId: string) => {
@@ -33,15 +36,24 @@ export const userAgentRunsWorkflow = task(
       agentRunId = await startAgentRunTask(userId);
 
       // Step 2: Embed user preferences
-      const {embedding: userSkillsEmbedding, skills} = await getUserSkillsTask(userId);
+      const { embedding: userSkillsEmbedding, skills } =
+        await getUserSkillsTask(userId);
 
       // Step 3: Find semantically similar issues
-      const candidateIssues = await semanticSearchIssuesTask(userSkillsEmbedding);
+      const candidateIssues = await semanticSearchIssuesTask(
+        userSkillsEmbedding,
+        userId,
+      );
 
-      // Step 4 + 5: Score each issue independently, then store if above threshold
-      for (const issue of candidateIssues) {
-        const matchScore = await scoreIssueTask(issue, skills);
-        await storeRecommendationTask(userId, agentRunId, issue, matchScore);
+      // Step 4 + 5: Score issue in batch, then store if above threshold otherwise store in agent eval
+      for (let i = 0; i < candidateIssues.length; i += BATCH_SIZE) {
+        const batch = candidateIssues.slice(i, i + BATCH_SIZE);
+
+        // score the batch — one LLM call for 5 issues
+        const evaluations = await scoreIssueTask(batch, skills);
+
+        // store the whole batch — two bulk DB inserts (recommend + evaluate)
+        await storeRecommendationTask(userId, agentRunId, evaluations);
       }
 
       // Step 6: Mark run as completed successfully
