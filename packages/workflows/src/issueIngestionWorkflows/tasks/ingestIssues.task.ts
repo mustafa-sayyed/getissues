@@ -13,14 +13,15 @@ export const ingestIssuesWorkflow = task(
   async () => {
     console.log("Starting issue ingestion workflow...");
     const octokit = getOctokit();
-    let issues = null;
+    let totalIssuesIngested = 0;
     for (const searchQuery of SEARCH_QUERIES) {
       const searchRes = await octokit.rest.search.issuesAndPullRequests({
         q: searchQuery.query,
         per_page: searchQuery.limit,
       });
 
-      issues = searchRes.data.items;
+      const issues = searchRes.data.items;
+      totalIssuesIngested += issues.length;
 
       console.log(
         `Found ${issues.length} issues for ${searchQuery.query}. Dispatching deduplication tasks...`,
@@ -33,7 +34,7 @@ export const ingestIssuesWorkflow = task(
 
     return {
       success: true,
-      message: `Ingested ${issues?.length} issues and dispatched deduplication tasks.`,
+      message: `Ingested ${totalIssuesIngested} issues and dispatched deduplication tasks.`,
     };
   },
 );

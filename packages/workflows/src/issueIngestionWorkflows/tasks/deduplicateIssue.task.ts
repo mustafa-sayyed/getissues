@@ -26,12 +26,12 @@ export const deduplicateIssueTask = task(
       existingIssue.find((existing) => existing.url === issue.html_url),
     );
 
-    if (existingIssue) {
+    if (existingIssue.length && !uniqueIssue.length) {
       console.log(`Issue #${existingIssue.length} already exists — skipping.`);
       return {
         success: true,
         skipped: true,
-        reason: "duplicate_issue",
+        reason: `Found ${existingIssue.length} existing issues in the database. No new issues to process.`,
         existingIssues: existingIssue.length,
       };
     }
@@ -42,6 +42,8 @@ export const deduplicateIssueTask = task(
 
     return {
       success: true,
+      existingIssues: existingIssue.length,
+      newIssues: uniqueIssue.length,
       message: `Issue #${uniqueIssue.length} is new and has passed to other tasks for further processing.`,
     };
   },

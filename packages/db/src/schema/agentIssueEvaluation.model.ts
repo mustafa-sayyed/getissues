@@ -19,7 +19,7 @@ export const agentIssueEvaluation = pgTable("agent_issue_evaluation", {
     .notNull()
     .references(() => user.id),
   reason: t.text("reason"),
-  matchScore: t.integer("match_score").notNull(),
+  matchScore: t.real("match_score").notNull(),
   createdAt: t
     .timestamp("created_at", { withTimezone: true })
     .defaultNow(),

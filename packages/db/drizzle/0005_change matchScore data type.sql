@@ -1,0 +1,1 @@
+ALTER TABLE "agent_issue_evaluation" ALTER COLUMN "match_score" SET DATA TYPE real;
