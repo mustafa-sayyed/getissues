@@ -21,7 +21,7 @@ export const issue = pgTable(
     githubRepoId: t
       .text("github_repo_id")
       .notNull()
-      .references(() => repoAnalysis.githubRepoId),
+      .references(() => repoAnalysis.githubRepoId, { onDelete: "cascade" }),
     embedding: t.vector("embedding", { dimensions: 1536 }),
     isActive: t.boolean("is_active").default(true),
     isAssigned: t.boolean("is_assigned").default(false),
