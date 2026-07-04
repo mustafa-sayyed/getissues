@@ -13,6 +13,20 @@ const EvaluationSchema = z.object({
   ),
 });
 
+const cleanupIssueBody = (body: string | null): string => {
+  if (!body) return "No description provided.";
+
+  // Remove img tags, markdown formatting and excessive whitespace
+  const cleanedBody = body
+    .replace(/[#_~`>-]/g, "")
+    .replace(/\n{2,}/g, "\n")
+    .replace(/[<][^>]*/g, "")
+    .trim();
+
+  // limit to 700 characters
+  return cleanedBody.slice(0, 700);
+};
+
 export const scoreIssueTask = task(
   { name: "scoreIssueTask", plan: "starter" },
   async (
@@ -25,7 +39,7 @@ export const scoreIssueTask = task(
           `Issue ${idx + 1}:
            ID: ${issue.id}
            Title: ${issue.title}
-           Description: ${issue.body?.slice(0, 200) ?? "(no description provided)"}`,
+           Description: ${cleanupIssueBody(issue.body)}`,
       )
       .join("\n\n");
 
@@ -33,7 +47,7 @@ export const scoreIssueTask = task(
         Developer skills:
         ${userSkillsText}
 
-        Evaluate the following ${issues.length} GitHub issue(s) for this developer:
+        Evaluate the following ${issues.length} GitHub issues for this developer:
 
         ${issuesList}
 
@@ -46,7 +60,8 @@ export const scoreIssueTask = task(
       },
     });
 
-    const evaluations: IssueEvaluation[] = result.object.evaluations as IssueEvaluation[];
+    const evaluations: IssueEvaluation[] = result.object
+      .evaluations as IssueEvaluation[];
 
     // Safety net: if agent missed any issue, assign neutral score
     const evaluatedIds = new Set(evaluations.map((e) => e.issueId));
@@ -64,9 +79,7 @@ export const scoreIssueTask = task(
     }
 
     evaluations.forEach((e) =>
-      console.log(
-        `Issue ${e.issueId}, score: ${e.score}, reason: ${e.reason}`,
-      ),
+      console.log(`Issue ${e.issueId}, score: ${e.score}, reason: ${e.reason}`),
     );
 
     return evaluations;
