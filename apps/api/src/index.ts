@@ -11,6 +11,7 @@ import agentConfigRouter from "./routes/agentConfig.route.js";
 import cron from "node-cron";
 import { db, schema } from "./lib/db.js";
 import { Render } from "@renderinc/sdk";
+import globalErrorHandler from "./middlewares/errorHandler.middleware.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -95,6 +96,9 @@ cron.schedule("0 */4 * * *", async () => {
     console.error("Cron Error (userAgentRunsWorkflow):", err);
   }
 });
+
+// Global Error Handler
+app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`API listening on port ${PORT}`);

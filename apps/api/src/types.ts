@@ -8,3 +8,10 @@ declare global {
     }
   }
 }
+
+interface ApiError extends Error {
+  statusCode?: number;
+  success?: boolean;
+}
+
+export {ApiError};
