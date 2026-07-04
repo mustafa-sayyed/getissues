@@ -9,15 +9,15 @@ export const agentIssueEvaluation = pgTable("agent_issue_evaluation", {
   issueId: t
     .uuid("issue_id")
     .notNull()
-    .references(() => issue.id),
+    .references(() => issue.id, { onDelete: "cascade" }),
   agentId: t
     .uuid("agent_id")
     .notNull()
-    .references(() => agentRuns.id),
+    .references(() => agentRuns.id, { onDelete: "cascade" }),
   userId: t
     .uuid("user_id")
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: "cascade" }),
   reason: t.text("reason"),
   matchScore: t.real("match_score").notNull(),
   createdAt: t

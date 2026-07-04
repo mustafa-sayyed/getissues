@@ -16,6 +16,7 @@ export const storeIssueTask = task(
   ) => {
     await db.insert(schema.issue).values({
       githubRepoId,
+      githubId: item.id,
       title: item.title,
       body: item.body ?? "",
       url: item.html_url,
@@ -23,11 +24,11 @@ export const storeIssueTask = task(
       embedding,
     });
 
-    console.log(`Issue #${item.number} — "${item.title}" stored successfully.`);
+    console.log(`Issue #${item.id} — "${item.title}" stored successfully.`);
 
     return {
       success: true,
-      issueNumber: item.number,
+      issueId: item.id,
       issueTitle: item.title,
       issueUrl: item.html_url,
     };

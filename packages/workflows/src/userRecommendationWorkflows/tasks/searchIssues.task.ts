@@ -42,7 +42,7 @@ export const semanticSearchIssuesTask = task(
         ),
       )
       .orderBy(sql`${schema.issue.embedding} <=> ${embeddingStr}`)
-      .limit(10);
+      .limit(20);
 
     console.log(
       `Semantic search found ${matchedIssues.length} candidate issues.`,

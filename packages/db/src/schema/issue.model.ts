@@ -12,11 +12,12 @@ export const issue = pgTable(
   "issue",
   {
     id: t.uuid().primaryKey().defaultRandom(),
+    githubId: t.numeric("github_id").unique(),
     title: t.text().notNull(),
     description: t.text(),
     body: t.text(),
     status: statusEnum("status").default("open").notNull(),
-    url: t.text().notNull(),
+    url: t.text().unique().notNull(),
     githubRepoId: t
       .text("github_repo_id")
       .notNull()
