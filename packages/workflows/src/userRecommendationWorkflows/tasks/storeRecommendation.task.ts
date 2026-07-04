@@ -24,6 +24,7 @@ export const storeRecommendationTask = task(
           issueId: e.issueId,
           agentRunId,
           matchScore: e.score,
+          reson: e.reason,
         }))
       );
       console.log(`Stored ${toRecommend.length} recommendations`);

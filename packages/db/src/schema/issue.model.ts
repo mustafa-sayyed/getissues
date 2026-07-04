@@ -12,7 +12,7 @@ export const issue = pgTable(
   "issue",
   {
     id: t.uuid().primaryKey().defaultRandom(),
-    githubId: t.numeric("github_id").unique(),
+    githubId: t.bigint("github_id", { mode: "number" }).unique(),
     title: t.text().notNull(),
     description: t.text(),
     body: t.text(),
@@ -22,7 +22,7 @@ export const issue = pgTable(
       .text("github_repo_id")
       .notNull()
       .references(() => repoAnalysis.githubRepoId),
-    embedding: t.vector("embedding", {dimensions: 1536}),
+    embedding: t.vector("embedding", { dimensions: 1536 }),
     isActive: t.boolean("is_active").default(true),
     isAssigned: t.boolean("is_assigned").default(false),
     createdAt: t.timestamp("created_at", { withTimezone: true }).defaultNow(),

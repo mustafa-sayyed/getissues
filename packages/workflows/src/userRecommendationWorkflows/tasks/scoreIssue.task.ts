@@ -46,7 +46,7 @@ export const scoreIssueTask = task(
       },
     });
 
-    const evaluations = result.object.evaluations;
+    const evaluations: IssueEvaluation[] = result.object.evaluations as IssueEvaluation[];
 
     // Safety net: if agent missed any issue, assign neutral score
     const evaluatedIds = new Set(evaluations.map((e) => e.issueId));
@@ -65,7 +65,7 @@ export const scoreIssueTask = task(
 
     evaluations.forEach((e) =>
       console.log(
-        `Issue ${e.issueId} → score: ${e.score} | ${e.reason}`,
+        `Issue ${e.issueId}, score: ${e.score}, reason: ${e.reason}`,
       ),
     );
 

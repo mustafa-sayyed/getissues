@@ -14,4 +14,4 @@ interface ApiError extends Error {
   success?: boolean;
 }
 
-export {ApiError};
+export type { ApiError };

@@ -50,6 +50,13 @@
       "when": 1783148842977,
       "tag": "0006_fix bugs in issue and agent eval table",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783155455562,
+      "tag": "0007_change githubId data type",
+      "breakpoints": true
     }
   ]
 }
