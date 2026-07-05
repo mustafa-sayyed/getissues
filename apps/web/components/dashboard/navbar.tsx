@@ -152,7 +152,6 @@ export function DashboardNavbar() {
           </DialogHeader>
           <DialogFooter className="flex gap-2 mt-4">
             <Button
-              variant="destructive"
               className="cursor-pointer"
               onClick={() => setShowLogoutDialog(false)}
               disabled={isLoggingOut}
@@ -160,6 +159,7 @@ export function DashboardNavbar() {
               Cancel
             </Button>
             <Button
+              variant="destructive"
               className="cursor-pointer flex items-center justify-center gap-2"
               onClick={handleLogout}
               disabled={isLoggingOut}

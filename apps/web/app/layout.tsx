@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import StoreProvider from "@/lib/StoreProvider";
+import { Toaster } from "sonner";
 
 const manropeHeading = Manrope({
   subsets: ["latin"],
@@ -58,7 +59,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <StoreProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster richColors />
+            </TooltipProvider>
           </ThemeProvider>
         </StoreProvider>
       </body>

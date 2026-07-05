@@ -6,6 +6,8 @@ import { eq, sql } from "drizzle-orm";
 const client = postgres(process.env.DATABASE_URL!, {
   connect_timeout: 10,
   idle_timeout: 60,
+  backoff: true,
+  ssl: "verify-full",
   max: 20,
 });
 

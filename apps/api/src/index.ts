@@ -103,3 +103,19 @@ app.use(globalErrorHandler);
 app.listen(PORT, () => {
   console.log(`API listening on port ${PORT}`);
 });
+
+process.on("SIGINT", async () => {
+  console.log("Shutting down gracefully...", {
+    signal: "SIGINT",
+    timestamp: new Date().toISOString(),
+  });
+  await db.$client.end();
+});
+
+process.on("SIGTERM", async () => {
+  console.log("Shutting down gracefully...", {
+    signal: "SIGTERM",
+    timestamp: new Date().toISOString(),
+  });
+  await db.$client.end();
+});

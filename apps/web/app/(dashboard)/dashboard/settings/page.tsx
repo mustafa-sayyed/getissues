@@ -9,9 +9,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Settings, Shield, Palette, Trash2, Save, Check } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { FaGithub } from "react-icons/fa6";
 import { SiNotion } from "react-icons/si";
@@ -19,6 +18,10 @@ import { NotebookPen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useTheme } from "next-themes";
 import { GrConnect } from "react-icons/gr";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
+import { LanguageCombobox } from "@/components/LanguageCombobox";
 
 const sections = [
   // sections to be added in future
@@ -32,13 +35,92 @@ const sections = [
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("skills");
-  const [saved, setSaved] = useState(false);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [interests, setInterests] = useState("");
+  const [isLoadingSkills, setIsLoadingSkills] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { setTheme, theme: currentTheme } = useTheme();
+  const router = useRouter();
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const loadSkills = useCallback(async () => {
+    if (!apiUrl) {
+      setIsLoadingSkills(false);
+      toast.error("API URL is not configured.");
+      return;
+    }
+
+    try {
+      setIsLoadingSkills(true);
+      const response = await fetch(`${apiUrl}/users/skills`, {
+        credentials: "include",
+      });
+
+      if (response.status === 404) {
+        setLanguages([]);
+        setInterests("");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to load skills (${response.status})`);
+      }
+
+      const data = (await response.json()) as {
+        languages: string[];
+        interests: string;
+      };
+
+      setLanguages(data.languages);
+      setInterests(data.interests);
+    } catch (error) {
+      console.error("Error loading user skills:", error);
+      toast.error("Failed to load skills.");
+    } finally {
+      setIsLoadingSkills(false);
+    }
+  }, [apiUrl]);
+
+  useEffect(() => {
+    void loadSkills();
+  }, [loadSkills]);
+
+  const handleDeleteAccount = async () => {
+    if (isDeleting) return;
+
+    if (!apiUrl) {
+      toast.error("API URL is not configured.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone.",
+    );
+
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`${apiUrl}/users/account`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete account (${response.status})`);
+      }
+
+      toast.success("Account deleted.");
+      router.replace("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast.error("Failed to delete account.");
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -61,7 +143,7 @@ export default function SettingsPage() {
               key={s.id}
               onClick={() => setActiveSection(s.id)}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left",
+                "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors text-left cursor-pointer",
                 activeSection === s.id
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -111,10 +193,14 @@ export default function SettingsPage() {
                   <label className="text-xs font-medium text-muted-foreground">
                     Your Skills
                   </label>
-                  <Input
-                    defaultValue="TypeScript, React, Node.js"
-                    className="h-9 bg-muted/40 border-border/60 focus-visible:ring-primary/40"
-                    placeholder="e.g. TypeScript, Rust, Go"
+                  <LanguageCombobox
+                    value={languages}
+                    disabled={true}
+                    placeholder={
+                      isLoadingSkills
+                        ? "Loading skills..."
+                        : "e.g. TypeScript, Rust, Go"
+                    }
                   />
                 </div>
                 <div className="flex flex-col space-y-2">
@@ -122,29 +208,11 @@ export default function SettingsPage() {
                     Tell about what issues you want to work on
                   </label>
                   <Textarea
-                    className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md"
+                    value={interests}
+                    readOnly={true}
+                    className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md cursor-default pointer-events-none opacity-70 "
                     placeholder="e.g. I want to work on open source issues related to web development, especially in JavaScript and TypeScript. I am also interested in contributing to projects that focus on accessibility and performance optimization."
                   />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button
-                    size="lg"
-                    onClick={handleSave}
-                    className="flex items-center px-4 gap-1.5"
-                  >
-                    {saved ? (
-                      <>
-                        <Check className="size-3.5" />
-                        Saved!
-                      </>
-                    ) : (
-                      <>
-                        <Save className="size-3.5" />
-                        Save
-                      </>
-                    )}
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -265,9 +333,15 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="destructive" size="sm" className="gap-1.5">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting}
+                  >
                     <Trash2 className="size-3.5" />
-                    Delete Account
+                    {isDeleting ? "Deleting..." : "Delete Account"}
                   </Button>
                 </CardContent>
               </Card>
