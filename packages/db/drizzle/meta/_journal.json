@@ -64,6 +64,13 @@
       "when": 1783186168119,
       "tag": "0008_add delete on cascade on issue table",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783250455169,
+      "tag": "0009_change column names in skills tables",
+      "breakpoints": true
     }
   ]
 }

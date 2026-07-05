@@ -19,9 +19,9 @@ export const getUserSkillsTask = task(
       throw new Error(`No skills found for user ${userId}.`);
     }
 
-    const skills = `User want to work on: ${userSkills.skillDetails}, \n\n user Skills: ${userSkills.skills}`;
+    const skills = `Known Programming to User: ${userSkills.languages.join(", ")}, \n\n User interested in Working: ${userSkills.interests}`;
 
-    console.log(`Retrieved skills for user ${userId}: ${userSkills.skills}.`);
+    console.log(`Retrieved skills for user ${userId}: ${userSkills.interests}.`);
     return {
       embedding: userSkills.embedding,
       skills: skills,

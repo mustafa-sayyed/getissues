@@ -9,7 +9,7 @@ export const skills = pgTable("skills", {
     .primaryKey()
     .notNull()
     .references(() => user.id),
-  skills: t.text("name").array().notNull(),
-  skillDetails: t.text("details").notNull(),
+  languages: t.text("languages").array().notNull(),
+  interests: t.text("interests").notNull(),
   embedding: t.vector("embedding", { dimensions: 1536 }).notNull(),
 });
