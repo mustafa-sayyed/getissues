@@ -17,9 +17,6 @@ importers:
 
   apps/api:
     dependencies:
-      '@cognee/cognee-ts':
-        specifier: ^0.1.3
-        version: 0.1.3
       '@google/genai':
         specifier: ^2.10.0
         version: 2.10.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
@@ -531,30 +528,6 @@ packages:
 
   '@better-fetch/fetch@1.1.21':
     resolution: {integrity: sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A==}
-
-  '@cognee/cognee-ts@0.1.3':
-    resolution: {integrity: sha512-N7ysLzpL7IjvBuQexJ4MIR01CDUnQyyabuMxZLlsuyiXjZzb6O7Rp6QmkqLAeVfFAt894Xb+O/F43VYJgT/5uA==}
-    engines: {node: '>=16.0.0'}
-
-  '@cognee/neon-darwin-arm64@0.1.3':
-    resolution: {integrity: sha512-bJiuCG/1/NfEifOyA3/oRVqHBc84QFxKk6NymIGEnQ+av6q2lg/J/Rn2zI+vvgYVtznBNdzXl1dqizrVYiy5XA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@cognee/neon-linux-arm64-gnu@0.1.3':
-    resolution: {integrity: sha512-0T5RhHZh3uNXb5DM5ZmcRmSLxXTLfavjbetUuWERNctaIF6A2qPAmYyzBox8s+n5iSpcpwOxV7HhuhDXFAnIww==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@cognee/neon-linux-x64-gnu@0.1.3':
-    resolution: {integrity: sha512-c6Sj1tL5S86zII3CWMYTG/nVTCSDk+2u5nqtmWHNSydg7tMZp/UBHgKfn/t1Y7ZFJxU+xpJChYXpkjfzu0nQcQ==}
-    cpu: [x64]
-    os: [linux]
-
-  '@cognee/neon-win32-x64-msvc@0.1.3':
-    resolution: {integrity: sha512-KRnavuzE+Jfm0ZNMio/eQ4vKg/K9jrJXIpzaAXiwXZ4fOZTIKZJtqZAq9lhiPX1nWgv+gH01KaLvIbPfKuLGsQ==}
-    cpu: [x64]
-    os: [win32]
 
   '@dotenvx/dotenvx@1.70.0':
     resolution: {integrity: sha512-vC/rom87ym8HEyVdzZZS6/PYGg1Z5fmozUZ8l6cw1sYAxdL1lEyvE/JbK8cMFQoq3GsR/P1PiQRY+VXMtDN9bw==}
@@ -1310,9 +1283,6 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
-
-  '@neon-rs/load@0.2.6':
-    resolution: {integrity: sha512-7p8j+guEhGTJNJISgmHO0homqGYAc0SDfmgGZfluMcQnimcceMY87b4hdqufp+7YmsOVC4W/JvT3/Tpi3/gy+Q==}
 
   '@neondatabase/serverless@1.1.0':
     resolution: {integrity: sha512-r3ZZhRjEcfEdKIZnoB1RusNgvHuaBRqfCzV4Gi+5A9yUX0S4HTws/ASWqt13wL4y4I+0rqsWGdA2w7EQXHi3+Q==}
@@ -3311,10 +3281,6 @@ packages:
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
-    engines: {node: '>=12'}
 
   dotenv@17.4.2:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
@@ -6055,28 +6021,6 @@ snapshots:
 
   '@better-fetch/fetch@1.1.21': {}
 
-  '@cognee/cognee-ts@0.1.3':
-    dependencies:
-      '@neon-rs/load': 0.2.6
-      dotenv: 16.6.1
-    optionalDependencies:
-      '@cognee/neon-darwin-arm64': 0.1.3
-      '@cognee/neon-linux-arm64-gnu': 0.1.3
-      '@cognee/neon-linux-x64-gnu': 0.1.3
-      '@cognee/neon-win32-x64-msvc': 0.1.3
-
-  '@cognee/neon-darwin-arm64@0.1.3':
-    optional: true
-
-  '@cognee/neon-linux-arm64-gnu@0.1.3':
-    optional: true
-
-  '@cognee/neon-linux-x64-gnu@0.1.3':
-    optional: true
-
-  '@cognee/neon-win32-x64-msvc@0.1.3':
-    optional: true
-
   '@dotenvx/dotenvx@1.70.0':
     dependencies:
       commander: 11.1.0
@@ -6666,8 +6610,6 @@ snapshots:
       '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.2
     optional: true
-
-  '@neon-rs/load@0.2.6': {}
 
   '@neondatabase/serverless@1.1.0': {}
 
@@ -8619,8 +8561,6 @@ snapshots:
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
-
-  dotenv@16.6.1: {}
 
   dotenv@17.4.2: {}
 
