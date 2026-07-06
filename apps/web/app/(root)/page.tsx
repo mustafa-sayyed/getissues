@@ -1,6 +1,3 @@
-"use client";
-
-import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -9,15 +6,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { faqs, howItWorks, memory, problemSolution } from "./constant";
-import { motion } from "framer-motion";
+import * as motion from "framer-motion/client";
 
-/* ─────────────────────────────────────────────────────────────
-   Main page
-───────────────────────────────────────────────────────────── */
+
 export default function Home() {
   return (
     <main className="relative isolate overflow-hidden bg-background text-foreground">
-      {/* Ambient gradient backdrop — fixed so it persists while scrolling */}
+
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_12%_15%,rgba(var(--spotlight-emerald),.18),transparent_45%),radial-gradient(circle_at_86%_20%,rgba(var(--spotlight-amber),.14),transparent_42%),radial-gradient(circle_at_55%_85%,rgba(var(--spotlight-sky),.15),transparent_40%)]" />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
@@ -405,7 +400,6 @@ export default function Home() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-12">
-          {/* Big Feature 1 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -430,7 +424,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Small Feature 1 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -454,7 +447,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Small Feature 2 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -479,7 +471,6 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Big Feature 2 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -524,7 +515,7 @@ export default function Home() {
           collapsible={true}
           autoCapitalize="sentences"
           type="single"
-          defaultValue={["item-1"]}
+          defaultValue={"item-1"}
           className="py-4 px-10"
         >
           {faqs.map((faq) => (
@@ -569,7 +560,7 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="h-14 px-10 text-base font-semibold text-white dark:text-black rounded-full shadow-lg hover:scale-105 transition-transform duration-300"
+                className="h-14 px-10 text-base font-semibold text-white dark:text-black rounded-full shadow-lg hover:scale-101 transition-transform duration-300"
               >
                 <a href="/login">Log in to get started &rarr;</a>
               </Button>
