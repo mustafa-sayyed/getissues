@@ -23,12 +23,14 @@ import {
   Bookmark,
   ChevronDown,
   CircleDot,
-  ExternalLink,
   RefreshCw,
   Star,
   Dot,
+  ThumbsDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type IssueStatus = "open" | "closed" | "assigned";
 type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
@@ -132,10 +134,12 @@ const formatScore = (score: number | null) => {
 };
 
 export default function RecommendationsPage() {
+  const router = useRouter();
   const [limit, setLimit] = useState<(typeof limits)[number]>(25);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const fetchRecommendations = useCallback(async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -174,6 +178,58 @@ export default function RecommendationsPage() {
   useEffect(() => {
     fetchRecommendations();
   }, [fetchRecommendations]);
+
+  const updateRecommendationStatus = async (
+    recommendationId: string,
+    status: RecommendationStatus,
+  ) => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiUrl || updatingId) return;
+
+    setUpdatingId(recommendationId);
+
+    try {
+      const response = await fetch(
+        `${apiUrl}/recommendations/${recommendationId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ status }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update recommendation (${response.status})`);
+      }
+
+      setRecommendations((current) =>
+        status === "deleted"
+          ? current.filter(
+              (recommendation) => recommendation.id !== recommendationId,
+            )
+          : current.map((recommendation) =>
+              recommendation.id === recommendationId
+                ? { ...recommendation, status }
+                : recommendation,
+            ),
+      );
+
+      toast.success(
+        status === "bookmarked"
+          ? "Recommendation bookmarked."
+          : "Recommendation hidden.",
+      );
+    } catch (err) {
+      console.error("Error updating recommendation:", err);
+      toast.error("Failed to update recommendation.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const visibleRecommendations = useMemo(
     () => recommendations,
@@ -275,7 +331,10 @@ export default function RecommendationsPage() {
             return (
               <Card
                 key={recommendation.id}
-                className="border-border/60 transition-colors hover:bg-muted/20"
+                className="cursor-pointer border-border/60 transition-colors hover:bg-muted/20"
+                onClick={() =>
+                  router.push(`/dashboard/recommendations/${recommendation.id}`)
+                }
               >
                 <CardHeader className="gap-3">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -287,7 +346,7 @@ export default function RecommendationsPage() {
                         </span>
                       </CardTitle>
                       <CardDescription className="mt-1 font-mono flex items-center gap-1">
-                        {repoName} <Dot /> {" "}
+                        {repoName} <Dot />{" "}
                         {formatRelativeTime(recommendation.recommendedAt)}
                       </CardDescription>
                     </div>
@@ -346,21 +405,40 @@ export default function RecommendationsPage() {
                       </div>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5 self-start sm:self-auto"
-                      onClick={() =>
-                        window.open(
-                          recommendation.issue.url,
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      }
-                    >
-                      <ExternalLink className="size-3.5" />
-                      Open
-                    </Button>
+                    <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5"
+                        disabled={updatingId === recommendation.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void updateRecommendationStatus(
+                            recommendation.id,
+                            "bookmarked",
+                          );
+                        }}
+                      >
+                        <Bookmark className="size-3.5" />
+                        Bookmark
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                        disabled={updatingId === recommendation.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void updateRecommendationStatus(
+                            recommendation.id,
+                            "deleted",
+                          );
+                        }}
+                      >
+                        <ThumbsDown className="size-3.5" />
+                        Not interested
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
