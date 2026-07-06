@@ -21,14 +21,14 @@ function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-foreground/80 md:flex">
-          <Link href="/" className="transition hover:text-primary">
-            Home
+          <Link href="/#how-it-works" className="transition hover:text-primary">
+            How it works
           </Link>
           <Link href="/#features" className="transition hover:text-primary">
             Features
           </Link>
-          <Link href="/#waitlist" className="transition hover:text-primary">
-            Early Access
+          <Link href="/#programs" className="transition hover:text-primary">
+            Programs
           </Link>
           {isPending ? (
             <Skeleton className="rounded-none w-25 h-9" />
@@ -62,11 +62,11 @@ function Header() {
         <div className="border-t border-border/70 bg-background/95 px-6 pb-6 pt-4 text-sm font-medium text-foreground/80 md:hidden">
           <div className="flex flex-col gap-3">
             <Link
-              href="/"
+              href="/#how-it-works"
               className="transition hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
-              Home
+              How it works
             </Link>
             <Link
               href="/#features"
@@ -76,11 +76,11 @@ function Header() {
               Features
             </Link>
             <Link
-              href="/#waitlist"
+              href="/#programs"
               className="transition hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
-              Early Access
+              Programs
             </Link>
             {isPending ? (
               <Skeleton className="rounded-none w-full h-9" />
