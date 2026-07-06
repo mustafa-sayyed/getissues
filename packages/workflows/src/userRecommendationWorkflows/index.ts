@@ -6,6 +6,7 @@ import { scoreIssueTask } from "./tasks/scoreIssue.task.js";
 import { storeRecommendationTask } from "./tasks/storeRecommendation.task.js";
 import { completeAgentRunTask } from "./tasks/completeAgentRun.task.js";
 import { getUserSkillsTask } from "./tasks/getUserSkills.tesk.js";
+import { getUserDecisionContext } from "../utils/cognee.js";
 
 /**
  * User Recommendation Workflow
@@ -39,6 +40,8 @@ export const userAgentRunsWorkflow = task(
       const { embedding: userSkillsEmbedding, skills } =
         await getUserSkillsTask(userId);
 
+      const decisionContext = await getUserDecisionContext(userId, skills);
+
       // Step 3: Find semantically similar issues
       const candidateIssues = await semanticSearchIssuesTask(
         userSkillsEmbedding,
@@ -50,7 +53,11 @@ export const userAgentRunsWorkflow = task(
         const batch = candidateIssues.slice(i, i + BATCH_SIZE);
 
         // score the batch — one LLM call for 5 issues
-        const evaluations = await scoreIssueTask(batch, skills);
+        const evaluations = await scoreIssueTask(
+          batch,
+          skills,
+          decisionContext,
+        );
 
         // store the whole batch — two bulk DB inserts (recommend + evaluate)
         await storeRecommendationTask(userId, agentRunId, evaluations);

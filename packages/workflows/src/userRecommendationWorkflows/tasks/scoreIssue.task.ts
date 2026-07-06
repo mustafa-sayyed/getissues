@@ -32,6 +32,7 @@ export const scoreIssueTask = task(
   async (
     issues: issue[],
     userSkillsText: string,
+    userDecisionContext = "",
   ): Promise<IssueEvaluation[]> => {
     const issuesList = issues
       .map(
@@ -46,6 +47,18 @@ export const scoreIssueTask = task(
     const prompt = `
         Developer skills:
         ${userSkillsText}
+
+        Previous user decisions from Cognee:
+        ${
+          userDecisionContext ||
+          "No prior recommendation decisions are available for this user."
+        }
+
+        Use previous decisions as personalization context:
+        - Bookmarked recommendations are strong positive signals.
+        - Not interested recommendations are strong negative signals.
+        - Viewed recommendations are weak positive signals.
+        - Do not ignore skill fit; user decisions should adjust ranking, not replace technical matching.
 
         Evaluate the following ${issues.length} GitHub issues for this developer:
 
