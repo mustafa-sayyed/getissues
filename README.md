@@ -1,14 +1,12 @@
 # getissues.tech
-AI-powered matching between open-source contributors and the GitHub issues they're actually a fit for.
-
-[![Website](https://img.shields.io/badge/site-getissues.tech-blue)](https://getissues.tech)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Finding the right issues on GitHub is often harder than solving it.**
 
 **getissues.tech** is an AI powered platform, where AI Agents search issues on behlaf of user, it helps developers find open-source issues that match their skills, interests, and goals — instead of doom-scrolling repo after repo.
 
-
+[![Website](https://img.shields.io/badge/site-getissues.tech-blue)](https://getissues.tech)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![CI](https://github.com/mustafa-sayyed/getissues/actions/workflows/ci.yaml/badge.svg)](https://github.com/mustafa-sayyed/getissues/actions/workflows/ci.yaml)
 
 ---
 
@@ -16,11 +14,9 @@ AI-powered matching between open-source contributors and the GitHub issues they'
 
 - [Why](#why)
 - [Features](#features)
-- [Tech Stack](#tech-stack)
+- [Contributor Memory](#contributor-memory)
 - [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -29,97 +25,116 @@ AI-powered matching between open-source contributors and the GitHub issues they'
 
 ## Why
 
-There are millions of repos and lakhs of issues on Github, but discovery is still broken — people manually search labels like `good-first-issue` across hundreds of repos, with no sense of fit for their actual skill set. getissues.tech closes that gap with semantic matching between a contributor's profile and live GitHub issue data.
+Finding good open source issues to contribute to is genuinely hard. You search GitHub, filter by `good first issue`, open five repos, discover two are abandoned, one has an unfriendly codebase, and the fourth has an issue already claimed. That's 45 minutes gone before you've written a single line of code.
+
+The problem gets worse if you're applying to **GSoC**, **LFX Mentorship**, or participating in **Hacktoberfest** — each program has its own repos, labels, and timelines, and there's no single tool that understands all of them.
+
+**getissues.tech** solves this with an autonomous agent that runs in the background, understands your skills semantically, learns your preferences over time, and delivers relevant, actionable issues directly to your feed.
+
+---
 
 ## Features
 
-- 🔍 **Semantic issue search** — issues are embedded and matched against contributor skills using `pgvector`, not just keyword/label filters.
-- 🤖 **Two-pipeline agent architecture** — one pipeline ingests and embeds issues from GitHub on a schedule, the other serves personalized matches per user.
-- ⏱️ **Per-user scheduling** — a lightweight cron heartbeat fans out matching runs only for users who are due, avoiding wasted compute.
-- 🔐 **GitHub OAuth** — sign in with GitHub via session-based auth; no separate credentials to manage.
-- 🏷️ **Broad issue coverage** — language filters, framework/topic targeting (e.g. React, Next.js, Vue, Django), label variants, and program-specific labels (GSoC, LFX, Hacktoberfest).
-- 🧩 **Normalized skills model** — standardized skill naming with shared embeddings, computed once and reused across users.
+### Semantic issue matching
+
+The agent doesn't keyword-match your skills against issue labels. It understands meaning. If you know TypeScript and async patterns, it recognizes that a "refactor error propagation in async handlers" issue is relevant to you — even if the word "TypeScript" doesn't appear in the title.
+
+### Autonomous background agent
+
+Set your frequency (every 2h, 4h, 6h) and the agent runs on its own schedule. It fetches issues semantically, scores issues against your profile using an LLM, and delivers the top matches to your app feed, email, or Notion — while you're sleeping, working, or doing anything else.
+
+### Contributor memory powered by Cognee
+The agent learns your taste over time — not just your skills. See the [full section](#contributor-memory) below.
+
+
+### Delivery to where you work
+Issues can be delivered to your in-app feed, Notion database. The agent pushes results to you — you don't have to come looking.
+
+---
 
 ## Architecture
 
-getissues.tech runs two logically separate pipelines:
+getissues is built on a two-pipeline architecture — one for system-level issue ingestion and another for per-user recommendation scoring. Both pipelines run on Render Workflows, which allows us to scale horizontally and run each pipeline independently.
 
-1. **Ingestion pipeline** — periodically pulls issues from the GitHub Search API across a set of curated queries (language, topic, label, and star-range filters), deduplicates by `updated_at`, and generates embeddings for new/changed issues.
-2. **Matching pipeline** — on a per-user schedule, compares a contributor's skill embeddings against the issue index and generates ranked recommendations.
-
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- A [Neon](https://neon.tech) Postgres database (or any Postgres with `pgvector` enabled)
-- A GitHub OAuth App (for auth) and a GitHub personal access token (for issue ingestion)
-
-### Installation
-
-```bash
-# clone the repo
-git clone https://github.com/<org>/getissues.git
-cd getissues
-
-# install dependencies
-pnpm install
-
-# copy env template and fill in values
-cp .env.example .env
-
-# run database migrations
-pnpm run drizzle:migrate
-
-# start the dev server
-pnpm run dev
+### Pipeline 1 — Issue ingestion (system-level)
+```
+node-cron (runs every few hours)
+  └─ Render Workflow: crawl-issues
+       ├─ Fetch issues via GitHub API (system PAT, smart search queries)
+       ├─ Per-query batch deduplication (in-memory + single batch DB check)
+       ├─ Generate embeddings (title + body + labels)
+       ├─ fetches and store repo in DB, if not already present
+       └─ Store issues in the DB
 ```
 
-The app should now be running at `http://localhost:3000` (frontend) with the API on `http://localhost:8080` (or as configured).
+### Pipeline 2 — User recommendation (per-user)
+```
+node-cron (Every few hours or as per user conf, per user)
+       Render Workflow: issue recommendations
+         ├─ Fetch user skill profile
+         ├─ Query Cognee memory for user preferences and history
+         ├─ pgvector similarity search → top 30 candidates
+         ├─ batched LLM calls → rerank + explain top results
+         ├─ Write to recommendations table
+         └─ Deliver (app feed / Notion)
+```
 
-## Environment Variables
+---
 
-| Variable | Description |
+
+## Contributor Memory
+
+The most important thing that separates getissues from a GitHub search wrapper is **persistent contributor memory**. Every interaction you have with the platform is a signal. We capture those signals, build a knowledge graph of your preferences, and use that graph to make every subsequent recommendation sharper.
+
+We use **[Cognee](https://github.com/topoteretes/cognee)** — an open-source AI memory and knowledge graph platform — as the memory layer beneath the recommendation agent.
+
+### What we capture
+
+When you interact with a recommendation, we ingest that event into your personal Cognee knowledge graph:
+
+**Dismissals** — when you mark an issue as not interested, we record the issue type, language, complexity, and repo. After a few dismissals of the same pattern, the agent quietly stops surfacing that type without you changing any setting.
+
+**Bookmarks** — when you save an issue, that's a strong positive signal. If you bookmark a Go concurrency issue and Go isn't even in your skill profile, the agent notices the interest and begins stretching recommendations in that direction — matching your _aspiration_, not just your current skills.
+
+**Assignments and contributions** — when you get assigned or merge a PR, that's the strongest signal of all. The agent learns what a confirmed successful match looks like for you and calibrates future scoring accordingly.
+
+---
+
+
+## Tech stack
+
+| Layer | Technology |
 |---|---|
-| `DATABASE_URL` | Neon Postgres connection string |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | GitHub OAuth App credentials |
-| `GITHUB_TOKEN` | Personal access token used for issue ingestion (higher rate limits) |
-| `BETTER_AUTH_SECRET` | Session signing secret |
+| Feontend | Next.js, TailwindCSS, Shadcn |
+| Backend | Node.js, Express.js |
+| Database | PostgreSQL (Neon) |
+| ORM | Drizzle ORM |
+| Vector search | pgvector |
+| Auth | Better Auth (GitHub OAuth) |
+| Background workflows | Render Workflows |
+| Scheduling | node-cron |
+| AI / agents | Mastra AI |
+| Contributor memory | Cognee |
+| Infrastructure | Render |
 
-See `.env.example` for the full list.
+---
 
-## Project Structure
-
-```
-.
-├── apps/
-│   ├── web/          # frontend (getissues.tech)
-│   └── api/           # backend (api.getissues.tech)
-├── packages/
-│   ├── db/            # Drizzle schema + migrations
-│   └── workflows/         # issue ingest and reccommendation workflows
-```
-
-*(Adjust to match your actual monorepo/folder layout.)*
 
 ## Roadmap
 
-- [ ] Cross-subdomain auth hardening across desktop and mobile
-- [ ] Full 8-tier ingestion query coverage (language, framework/topic, labels, star-range, program-specific)
-- [ ] Dynamic per-user scheduling via `agent_schedule`
-- [ ] User-facing GitHub actions (e.g. auto-commenting to claim an issue) using stored OAuth tokens
+- [x] Semantic issue matching
+- [x] Autonomous background agent (Render Workflows)
+- [x] Contributor memory with Cognee
+- [ ] Dashboard AI Assistant
+- [ ] Notion integration 
+- [ ] Dynamic per-user scheduling
+- [ ] MCP server — Claude, Codex, Gemini, OpenCode integrations
+- [ ] Program modes — GSoC, LFX, Hacktoberfest
+- [ ] WhatsApp / push notifications
 
 ## Contributing
 
-Contributions are welcome! This project is itself meant to be a friendly place to make a first open-source contribution.
-
-1. Fork the repo and create your branch from `main`.
-2. Run `pnpm install` and make sure the app runs locally.
-3. Make your change, and add tests if applicable.
-4. Open a PR with a clear description of what changed and why.
-
-Please check open issues labeled `good-first-issue` or `help-wanted` before starting something new, and feel free to open an issue to discuss larger changes first.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to this project.
 
 ## License
 
