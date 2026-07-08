@@ -8,11 +8,9 @@ import {
 import { faqs, howItWorks, memory, problemSolution } from "./constant";
 import * as motion from "framer-motion/client";
 
-
 export default function Home() {
   return (
     <main className="relative isolate overflow-hidden bg-background text-foreground">
-
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_12%_15%,rgba(var(--spotlight-emerald),.18),transparent_45%),radial-gradient(circle_at_86%_20%,rgba(var(--spotlight-amber),.14),transparent_42%),radial-gradient(circle_at_55%_85%,rgba(var(--spotlight-sky),.15),transparent_40%)]" />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
@@ -32,16 +30,16 @@ export default function Home() {
           transition={{ duration: 1, delay: 0.1, ease: [0.2, 0.8, 0.2, 1] }}
           className="flex flex-col items-center gap-6"
         >
-          <h1 className="max-w-2xl text-4xl font-bold font-heading leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-            Stop hunting for issues.
+          <h1 className="max-w-3xl text-3xl font-bold font-heading leading-tight tracking-tight sm:text-5xl lg:text-6xl">
+            Stop searching issues manually.
             <span className="block text-primary">
-              AI Agents find them for you while you sleep.
+              AI Agents find them for you.
             </span>
           </h1>
           <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
             AI agents match your skills to real open issues, filter noisy
             repositories, and send curated opportunities to your app feed or
-            Notion while you sleep.
+            Notion.
           </p>
           <div className="flex flex-col gap-3 mt-4 sm:flex-row">
             <Button
@@ -49,7 +47,7 @@ export default function Home() {
               size="lg"
               className="h-12 px-6 text-base text-white dark:text-black rounded-none"
             >
-              <a href="/login">Start Using getissues for Free</a>
+              <a href="/login">Start your Contribution Journey</a>
             </Button>
             <Button
               asChild
@@ -90,7 +88,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.8, delay: i * 0.15, ease: [0.2, 0.8, 0.2, 1] }}
+              transition={{
+                duration: 0.8,
+                delay: i * 0.15,
+                ease: [0.2, 0.8, 0.2, 1],
+              }}
               className="relative group"
             >
               <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card/40 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
@@ -150,7 +152,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.8, delay: i * 0.12, ease: [0.2, 0.8, 0.2, 1] }}
+              transition={{
+                duration: 0.8,
+                delay: i * 0.12,
+                ease: [0.2, 0.8, 0.2, 1],
+              }}
               className="relative rounded-2xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-md"
             >
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-sm font-bold text-primary">
@@ -194,7 +200,11 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
-                transition={{ duration: 0.5, delay: (i * 0.1) + 0.1, ease: "easeOut" }}
+                transition={{
+                  duration: 0.5,
+                  delay: i * 0.1 + 0.1,
+                  ease: "easeOut",
+                }}
                 className="rounded-2xl border border-border/60 bg-background/60 p-5 backdrop-blur-sm transition-[border-color,background-color] duration-300 hover:border-primary/30 hover:bg-background/80"
               >
                 <div className="mb-3 flex items-center gap-2">
@@ -277,16 +287,17 @@ export default function Home() {
                 </p>
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
-                {["Personalised Skill based project recommendation", "Org discovery"].map(
-                  (tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-primary/20 bg-primary/5 px-3 py-0.5 text-xs font-medium text-primary"
-                    >
-                      {tag}
-                    </span>
-                  ),
-                )}
+                {[
+                  "Personalised Skill based project recommendation",
+                  "Org discovery",
+                ].map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-primary/20 bg-primary/5 px-3 py-0.5 text-xs font-medium text-primary"
+                  >
+                    {tag}
+                  </span>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -297,7 +308,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.8, delay: 0.12, ease: [0.2, 0.8, 0.2, 1] }}
+              transition={{
+                duration: 0.8,
+                delay: 0.12,
+                ease: [0.2, 0.8, 0.2, 1],
+              }}
               className="flex-1"
             >
               <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
@@ -321,7 +336,8 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Recommends mentorship projects that match with your skills so you can apply to the right ones.
+                  Recommends mentorship projects that match with your skills so
+                  you can apply to the right ones.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {["Project recommendation", "Skill match"].map((tag) => (
@@ -340,7 +356,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+              transition={{
+                duration: 0.8,
+                delay: 0.2,
+                ease: [0.2, 0.8, 0.2, 1],
+              }}
               className="flex-1"
             >
               <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
@@ -368,14 +388,16 @@ export default function Home() {
                   miss a valid issue during the event.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-1.5">
-                  {["Label based issue search", "Instant notifications"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-orange-500/20 bg-orange-500/5 px-2.5 py-0.5 text-xs font-medium text-orange-600 dark:text-orange-400"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {["Label based issue search", "Instant notifications"].map(
+                    (tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-orange-500/20 bg-orange-500/5 px-2.5 py-0.5 text-xs font-medium text-orange-600 dark:text-orange-400"
+                      >
+                        {tag}
+                      </span>
+                    ),
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -524,8 +546,12 @@ export default function Home() {
               value={faq.value}
               className="cursor-pointer text-base rounded-md py-1 px-4"
             >
-              <AccordionTrigger className="text-base cursor-pointer">{faq.q}</AccordionTrigger>
-              <AccordionContent className="text-[14px]">{faq.a}</AccordionContent>
+              <AccordionTrigger className="text-base cursor-pointer">
+                {faq.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-[14px]">
+                {faq.a}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
@@ -550,10 +576,7 @@ export default function Home() {
             </h2>
             <p className="mt-4 mx-auto max-w-lg text-lg text-muted-foreground">
               Start using the AI agent now{" "}
-              <strong className="text-foreground">
-                before a paywall comes.
-              </strong>{" "}
-              Lock in your free tier access today.
+                to search issues on behalf of you
             </p>
 
             <div className="mt-10 flex justify-center">
