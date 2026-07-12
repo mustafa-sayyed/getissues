@@ -16,35 +16,40 @@ import { inArray } from "drizzle-orm";
 export const deduplicateIssueTask = task(
   { name: "deduplicateIssueTask", plan: "starter" },
   async (issues: GitHubIssueSearchItem[]) => {
-    const issuesUrl = issues.map((item) => item.html_url);
+    const issuesMap = new Map(issues.map((issue) => [issue.html_url, issue]));
 
-    const existingIssue = await db.query.issue.findMany({
-      where: inArray(schema.issue.url, issuesUrl),
+    const existingIssues = await db.query.issue.findMany({
+      where: inArray(schema.issue.url, issuesMap.keys().toArray()),
     });
 
-    const uniqueIssue = issues.filter((issue) =>
-      existingIssue.find((existing) => existing.url === issue.html_url),
+    const existingIssuesMap = new Map(
+      existingIssues.map((issue) => [issue.url, issue]),
     );
 
-    if (existingIssue.length && !uniqueIssue.length) {
-      console.log(`Issue #${existingIssue.length} already exists — skipping.`);
+    const uniqueIssues = issuesMap
+      .values()
+      .filter((issue) => !existingIssuesMap.has(issue.html_url))
+      .toArray();
+
+    if (existingIssues.length && !uniqueIssues.length) {
+      console.log(`Issue #${existingIssues.length} already exists — skipping.`);
       return {
         success: true,
         skipped: true,
-        reason: `Found ${existingIssue.length} existing issues in the database. No new issues to process.`,
-        existingIssues: existingIssue.length,
+        reason: `Found ${existingIssues.length} existing issues in the database. No new issues to process.`,
+        existingIssues: existingIssues.length,
       };
     }
 
-    for (const item of uniqueIssue) {
+    for (const item of uniqueIssues) {
       await ensureRepoTask(item);
     }
 
     return {
       success: true,
-      existingIssues: existingIssue.length,
-      newIssues: uniqueIssue.length,
-      message: `Issue #${uniqueIssue.length} is new and has passed to other tasks for further processing.`,
+      existingIssues: existingIssues.length,
+      newIssues: uniqueIssues.length,
+      message: `Issue #${uniqueIssues.length} is new and has passed to other tasks for further processing.`,
     };
   },
 );
