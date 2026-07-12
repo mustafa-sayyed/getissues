@@ -12,6 +12,7 @@ import cron from "node-cron";
 import { db, schema } from "./lib/db.js";
 import { Render } from "@renderinc/sdk";
 import globalErrorHandler from "./middlewares/errorHandler.middleware.js";
+import compression from "compression";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 4000);
@@ -25,6 +26,20 @@ app.use(
   cors({
     origin: corsOrigins,
     credentials: true,
+  }),
+);
+
+app.use(
+  compression({
+    filter: (req, res) => {
+      if (req.headers["x-no-compression"]) {
+        // don't compress responses if this request header is present
+        return false;
+      }
+
+      // fallback to standard filter function
+      return compression.filter(req, res);
+    },
   }),
 );
 
