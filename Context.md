@@ -138,7 +138,7 @@ pnpm lint
 pnpm typecheck
 pnpm --filter @getissues/api typecheck
 pnpm --filter @packages/db typecheck
-pnpm --filter @packages/workflows exec tsc -p tsconfig.json --noEmit
+pnpm --filter @getissues/workflows typecheck
 ```
 
 Package managers/tools:
