@@ -27,6 +27,7 @@ const getQueryEmbedding = async (query: string) => {
     return null;
   }
 };
+
 const getIssues = asyncHandler(async (req, res) => {
   const search =
     typeof req.query.search === "string" ? req.query.search.trim() : "";

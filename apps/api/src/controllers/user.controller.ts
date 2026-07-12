@@ -6,6 +6,16 @@ import { db, schema, eq, sql } from "../lib/db.js";
 import { getVoyageClient } from "../lib/voyage.js";
 import { fromNodeHeaders } from "better-auth/node";
 
+const buildSkillsEmbedding = async (languages: string[], interests: string) => {
+  const voyage = getVoyageClient();
+  const embeddingResponse = await voyage.embed({
+    input: `${languages.join(", ")} \n\n ${interests}`,
+    model: "voyage-3",
+  });
+
+  return embeddingResponse.data?.[0]?.embedding;
+};
+
 const getGithubUserData = asyncHandler(async (req, res) => {
   const userId = req.params.userId as string;
 
@@ -29,6 +39,8 @@ const getGithubUserData = asyncHandler(async (req, res) => {
 });
 
 const getUserSkills = asyncHandler(async (req, res) => {
+  const { includeEmbedding } = req.body;
+
   if (!req.user) {
     return res
       .status(httpStatusCodes.UNAUTHORIZED)
@@ -39,7 +51,7 @@ const getUserSkills = asyncHandler(async (req, res) => {
     .select({
       languages: schema.skills.languages,
       interests: schema.skills.interests,
-      embedding: schema.skills.embedding,
+      embedding: includeEmbedding ? schema.skills.embedding : sql`NULL`,
     })
     .from(schema.skills)
     .where(eq(schema.skills.userId, req.user.id))
@@ -54,7 +66,7 @@ const getUserSkills = asyncHandler(async (req, res) => {
   return res.status(httpStatusCodes.OK).json(userSkills[0]);
 });
 
-const saveUserSkills = asyncHandler(async (req, res) => {
+const createUserSkills = asyncHandler(async (req, res) => {
   if (!req.user) {
     return res
       .status(httpStatusCodes.UNAUTHORIZED)
@@ -63,39 +75,24 @@ const saveUserSkills = asyncHandler(async (req, res) => {
 
   const { languages, interests } = req.body;
 
-  const voyage = getVoyageClient();
-  const embeddingResponse = await voyage.embed({
-    input: `${languages.join(", ")} \n\n ${interests}`,
-    model: "voyage-3",
-  });
-
-  const embedding = embeddingResponse.data?.[0]?.embedding;
-
-  if (!embedding) {
-    return res
-      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: "Failed to Save User Skills" });
-  }
-
   const existingSkills = await db
-    .select()
+    .select({ userId: schema.skills.userId })
     .from(schema.skills)
     .where(eq(schema.skills.userId, req.user.id))
     .limit(1);
 
   if (existingSkills.length > 0) {
-    await db
-      .update(schema.skills)
-      .set({
-        languages,
-        interests,
-        embedding,
-      })
-      .where(eq(schema.skills.userId, req.user.id));
-
     return res
-      .status(httpStatusCodes.OK)
-      .json({ success: true, updated: true });
+      .status(httpStatusCodes.BAD_REQUEST)
+      .json({ error: "Skills already exist. Use the update endpoint." });
+  }
+
+  const embedding = await buildSkillsEmbedding(languages, interests);
+
+  if (!embedding) {
+    return res
+      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Failed to Save User Skills" });
   }
 
   await db.insert(schema.skills).values({
@@ -108,6 +105,47 @@ const saveUserSkills = asyncHandler(async (req, res) => {
   return res
     .status(httpStatusCodes.CREATED)
     .json({ success: true, message: "User skills saved successfully" });
+});
+
+const updateUserSkills = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res
+      .status(httpStatusCodes.UNAUTHORIZED)
+      .json({ error: "Unauthorized" });
+  }
+
+  const { languages, interests } = req.body;
+
+  const existingSkills = await db
+    .select({ userId: schema.skills.userId })
+    .from(schema.skills)
+    .where(eq(schema.skills.userId, req.user.id))
+    .limit(1);
+
+  if (!existingSkills.length) {
+    return res
+      .status(httpStatusCodes.NOT_FOUND)
+      .json({ error: "Skills not found" });
+  }
+
+  const embedding = await buildSkillsEmbedding(languages, interests);
+
+  if (!embedding) {
+    return res
+      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Failed to Update User Skills" });
+  }
+
+  await db
+    .update(schema.skills)
+    .set({
+      languages,
+      interests,
+      embedding,
+    })
+    .where(eq(schema.skills.userId, req.user.id));
+
+  return res.status(httpStatusCodes.OK).json({ success: true, updated: true });
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -149,7 +187,8 @@ const deleteAccount = asyncHandler(async (req, res) => {
 export {
   getGithubUserData,
   getUserSkills,
-  saveUserSkills,
+  createUserSkills,
+  updateUserSkills,
   logoutUser,
   deleteAccount,
 };

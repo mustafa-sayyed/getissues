@@ -38,6 +38,8 @@ export default function SettingsPage() {
   const [languages, setLanguages] = useState<string[]>([]);
   const [interests, setInterests] = useState("");
   const [isLoadingSkills, setIsLoadingSkills] = useState(true);
+  const [hasSkills, setHasSkills] = useState(false);
+  const [isSavingSkills, setIsSavingSkills] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { setTheme, theme: currentTheme } = useTheme();
@@ -61,6 +63,7 @@ export default function SettingsPage() {
       if (response.status === 404) {
         setLanguages([]);
         setInterests("");
+        setHasSkills(false);
         return;
       }
 
@@ -75,6 +78,7 @@ export default function SettingsPage() {
 
       setLanguages(data.languages);
       setInterests(data.interests);
+      setHasSkills(true);
     } catch (error) {
       console.error("Error loading user skills:", error);
       toast.error("Failed to load skills.");
@@ -82,6 +86,48 @@ export default function SettingsPage() {
       setIsLoadingSkills(false);
     }
   }, [apiUrl]);
+
+  const handleSaveSkills = async () => {
+    if (isSavingSkills) return;
+
+    if (!apiUrl) {
+      toast.error("API URL is not configured.");
+      return;
+    }
+
+    if (!languages.length || interests.trim().length < 10) {
+      toast.error("Add at least one language and a short preference note.");
+      return;
+    }
+
+    setIsSavingSkills(true);
+
+    try {
+      const response = await fetch(`${apiUrl}/users/skills`, {
+        method: hasSkills ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          languages,
+          interests: interests.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to save skills (${response.status})`);
+      }
+
+      setHasSkills(true);
+      toast.success(hasSkills ? "Skills updated." : "Skills saved.");
+    } catch (error) {
+      console.error("Error saving user skills:", error);
+      toast.error("Failed to save skills.");
+    } finally {
+      setIsSavingSkills(false);
+    }
+  };
 
   useEffect(() => {
     void loadSkills();
@@ -195,7 +241,8 @@ export default function SettingsPage() {
                   </label>
                   <LanguageCombobox
                     value={languages}
-                    disabled={true}
+                    onChange={setLanguages}
+                    disabled={isLoadingSkills || isSavingSkills}
                     placeholder={
                       isLoadingSkills
                         ? "Loading skills..."
@@ -209,10 +256,29 @@ export default function SettingsPage() {
                   </label>
                   <Textarea
                     value={interests}
-                    readOnly={true}
-                    className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md cursor-default pointer-events-none opacity-70 "
+                    onChange={(event) => setInterests(event.target.value)}
+                    disabled={isLoadingSkills || isSavingSkills}
+                    className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md"
                     placeholder="e.g. I want to work on open source issues related to web development, especially in JavaScript and TypeScript. I am also interested in contributing to projects that focus on accessibility and performance optimization."
                   />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSaveSkills}
+                    disabled={isLoadingSkills || isSavingSkills}
+                    className="gap-2"
+                  >
+                    {isSavingSkills ? (
+                      <>
+                        <Spinner className="size-3.5" />
+                        Saving...
+                      </>
+                    ) : hasSkills ? (
+                      "Update Skills"
+                    ) : (
+                      "Save Skills"
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -245,7 +311,7 @@ export default function SettingsPage() {
                             ? "bg-white border border-gray-200"
                             : theme === "dark"
                               ? "bg-gray-900 border border-gray-700"
-                              : "bg-gradient-to-br from-white to-gray-900",
+                              : "bg-linear-to-br from-white to-gray-900",
                         )}
                       />
                       <span className="text-xs font-medium capitalize">
