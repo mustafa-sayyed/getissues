@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, eq, schema } from "../../lib/db.js";
 
 export const getUserSkillsTask = task(
@@ -21,7 +22,10 @@ export const getUserSkillsTask = task(
 
     const skills = `Known Programming to User: ${userSkills.languages.join(", ")}, \n\n User interested in Working: ${userSkills.interests}`;
 
-    console.log(`Retrieved skills for user ${userId}: ${userSkills.interests}.`);
+    logger.info(
+      { userId, interests: userSkills.interests },
+      `Retrieved skills for user ${userId}: ${userSkills.interests}.`,
+    );
     return {
       embedding: userSkills.embedding,
       skills: skills,

@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, eq, schema, sql } from "../../lib/db.js";
 import { issue } from "../../types/common.types.js";
 import { and, notInArray } from "drizzle-orm";
@@ -44,7 +45,8 @@ export const semanticSearchIssuesTask = task(
       .orderBy(sql`${schema.issue.embedding} <=> ${embeddingStr}`)
       .limit(20);
 
-    console.log(
+    logger.info(
+      { candidateIssues: matchedIssues.length, userId },
       `Semantic search found ${matchedIssues.length} candidate issues.`,
     );
     return matchedIssues;

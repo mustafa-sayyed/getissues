@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, eq, schema } from "../../lib/db.js";
 import type { GitHubIssueSearchItem } from "../../types/github.types.js";
 import { ensureRepoTask } from "./ensureRepo.task.js";
@@ -6,7 +7,10 @@ import { inArray } from "drizzle-orm";
 
 /**
  * Task: Deduplication Check
- *
+      logger.info(
+        { existingIssues: existingIssues.length },
+        `Issue #${existingIssues.length} already exists — skipping.`,
+      );
  * Checks whether the given GitHub issue already exists in the database.
  * - If it exists -> logs and returns early (no further processing).
  * - If it doesn't exist -> passes the item downstream to `ensureRepoTask`.
@@ -32,7 +36,10 @@ export const deduplicateIssueTask = task(
       .toArray();
 
     if (existingIssues.length && !uniqueIssues.length) {
-      console.log(`Issue #${existingIssues.length} already exists — skipping.`);
+      logger.info(
+        { existingIssues: existingIssues.length },
+        `Issue #${existingIssues.length} already exists — skipping.`,
+      );
       return {
         success: true,
         skipped: true,

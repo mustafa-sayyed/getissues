@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, schema, eq } from "../../lib/db.js";
 import { getOctokit } from "../../lib/octokit.js";
 import type {
@@ -82,7 +83,10 @@ export const ensureRepoTask = task(
         stars: repoData.stargazers_count,
       };
 
-      console.log(`Repo ${githubRepoId} inserted into repo_analysis.`);
+      logger.info(
+        { githubRepoId },
+        `Repo ${githubRepoId} inserted into repo_analysis.`,
+      );
     }
 
     createIssueEmbeddingTask(

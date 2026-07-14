@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { getOctokit } from "../../lib/octokit.js";
 import { deduplicateIssueTask } from "./deduplicateIssue.task.js";
 import { SEARCH_QUERIES } from "../../lib/githubSearchQueries.js";
@@ -11,7 +12,7 @@ import { SEARCH_QUERIES } from "../../lib/githubSearchQueries.js";
 export const ingestIssuesWorkflow = task(
   { name: "ingestIssuesWorkflow", plan: "starter" },
   async () => {
-    console.log("Starting issue ingestion workflow...");
+    logger.info("Starting issue ingestion workflow...");
     const octokit = getOctokit();
     let totalIssuesIngested = 0;
     for (const searchQuery of SEARCH_QUERIES) {
@@ -23,14 +24,18 @@ export const ingestIssuesWorkflow = task(
       const issues = searchRes.data.items;
       totalIssuesIngested += issues.length;
 
-      console.log(
-        `Found ${issues.length} issues for ${searchQuery.query}. Dispatching deduplication tasks...`,
+      logger.info(
+        {
+          issueCount: issues.length,
+          query: searchQuery.query,
+        },
+        "Dispatching deduplication tasks",
       );
 
       deduplicateIssueTask(issues);
     }
 
-    console.log("Issue ingestion tasks dispatched.");
+    logger.info("Issue ingestion tasks dispatched.");
 
     return {
       success: true,

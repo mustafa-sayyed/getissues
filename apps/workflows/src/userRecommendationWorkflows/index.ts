@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { startAgentRunTask } from "./tasks/startAgentRun.task.js";
 import { embedPreferencesTask } from "./tasks/embedPreferences.task.js";
 import { semanticSearchIssuesTask } from "./tasks/searchIssues.task.js";
@@ -66,7 +67,10 @@ export const userAgentRunsWorkflow = task(
       // Step 6: Mark run as completed successfully
       await completeAgentRunTask(agentRunId, "success");
 
-      console.log(`User recommendation workflow completed for user ${userId}.`);
+      logger.info(
+        { userId },
+        `User recommendation workflow completed for user ${userId}.`,
+      );
 
       return {
         success: true,
@@ -74,6 +78,13 @@ export const userAgentRunsWorkflow = task(
         agentRunId,
       };
     } catch (error) {
+      logger.error(
+        { error, userId, agentRunId },
+        `User recommendation workflow failed for user ${userId}.`,
+      );
+
+      // If an error occurs, we want to mark the agent run as failed
+      // so that we can track the failure in the DB.
       // Mark the run as failed
       if (agentRunId) {
         await completeAgentRunTask(agentRunId, "failed");

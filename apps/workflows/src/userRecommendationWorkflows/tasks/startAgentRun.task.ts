@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, schema } from "../../lib/db.js";
 
 /**
@@ -17,7 +18,10 @@ export const startAgentRunTask = task(
       .values({ userId, status: "running" })
       .returning();
 
-    console.log(`Agent run ${agentRun.id} started for user ${userId}.`);
+    logger.info(
+      { agentRunId: agentRun.id, userId },
+      `Agent run ${agentRun.id} started for user ${userId}.`,
+    );
     return agentRun.id;
   }
 );

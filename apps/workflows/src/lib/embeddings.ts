@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { getVoyageClient } from "./voyage.js";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
@@ -9,7 +10,7 @@ export const getEmbeddings = async (
   retryCount: number = 0,
   provider: string = "voyage-1",
 ): Promise<{ embeddings: number[] }> => {
-  console.log(`Attempt ${retryCount + 1} time to get embedding.`);
+  logger.info(`Attempt ${retryCount + 1} time to get embedding.`);
 
   let embedding: number[] = [];
 
@@ -52,9 +53,9 @@ export const getEmbeddings = async (
 
     return { embeddings: embedding };
   } catch (error) {
-    console.error("Error generating embeddings:", error);
+    logger.error({ error }, "Error generating embeddings:");
     if (retryCount < 3) {
-      console.log(`Retrying embedding generation... Attempt ${retryCount + 1}`);
+      logger.info(`Retrying embedding generation... Attempt ${retryCount + 1}`);
       const nextProvider =
         provider === "voyage-1"
           ? "google"

@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, schema, eq } from "../../lib/db.js";
 
 export type AgentRunStatus = "success" | "failed";
@@ -14,17 +15,28 @@ export type AgentRunStatus = "success" | "failed";
 export const completeAgentRunTask = task(
   { name: "completeAgentRunTask", plan: "starter" },
   async (agentRunId: string, status: AgentRunStatus = "success") => {
-    await db
+    try {
+      await db
       .update(schema.agentRuns)
       .set({ status, endedAt: new Date() })
       .where(eq(schema.agentRuns.id, agentRunId));
 
-    console.log(`Agent run ${agentRunId} marked as "${status}".`);
+    logger.info(
+      { agentRunId, status },
+      `Agent run ${agentRunId} marked as "${status}".`,
+    );
 
     return {
       success: true,
       agentRunId,
       status,
     };
-  }
+    } catch (error) {
+      logger.error(
+        { error, agentRunId, status },
+        `Failed to mark agent run ${agentRunId} as "${status}".`,
+      );
+      throw new Error(`Failed to mark agent run ${agentRunId} as "${status}".`, error);
+    }
+  },
 );

@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import z from "zod";
 import { issue, IssueEvaluation } from "../../types/common.types.js";
 import { scoringAgent } from "../../lib/agent.js";
@@ -80,7 +81,8 @@ export const scoreIssueTask = task(
     const evaluatedIds = new Set(evaluations.map((e) => e.issueId));
     for (const issue of issues) {
       if (!evaluatedIds.has(issue.id)) {
-        console.warn(
+        logger.warn(
+          { issueId: issue.id },
           `Agent missed issue ${issue.id} — assigning neutral score`,
         );
         evaluations.push({
@@ -92,7 +94,10 @@ export const scoreIssueTask = task(
     }
 
     evaluations.forEach((e) =>
-      console.log(`Issue ${e.issueId}, score: ${e.score}, reason: ${e.reason}`),
+      logger.info(
+        { issueId: e.issueId, score: e.score, reason: e.reason },
+        `Issue ${e.issueId}, score: ${e.score}, reason: ${e.reason}`,
+      ),
     );
 
     return evaluations;

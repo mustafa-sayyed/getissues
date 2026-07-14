@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { getVoyageClient } from "../../lib/voyage.js";
 import type {
   GitHubIssueSearchItem,
@@ -41,7 +42,8 @@ export const createIssueEmbeddingTask = task(
       const embedding: number[] = embedRes.embeddings;
 
       if (embedding.length === 0) {
-        console.warn(
+        logger.warn(
+          { issueNumber: item.number },
           `VoyageAI returned an empty embedding for issue #${item.number}. Skipping store.`,
         );
         return {
@@ -59,9 +61,9 @@ export const createIssueEmbeddingTask = task(
         message: `Embedding created and issue #${item.number} stored successfully.`,
       };
     } catch (error) {
-      console.log(
+      logger.error(
+        { error, issueNumber: item.number },
         "[Voyage AI]: An error occured while creating embeddings",
-        error,
       );
       throw error;
     }

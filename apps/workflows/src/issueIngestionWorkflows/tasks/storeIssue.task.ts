@@ -1,4 +1,5 @@
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db, schema } from "../../lib/db.js";
 import type { GitHubIssueSearchItem } from "../../types/github.types.js";
 import { NeonDbError } from "@neondatabase/serverless";
@@ -26,7 +27,13 @@ export const storeIssueTask = task(
         embedding,
       });
 
-      console.log(`Issue #${item.id} — "${item.title}" stored successfully.`);
+      logger.info(
+        {
+          issueId: item.id,
+          issueTitle: item.title,
+        },
+        "Issue stored successfully",
+      );
 
       return {
         success: true,
@@ -39,16 +46,19 @@ export const storeIssueTask = task(
         error instanceof NeonDbError &&
         (error.code === "23505" || error?.constraint === "issue_url_unique")
       ) {
-        console.log("Duplicate issue, issue already exist in the DB", error);
+        logger.error(
+          { error, issueId: item.id },
+          "Duplicate issue, issue already exists in the DB",
+        );
         return {
           success: false,
           error: "Duplicate issue, issue already exist in the DB",
         };
       }
 
-      console.error(
+      logger.error(
+        { error, issueId: item.id, issueTitle: item.title },
         `Failed to store issue #${item.id} — "${item.title}":`,
-        error,
       );
 
       return {

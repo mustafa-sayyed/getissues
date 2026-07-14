@@ -23,6 +23,7 @@
     "@mastra/core": "^1.46.0",
     "@neondatabase/serverless": "^1.1.0",
     "@packages/db": "workspace:*",
+    "@packages/logging": "workspace:*",
     "@renderinc/sdk": "^0.6.0",
     "drizzle-orm": "^0.45.2",
     "octokit": "^5.0.5",

@@ -1,4 +1,6 @@
 
+import { WorkflowLogger as logger } from "@packages/logging";
+
 const getCogneeApiBaseUrl = () => {
   const baseUrl =
     process.env.COGNEE_BASE_URL ?? "";
@@ -39,7 +41,7 @@ const requestCognee = async (path: string, init: RequestInit): Promise<any> => {
   const apiBaseUrl = getCogneeApiBaseUrl();
 
   if (!apiBaseUrl) {
-    console.warn("COGNEE_BASE_URL is not configured; skipping Cognee recall.");
+    logger.warn("COGNEE_BASE_URL is not configured; skipping Cognee recall.");
     return null;
   }
 
@@ -97,7 +99,7 @@ export const getUserDecisionContext = async (
 
     return response[0]?.text ?? "";
   } catch (error) {
-    console.warn("Unable to recall Cognee recommendation memory.", { error });
+    logger.error({ error }, "Unable to recall Cognee recommendation memory.");
     return "";
   }
 };

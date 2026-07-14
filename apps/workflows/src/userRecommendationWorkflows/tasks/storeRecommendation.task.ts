@@ -1,6 +1,7 @@
 // storeRecommendation.task.ts
 import { schema } from "@packages/db";
 import { task } from "@renderinc/sdk/workflows";
+import { WorkflowLogger as logger } from "@packages/logging";
 import { db } from "../../lib/db.js";
 import { IssueEvaluation } from "../../types/common.types.js";
 
@@ -27,7 +28,10 @@ export const storeRecommendationTask = task(
           reason: e.reason,
         }))
       );
-      console.log(`Stored ${toRecommend.length} recommendations`);
+      logger.info(
+        { stored: toRecommend.length },
+        `Stored ${toRecommend.length} recommendations`,
+      );
     }
 
     // Bulk insert below-threshold evaluations in one DB call
@@ -41,7 +45,10 @@ export const storeRecommendationTask = task(
           reason: e.reason,
         }))
       );
-      console.log(`Stored ${toEvaluate.length} below-threshold evaluations`);
+      logger.info(
+        { stored: toEvaluate.length },
+        `Stored ${toEvaluate.length} below-threshold evaluations`,
+      );
     }
 
     return {
