@@ -16,14 +16,10 @@ const sdk = new NodeSDK({
     [ATTR_SERVICE_VERSION]: "1.0.0",
   }),
 
-  traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-  }),
+  traceExporter: new OTLPTraceExporter(),
 
   metricReader: new PeriodicExportingMetricReader({
-    exporter: new OTLPMetricExporter({
-      url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-    }),
+    exporter: new OTLPMetricExporter(),
     exportIntervalMillis: 10000,
   }),
 

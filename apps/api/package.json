@@ -21,6 +21,7 @@
     "@opentelemetry/resources": "^2.9.0",
     "@opentelemetry/sdk-metrics": "^2.9.0",
     "@opentelemetry/sdk-node": "^0.220.0",
+    "@opentelemetry/sdk-trace-node": "^2.9.0",
     "@opentelemetry/semantic-conventions": "^1.43.0",
     "@packages/db": "workspace:*",
     "@packages/logging": "workspace:*",
