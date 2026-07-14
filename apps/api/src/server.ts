@@ -1,3 +1,5 @@
+import "dotenv/config";
+import "./utils/instrumentation.js";
 import { Render } from "@renderinc/sdk";
 import { app } from "./app.js";
 import { ApiLogger as logger } from "@packages/logging";

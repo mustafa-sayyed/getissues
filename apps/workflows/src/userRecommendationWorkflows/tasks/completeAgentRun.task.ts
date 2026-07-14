@@ -36,7 +36,7 @@ export const completeAgentRunTask = task(
         { error, agentRunId, status },
         `Failed to mark agent run ${agentRunId} as "${status}".`,
       );
-      throw new Error(`Failed to mark agent run ${agentRunId} as "${status}".`, error);
+      throw new Error(`Failed to mark agent run ${agentRunId} as "${status}".`, (error as Error));
     }
   },
 );
