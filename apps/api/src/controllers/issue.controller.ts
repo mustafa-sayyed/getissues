@@ -1,4 +1,5 @@
 import { and, desc, ilike, or, sql, type SQL } from "drizzle-orm";
+import { ApiLogger as logger } from "@packages/logging";
 import { db, schema, eq } from "../lib/db.js";
 import { getVoyageClient } from "../lib/voyage.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
@@ -23,7 +24,7 @@ const getQueryEmbedding = async (query: string) => {
 
     return `[${embedding.join(",")}]`;
   } catch (error) {
-    console.log("Error while generating Embedding in issue search", error);
+    logger.error({ error }, "Error while generating Embedding in issue search");
     return null;
   }
 };

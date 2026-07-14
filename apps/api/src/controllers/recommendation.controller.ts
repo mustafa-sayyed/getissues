@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { ApiLogger as logger } from "@packages/logging";
 import { db, schema } from "../lib/db.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
 import { captureRecommendationDecision } from "../utils/cognee.js";
@@ -285,9 +286,7 @@ const updateRecommendationStatus = asyncHandler(async (req, res) => {
       repoLanguages: decisionSnapshot.repo?.languages ?? null,
       repoDescription: decisionSnapshot.repo?.description ?? null,
     }).catch((error) => {
-      console.warn("Failed to capture recommendation decision in Cognee.", {
-        error,
-      });
+      logger.error({ error }, "Failed to capture recommendation decision in Cognee.");
     });
   }
 

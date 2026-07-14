@@ -1,3 +1,5 @@
+import { ApiLogger as logger } from "@packages/logging";
+
 type RecommendationDecisionStatus =
   | "notviewed"
   | "viewed"
@@ -59,7 +61,7 @@ const requestCognee = async (path: string, init: RequestInit) => {
   const apiBaseUrl = getCogneeApiBaseUrl();
 
   if (!apiBaseUrl) {
-    console.warn("COGNEE_BASE_URL is not configured; skipping Cognee memory.");
+    logger.warn("COGNEE_BASE_URL is not configured; skipping Cognee memory.");
     return null;
   }
 

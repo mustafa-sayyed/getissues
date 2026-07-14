@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { ApiLogger as logger } from "@packages/logging";
 import { auth } from "../utils/auth.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
 
@@ -20,7 +21,7 @@ export const requireAuth = async (
 
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    logger.error({ error }, "Auth middleware error:");
     return res
       .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
       .json({ error: "Authentication failed" });
