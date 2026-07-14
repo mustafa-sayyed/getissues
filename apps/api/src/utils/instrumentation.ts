@@ -8,6 +8,7 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
+import { PinoInstrumentation } from "@opentelemetry/instrumentation-pino";
 
 const sdk = new NodeSDK({
   resource: resourceFromAttributes({
@@ -26,7 +27,7 @@ const sdk = new NodeSDK({
     exportIntervalMillis: 10000,
   }),
 
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [getNodeAutoInstrumentations(), new PinoInstrumentation()],
 });
 
 sdk.start();

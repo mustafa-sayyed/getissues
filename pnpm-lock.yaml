@@ -20,6 +20,9 @@ importers:
       '@google/genai':
         specifier: ^2.10.0
         version: 2.10.0(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@opentelemetry/auto-instrumentations-node':
         specifier: ^0.78.0
         version: 0.78.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.9.0(@opentelemetry/api@1.9.1))
@@ -29,6 +32,9 @@ importers:
       '@opentelemetry/exporter-trace-otlp-http':
         specifier: ^0.220.0
         version: 0.220.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/instrumentation-pino':
+        specifier: ^0.66.0
+        version: 0.66.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/resources':
         specifier: ^2.9.0
         version: 2.9.0(@opentelemetry/api@1.9.1)
