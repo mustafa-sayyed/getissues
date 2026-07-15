@@ -39,7 +39,7 @@ const getGithubUserData = asyncHandler(async (req, res) => {
 });
 
 const getUserSkills = asyncHandler(async (req, res) => {
-  const { includeEmbedding } = req.body;
+  const { includeEmbedding = null } = req.query as { includeEmbedding: string };
 
   if (!req.user) {
     return res
