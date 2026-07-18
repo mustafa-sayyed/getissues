@@ -3,7 +3,6 @@ import { auth } from "../utils/auth.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
 import { getOctokit } from "../utils/octokit.js";
 import { db, schema, eq, sql } from "../lib/db.js";
-import { getVoyageClient } from "../lib/voyage.js";
 import { fromNodeHeaders } from "better-auth/node";
 import { ApiLogger as logger } from "@packages/logging";
 import { ai } from "../lib/google.js";

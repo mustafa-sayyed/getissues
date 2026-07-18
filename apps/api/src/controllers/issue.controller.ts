@@ -4,6 +4,7 @@ import { db, schema, eq } from "../lib/db.js";
 import { getVoyageClient } from "../lib/voyage.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
+import ApiError from "../utils/ApiError.js";
 
 const searchModes = ["keyword", "semantic"] as const;
 type SearchMode = (typeof searchModes)[number];
@@ -19,7 +20,11 @@ const getQueryEmbedding = async (query: string) => {
     const embedding = embedResponse.data?.[0]?.embedding ?? [];
 
     if (!embedding.length) {
-      throw new Error("Failed to generate query embedding.");
+      logger.error(
+        { query, embedResponse },
+        "Failed to generate embedding for issue search",
+      );
+      return null;
     }
 
     return `[${embedding.join(",")}]`;
@@ -61,9 +66,10 @@ const getIssues = asyncHandler(async (req, res) => {
     const queryEmbedding = await getQueryEmbedding(search);
 
     if (!queryEmbedding) {
-      return res.status(httpStatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "Failed to search issues. Please try again later.",
-      });
+      throw new ApiError(
+        httpStatusCodes.INTERNAL_SERVER_ERROR,
+        "Failed to search issues. Please try again later.",
+      );
     }
 
     filters.push(sql`${schema.issue.embedding} IS NOT NULL`);

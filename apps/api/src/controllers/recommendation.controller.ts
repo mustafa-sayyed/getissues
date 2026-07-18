@@ -4,6 +4,7 @@ import { db, schema } from "../lib/db.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
 import { captureRecommendationDecision } from "../utils/cognee.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
+import ApiError from "../utils/ApiError.js";
 
 const recommendationStatuses = [
   "notviewed",
@@ -58,9 +59,7 @@ const getRecommendationDecisionSnapshot = async (
 
 const getRecommendations = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const status = typeof req.query.status === "string" ? req.query.status : "";
@@ -126,9 +125,7 @@ const getRecommendations = asyncHandler(async (req, res) => {
 
 const getRecommendationStats = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const [stats] = await db
@@ -162,9 +159,7 @@ const getRecommendationStats = asyncHandler(async (req, res) => {
 
 const getRecommendation = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const recommendationId = req.params.recommendationId as string;
@@ -222,9 +217,7 @@ const getRecommendation = asyncHandler(async (req, res) => {
     .limit(1);
 
   if (!recommendation) {
-    return res
-      .status(httpStatusCodes.NOT_FOUND)
-      .json({ error: "Recommendation not found" });
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "Recommendation not found");
   }
 
   return res.status(httpStatusCodes.OK).json({ recommendation });
@@ -232,18 +225,17 @@ const getRecommendation = asyncHandler(async (req, res) => {
 
 const updateRecommendationStatus = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const recommendationId = req.params.recommendationId as string;
   const status = req.body.status as RecommendationStatus;
 
   if (!recommendationStatuses.includes(status)) {
-    return res
-      .status(httpStatusCodes.BAD_REQUEST)
-      .json({ error: "Invalid recommendation status" });
+    throw new ApiError(
+      httpStatusCodes.BAD_REQUEST,
+      "Invalid recommendation status",
+    );
   }
 
   const [recommendation] = await db
@@ -261,9 +253,10 @@ const updateRecommendationStatus = asyncHandler(async (req, res) => {
     });
 
   if (!recommendation) {
-    return res
-      .status(httpStatusCodes.NOT_FOUND)
-      .json({ error: "Recommendation not found" });
+    throw new ApiError(
+      httpStatusCodes.NOT_FOUND,
+      "Recommendation not found",
+    );
   }
 
   const decisionSnapshot = await getRecommendationDecisionSnapshot(

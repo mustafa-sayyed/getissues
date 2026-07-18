@@ -2,12 +2,11 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db, schema } from "../lib/db.js";
 import { asyncHandler } from "../utils/asyncRequest.js";
 import { httpStatusCodes } from "../utils/httpStatusCodes.js";
+import ApiError from "../utils/ApiError.js";
 
 const getAgentRuns = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const requestedLimit = Number(req.query.limit);
@@ -46,9 +45,7 @@ const getAgentRuns = asyncHandler(async (req, res) => {
 
 const getAgentRunStats = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const [stats] = await db
