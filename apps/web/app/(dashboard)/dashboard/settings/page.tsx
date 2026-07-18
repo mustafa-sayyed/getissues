@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Settings, Shield, Palette, Trash2, Save, Check } from "lucide-react";
+import { Settings, Shield, Palette, Trash2, Check } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { FaGithub } from "react-icons/fa6";
@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const [interests, setInterests] = useState("");
   const [isLoadingSkills, setIsLoadingSkills] = useState(true);
   const [hasSkills, setHasSkills] = useState(false);
+  const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isSavingSkills, setIsSavingSkills] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -70,12 +71,14 @@ export default function SettingsPage() {
         setLanguages([]);
         setInterests("");
         setHasSkills(false);
+        setIsEditingSkills(true);
         return;
       }
 
       setLanguages(response.data.languages);
       setInterests(response.data.interests);
       setHasSkills(true);
+      setIsEditingSkills(false);
     } catch (error) {
       console.error("Error loading user skills:", error);
       toast.error("Failed to load skills.");
@@ -87,8 +90,13 @@ export default function SettingsPage() {
   const handleSaveSkills = async () => {
     if (isSavingSkills) return;
 
+    if (hasSkills && !isEditingSkills) {
+      setIsEditingSkills(true);
+      return;
+    }
+
     if (!apiUrl) {
-      toast.error("API URL is not configured.");
+      toast.error("Internal Server Error");
       return;
     }
 
@@ -111,6 +119,7 @@ export default function SettingsPage() {
       });
 
       setHasSkills(true);
+      setIsEditingSkills(false);
       toast.success(hasSkills ? "Skills updated." : "Skills saved.");
     } catch (error) {
       console.error("Error saving user skills:", error);
@@ -121,8 +130,12 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    void loadSkills();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSkills();
   }, [loadSkills]);
+
+  const areSkillFieldsDisabled =
+    isLoadingSkills || isSavingSkills || (hasSkills && !isEditingSkills);
 
   const handleDeleteAccount = async () => {
     if (isDeleting) return;
@@ -228,7 +241,7 @@ export default function SettingsPage() {
                   <LanguageCombobox
                     value={languages}
                     onChange={setLanguages}
-                    disabled={isLoadingSkills || isSavingSkills}
+                    disabled={areSkillFieldsDisabled}
                     placeholder={
                       isLoadingSkills
                         ? "Loading skills..."
@@ -243,14 +256,26 @@ export default function SettingsPage() {
                   <Textarea
                     value={interests}
                     onChange={(event) => setInterests(event.target.value)}
-                    disabled={isLoadingSkills || isSavingSkills}
+                    disabled={areSkillFieldsDisabled}
                     className="max-h-60 min-h-30 bg-muted/40 border-border/60 focus-visible:ring-primary/40 rounded-md"
                     placeholder="e.g. I want to work on open source issues related to web development, especially in JavaScript and TypeScript. I am also interested in contributing to projects that focus on accessibility and performance optimization."
                   />
                 </div>
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                  {hasSkills && isEditingSkills && (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => setIsEditingSkills(false)}
+                      className="gap-2"
+                    >
+                      cancel
+                    </Button>
+                  )}
+
                   <Button
                     onClick={handleSaveSkills}
+                    size="lg"
                     disabled={isLoadingSkills || isSavingSkills}
                     className="gap-2"
                   >
@@ -259,10 +284,10 @@ export default function SettingsPage() {
                         <Spinner className="size-3.5" />
                         Saving...
                       </>
-                    ) : hasSkills ? (
+                    ) : hasSkills && !isEditingSkills ? (
                       "Update Skills"
                     ) : (
-                      "Save Skills"
+                      "Save Changes"
                     )}
                   </Button>
                 </div>
