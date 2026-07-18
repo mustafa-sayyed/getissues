@@ -26,6 +26,7 @@ import { useCallback, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
+import axios from "axios";
 
 type IssueStatus = "open" | "closed" | "assigned";
 type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
@@ -212,23 +213,13 @@ export default function RecommendationDetailPage() {
       setIsUpdating(true);
 
       try {
-        const response = await fetch(
+        await axios.patch(
           `${apiUrl}/recommendations/${recommendationId}/status`,
+          { status },
           {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({ status }),
+            withCredentials: true,
           },
         );
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to update recommendation (${response.status})`,
-          );
-        }
 
         setRecommendation((current) =>
           current ? { ...current, status } : current,
@@ -266,16 +257,10 @@ export default function RecommendationDetailPage() {
     setError(null);
 
     try {
-      const response = await fetch(
+      const { data } = await axios.get<RecommendationResponse>(
         `${apiUrl}/recommendations/${recommendationId}`,
-        { credentials: "include" },
+        { withCredentials: true },
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch recommendation (${response.status})`);
-      }
-
-      const data = (await response.json()) as RecommendationResponse;
       setRecommendation(data.recommendation);
 
       if (data.recommendation.status === "notviewed") {

@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { LanguageCombobox } from "@/components/LanguageCombobox";
+import axios from "axios";
 
 const sections = [
   // sections to be added in future
@@ -50,14 +51,19 @@ export default function SettingsPage() {
   const loadSkills = useCallback(async () => {
     if (!apiUrl) {
       setIsLoadingSkills(false);
-      toast.error("API URL is not configured.");
+      toast.error("Internal Server Error");
       return;
     }
 
     try {
       setIsLoadingSkills(true);
-      const response = await fetch(`${apiUrl}/users/skills`, {
-        credentials: "include",
+      const response = await axios.get<{
+        languages: string[];
+        interests: string;
+      }>(`${apiUrl}/users/skills`, {
+        withCredentials: true,
+        validateStatus: (status) =>
+          (status >= 200 && status < 300) || status === 404,
       });
 
       if (response.status === 404) {
@@ -67,17 +73,8 @@ export default function SettingsPage() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Failed to load skills (${response.status})`);
-      }
-
-      const data = (await response.json()) as {
-        languages: string[];
-        interests: string;
-      };
-
-      setLanguages(data.languages);
-      setInterests(data.interests);
+      setLanguages(response.data.languages);
+      setInterests(response.data.interests);
       setHasSkills(true);
     } catch (error) {
       console.error("Error loading user skills:", error);
@@ -103,21 +100,15 @@ export default function SettingsPage() {
     setIsSavingSkills(true);
 
     try {
-      const response = await fetch(`${apiUrl}/users/skills`, {
+      await axios.request({
         method: hasSkills ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
+        url: `${apiUrl}/users/skills`,
+        data: {
           languages,
           interests: interests.trim(),
-        }),
+        },
+        withCredentials: true,
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to save skills (${response.status})`);
-      }
 
       setHasSkills(true);
       toast.success(hasSkills ? "Skills updated." : "Skills saved.");
@@ -150,14 +141,9 @@ export default function SettingsPage() {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`${apiUrl}/users/account`, {
-        method: "DELETE",
-        credentials: "include",
+      await axios.delete(`${apiUrl}/users/account`, {
+        withCredentials: true,
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to delete account (${response.status})`);
-      }
 
       toast.success("Account deleted.");
       router.replace("/login");

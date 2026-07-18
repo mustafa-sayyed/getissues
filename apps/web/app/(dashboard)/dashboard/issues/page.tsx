@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
+import axios from "axios";
 
 type IssueStatus = "open" | "closed" | "assigned";
 type SearchMode = "keyword" | "semantic";
@@ -69,7 +70,7 @@ const statusColor: Record<IssueStatus, string> = {
   closed: "bg-muted text-muted-foreground border-0",
 };
 
-const langColor: Record<string, string> = {  
+const langColor: Record<string, string> = {
   // Top Web & General Purpose
   typescript: "bg-[#3178c6] text-white",
   javascript: "bg-[#f1e05a] text-black",
@@ -97,7 +98,7 @@ const langColor: Record<string, string> = {
   less: "bg-[#1d365d] text-white",
   vue: "bg-[#41b883] text-black",
   svelte: "bg-[#ff3e00] text-white",
-  
+
   // Functional & Data Science
   elixir: "bg-[#6e4a7e] text-white",
   haskell: "bg-[#5e5086] text-white",
@@ -116,7 +117,7 @@ const langColor: Record<string, string> = {
   nix: "bg-[#7e7eff] text-black",
   lua: "bg-[#000080] text-white",
   perl: "bg-[#0298c3] text-white",
-  markdown: "bg-[#083fa1] text-white", 
+  markdown: "bg-[#083fa1] text-white",
   mdx: "bg-[#fcb32c] text-black",
 
   // Database & Logic
@@ -127,8 +128,6 @@ const langColor: Record<string, string> = {
   // Fallback default catch-all
   default: "bg-[#64748b] text-white",
 };
-
-
 
 const searchModes: Array<{ value: SearchMode; label: string }> = [
   { value: "keyword", label: "Keyword" },
@@ -195,15 +194,12 @@ export default function IssuesPage() {
         params.set("search", search.trim());
       }
 
-      const response = await fetch(`${apiUrl}/issues?${params.toString()}`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch issues (${response.status})`);
-      }
-
-      const data = (await response.json()) as IssuesResponse;
+      const { data } = await axios.get<IssuesResponse>(
+        `${apiUrl}/issues?${params.toString()}`,
+        {
+          withCredentials: true,
+        },
+      );
       setIssues(data.issues);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch issues.");
@@ -321,7 +317,9 @@ export default function IssuesPage() {
         <span className="flex items-center gap-1.5">
           <CircleDot className="size-5 text-primary" />
           <span>
-            <strong className="text-foreground">{isLoading ? 0 : visibleIssues.length}</strong>{" "}
+            <strong className="text-foreground">
+              {isLoading ? 0 : visibleIssues.length}
+            </strong>{" "}
             issues found
           </span>
         </span>
@@ -357,7 +355,9 @@ export default function IssuesPage() {
                   colSpan={6}
                   className="text-center py-16 text-muted-foreground text-sm"
                 >
-                  <div className="flex items-center justify-center gap-2"><Spinner /> Loading issues...</div>
+                  <div className="flex items-center justify-center gap-2">
+                    <Spinner /> Loading issues...
+                  </div>
                 </TableCell>
               </TableRow>
             ) : error ? (

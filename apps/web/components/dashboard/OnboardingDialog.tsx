@@ -14,6 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LanguageCombobox } from "@/components/LanguageCombobox";
 import { toast } from "sonner";
+import axios from "axios";
 
 function OnboardingDialogInner() {
   const searchParams = useSearchParams();
@@ -48,26 +49,20 @@ function OnboardingDialogInner() {
         return;
       }
 
-      const res = await fetch(`${apiUrl}/users/skills`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
+      await axios.post(
+        `${apiUrl}/users/skills`,
+        {
           languages,
           interests: details,
-        }),
-      });
+        },
+        {
+          withCredentials: true,
+        },
+      );
 
-      if (res.ok) {
-        toast.success("Profile saved.");
-        setIsOpen(false);
-        router.replace("/dashboard"); // Remove ?newUser=true
-      } else {
-        toast.error("Failed to save profile.");
-        console.error("Failed to save skills");
-      }
+      toast.success("Profile saved.");
+      setIsOpen(false);
+      router.replace("/dashboard"); // Remove ?newUser=true
     } catch (error) {
       toast.error("Failed to save profile.");
       console.error("Error saving skills:", error);

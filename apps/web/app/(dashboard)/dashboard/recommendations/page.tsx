@@ -31,6 +31,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import axios from "axios";
 
 type IssueStatus = "open" | "closed" | "assigned";
 type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
@@ -155,16 +156,10 @@ export default function RecommendationsPage() {
 
     try {
       const params = new URLSearchParams({ limit: String(limit) });
-      const response = await fetch(
+      const { data } = await axios.get<RecommendationsResponse>(
         `${apiUrl}/recommendations?${params.toString()}`,
-        { credentials: "include" },
+        { withCredentials: true },
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch recommendations (${response.status})`);
-      }
-
-      const data = (await response.json()) as RecommendationsResponse;
       setRecommendations(data.recommendations);
     } catch (err) {
       setError(
@@ -190,21 +185,13 @@ export default function RecommendationsPage() {
     setUpdatingId(recommendationId);
 
     try {
-      const response = await fetch(
+      await axios.patch(
         `${apiUrl}/recommendations/${recommendationId}/status`,
+        { status },
         {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ status }),
+          withCredentials: true,
         },
       );
-
-      if (!response.ok) {
-        throw new Error(`Failed to update recommendation (${response.status})`);
-      }
 
       setRecommendations((current) =>
         status === "deleted"

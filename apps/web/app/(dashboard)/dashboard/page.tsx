@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 
 type IssueStatus = "open" | "closed" | "assigned";
 type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
@@ -184,7 +185,7 @@ export default function DashboardHomePage() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
-      setError("NEXT_PUBLIC_API_URL is not configured.");
+      setError("Internal Server Error");
       setIsLoading(false);
       return;
     }
@@ -200,42 +201,32 @@ export default function DashboardHomePage() {
         agentRunsResponse,
         agentConfigResponse,
       ] = await Promise.all([
-        fetch(`${apiUrl}/recommendations/stats`, { credentials: "include" }),
-        fetch(`${apiUrl}/recommendations?limit=5`, { credentials: "include" }),
-        fetch(`${apiUrl}/agent-runs/stats`, { credentials: "include" }),
-        fetch(`${apiUrl}/agent-runs?limit=5`, { credentials: "include" }),
-        fetch(`${apiUrl}/agent-config`, { credentials: "include" }),
+        axios.get<RecommendationStatsResponse>(
+          `${apiUrl}/recommendations/stats`,
+          { withCredentials: true },
+        ),
+        axios.get<RecommendationsResponse>(
+          `${apiUrl}/recommendations?limit=5`,
+          {
+            withCredentials: true,
+          },
+        ),
+        axios.get<AgentRunStatsResponse>(`${apiUrl}/agent-runs/stats`, {
+          withCredentials: true,
+        }),
+        axios.get<AgentRunsResponse>(`${apiUrl}/agent-runs?limit=5`, {
+          withCredentials: true,
+        }),
+        axios.get<AgentConfigResponse>(`${apiUrl}/agent-config`, {
+          withCredentials: true,
+        }),
       ]);
 
-      const responses = [
-        recommendationStatsResponse,
-        recommendationsResponse,
-        agentRunStatsResponse,
-        agentRunsResponse,
-        agentConfigResponse,
-      ];
-
-      const failedResponse = responses.find((response) => !response.ok);
-      if (failedResponse) {
-        throw new Error(`Failed to load dashboard (${failedResponse.status})`);
-      }
-
-      const recommendationStatsData =
-        (await recommendationStatsResponse.json()) as RecommendationStatsResponse;
-      const recommendationsData =
-        (await recommendationsResponse.json()) as RecommendationsResponse;
-      const agentRunStatsData =
-        (await agentRunStatsResponse.json()) as AgentRunStatsResponse;
-      const agentRunsData =
-        (await agentRunsResponse.json()) as AgentRunsResponse;
-      const agentConfigData =
-        (await agentConfigResponse.json()) as AgentConfigResponse;
-
-      setRecommendationStats(recommendationStatsData.stats);
-      setRecommendations(recommendationsData.recommendations);
-      setAgentRunStats(agentRunStatsData.stats);
-      setAgentRuns(agentRunsData.agentRuns);
-      setAgentConfigs(agentConfigData.configs);
+      setRecommendationStats(recommendationStatsResponse.data.stats);
+      setRecommendations(recommendationsResponse.data.recommendations);
+      setAgentRunStats(agentRunStatsResponse.data.stats);
+      setAgentRuns(agentRunsResponse.data.agentRuns);
+      setAgentConfigs(agentConfigResponse.data.configs);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load dashboard.",

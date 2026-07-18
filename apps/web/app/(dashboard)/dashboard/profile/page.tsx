@@ -16,6 +16,7 @@ import { SlUserFollow, SlUserFollowing } from "react-icons/sl";
 import { GoRepo } from "react-icons/go";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import axios from "axios";
 
 const statusConfig: Record<string, { color: string; label: string }> = {
   merged: {
@@ -48,7 +49,7 @@ export default async function ProfilePage() {
   let user: User | null = null;
   let githubData: GithubUserData | null = null;
   let error;
-  
+
   const requestHeaders = await headers();
   const cookie = requestHeaders.get("cookie") ?? "";
   const { data: session } = await authClient.getSession({
@@ -64,23 +65,15 @@ export default async function ProfilePage() {
   user = session.user;
 
   try {
-    const res = await fetch(
+    const { data } = await axios.get<GithubUserData>(
       `${process.env.NEXT_PUBLIC_API_URL}/users/github/${session.user.id}`,
       {
         headers: {
           cookie,
         },
-        cache: "no-store",
       },
     );
-
-    if (!res.ok) {
-      throw new Error(
-        `Failed to fetch GitHub profile data (${res.status} ${res.statusText})`,
-      );
-    }
-
-    githubData = await res.json();
+    githubData = data;
   } catch (err) {
     console.log(err);
     error = err instanceof Error ? err.message : "Failed to fetch user data.";
