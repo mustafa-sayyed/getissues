@@ -5,15 +5,25 @@ import { getOctokit } from "../utils/octokit.js";
 import { db, schema, eq, sql } from "../lib/db.js";
 import { getVoyageClient } from "../lib/voyage.js";
 import { fromNodeHeaders } from "better-auth/node";
+import { ApiLogger as logger } from "@packages/logging";
+import { ai } from "../lib/google.js";
+import ApiError from "../utils/ApiError.js";
 
 const buildSkillsEmbedding = async (languages: string[], interests: string) => {
-  const voyage = getVoyageClient();
-  const embeddingResponse = await voyage.embed({
-    input: `${languages.join(", ")} \n\n ${interests}`,
-    model: "voyage-3",
-  });
+  try {
+    const result = await ai.models.embedContent({
+      contents: [languages.join(", ") + "\n\n" + interests],
+      model: "gemini-embedding-2",
+      config: {
+        outputDimensionality: 1536,
+      },
+    });
 
-  return embeddingResponse.data?.[0]?.embedding;
+    return result.embeddings?.[0]?.values ?? null;
+  } catch (error) {
+    logger.error({ error }, "Error building skills embedding:");
+    return null;
+  }
 };
 
 const getGithubUserData = asyncHandler(async (req, res) => {
@@ -42,9 +52,10 @@ const getUserSkills = asyncHandler(async (req, res) => {
   const { includeEmbedding = null } = req.query as { includeEmbedding: string };
 
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(
+      httpStatusCodes.UNAUTHORIZED,
+      "Unauthorized",
+    );
   }
 
   const userSkills = await db
@@ -68,9 +79,10 @@ const getUserSkills = asyncHandler(async (req, res) => {
 
 const createUserSkills = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(
+      httpStatusCodes.UNAUTHORIZED,
+      "Unauthorized",
+    );
   }
 
   const { languages, interests } = req.body;
@@ -90,9 +102,10 @@ const createUserSkills = asyncHandler(async (req, res) => {
   const embedding = await buildSkillsEmbedding(languages, interests);
 
   if (!embedding) {
-    return res
-      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: "Failed to Save User Skills" });
+    throw new ApiError(
+      httpStatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to create User Skills",
+    );
   }
 
   await db.insert(schema.skills).values({
@@ -109,9 +122,10 @@ const createUserSkills = asyncHandler(async (req, res) => {
 
 const updateUserSkills = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(
+      httpStatusCodes.UNAUTHORIZED,
+      "Unauthorized",
+    );
   }
 
   const { languages, interests } = req.body;
@@ -123,17 +137,19 @@ const updateUserSkills = asyncHandler(async (req, res) => {
     .limit(1);
 
   if (!existingSkills.length) {
-    return res
-      .status(httpStatusCodes.NOT_FOUND)
-      .json({ error: "Skills not found" });
+    throw new ApiError(
+      httpStatusCodes.NOT_FOUND,
+      "Skills not found. Use the create endpoint to add skills first.",
+    );
   }
 
   const embedding = await buildSkillsEmbedding(languages, interests);
 
   if (!embedding) {
-    return res
-      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: "Failed to Update User Skills" });
+    throw new ApiError(
+      httpStatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to update User Skills",
+    );
   }
 
   await db
@@ -150,9 +166,10 @@ const updateUserSkills = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(
+      httpStatusCodes.UNAUTHORIZED,
+      "Unauthorized",
+    );
   }
 
   const result = await auth.api.signOut({
@@ -160,9 +177,10 @@ const logoutUser = asyncHandler(async (req, res) => {
   });
 
   if (!result.success) {
-    return res
-      .status(httpStatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: "Failed to log out" });
+    throw new ApiError(
+      httpStatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to log out user",
+    );
   }
 
   return res.status(httpStatusCodes.OK).json({ success: true });
@@ -170,9 +188,10 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const deleteAccount = asyncHandler(async (req, res) => {
   if (!req.user) {
-    return res
-      .status(httpStatusCodes.UNAUTHORIZED)
-      .json({ error: "Unauthorized" });
+    throw new ApiError(
+      httpStatusCodes.UNAUTHORIZED,
+      "Unauthorized",
+    );
   }
 
   await auth.api.signOut({

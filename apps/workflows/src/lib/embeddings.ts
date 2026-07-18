@@ -28,7 +28,7 @@ export const getEmbeddings = async (
       case "google":
         const response = await ai.models.embedContent({
           model: "gemini-embedding-2",
-          contents: "Your target text or data goes here.",
+          contents: [text],
           config: {
             outputDimensionality: 1536,
           },

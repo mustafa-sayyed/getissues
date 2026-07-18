@@ -13,12 +13,8 @@ const globalErrorHandler = (
   const error = process.env.NODE_ENV === "development" ? err : undefined;
 
   logger.error(
-    {
-      statusCode: err.statusCode,
-      stack: err.stack,
-      error: err,
-    },
-    err.message,
+    err,
+    `Error occurred while processing request: ${req.method} ${req.originalUrl}`,
   );
 
   res.status(statusCode).json({
