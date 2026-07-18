@@ -1,6 +1,7 @@
 services:
   postgres: 
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17
+    container_name: postgres
     restart: always
     environment:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -10,14 +11,6 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-
-    
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "8080:8080"
-      
 
 
 volumes:

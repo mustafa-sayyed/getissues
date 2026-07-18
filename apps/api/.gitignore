@@ -30,4 +30,4 @@ Thumbs.db
 # Environmental Variables
 .env
 .env.local
-.env.production.local
+.env.production

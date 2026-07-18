@@ -8,7 +8,7 @@ export const skills = pgTable("skills", {
     .uuid("user_id")
     .primaryKey()
     .notNull()
-    .references(() => user.id),
+    .references(() => user.id, { onDelete: "cascade" }),
   languages: t.text("languages").array().notNull(),
   interests: t.text("interests").notNull(),
   embedding: t.vector("embedding", { dimensions: 1536 }).notNull(),
