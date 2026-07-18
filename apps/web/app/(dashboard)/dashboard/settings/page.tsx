@@ -9,6 +9,14 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Settings, Shield, Palette, Trash2, Check } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -18,7 +26,6 @@ import { NotebookPen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useTheme } from "next-themes";
 import { GrConnect } from "react-icons/gr";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { LanguageCombobox } from "@/components/LanguageCombobox";
@@ -42,10 +49,10 @@ export default function SettingsPage() {
   const [hasSkills, setHasSkills] = useState(false);
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isSavingSkills, setIsSavingSkills] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { setTheme, theme: currentTheme } = useTheme();
-  const router = useRouter();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -145,12 +152,6 @@ export default function SettingsPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone.",
-    );
-
-    if (!confirmed) return;
-
     setIsDeleting(true);
 
     try {
@@ -158,13 +159,13 @@ export default function SettingsPage() {
         withCredentials: true,
       });
 
+      window.location.assign("/login");
       toast.success("Account deleted.");
-      router.replace("/login");
-      router.refresh();
     } catch (error) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account.");
       setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -414,7 +415,7 @@ export default function SettingsPage() {
                     variant="destructive"
                     size="sm"
                     className="gap-1.5"
-                    onClick={handleDeleteAccount}
+                    onClick={() => setShowDeleteDialog(true)}
                     disabled={isDeleting}
                   >
                     <Trash2 className="size-3.5" />
@@ -426,6 +427,45 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete account</DialogTitle>
+            <DialogDescription>
+              This will permanently delete your account and sign you out. This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Spinner className="size-3.5" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-3.5" />
+                  Delete account
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
