@@ -32,16 +32,14 @@ export const auth = betterAuth({
       enabled: Boolean(cookieDomain),
       domain: cookieDomain,
     },
-    defaultCookieAttributes: {
-      sameSite: "None",
-      secure: true,
-      domain: cookieDomain,
-    }
   },
   usePlural: true,
   user: {
     fields: {
       image: "avatarUrl",
+    },
+    deleteUser: {
+      enabled: true,
     },
   },
   socialProviders: {

@@ -51,10 +51,7 @@ const getUserSkills = asyncHandler(async (req, res) => {
   const { includeEmbedding = null } = req.query as { includeEmbedding: string };
 
   if (!req.user) {
-    throw new ApiError(
-      httpStatusCodes.UNAUTHORIZED,
-      "Unauthorized",
-    );
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const userSkills = await db
@@ -78,10 +75,7 @@ const getUserSkills = asyncHandler(async (req, res) => {
 
 const createUserSkills = asyncHandler(async (req, res) => {
   if (!req.user) {
-    throw new ApiError(
-      httpStatusCodes.UNAUTHORIZED,
-      "Unauthorized",
-    );
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const { languages, interests } = req.body;
@@ -121,10 +115,7 @@ const createUserSkills = asyncHandler(async (req, res) => {
 
 const updateUserSkills = asyncHandler(async (req, res) => {
   if (!req.user) {
-    throw new ApiError(
-      httpStatusCodes.UNAUTHORIZED,
-      "Unauthorized",
-    );
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const { languages, interests } = req.body;
@@ -165,10 +156,7 @@ const updateUserSkills = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   if (!req.user) {
-    throw new ApiError(
-      httpStatusCodes.UNAUTHORIZED,
-      "Unauthorized",
-    );
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
   const result = await auth.api.signOut({
@@ -187,17 +175,22 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 const deleteAccount = asyncHandler(async (req, res) => {
   if (!req.user) {
-    throw new ApiError(
-      httpStatusCodes.UNAUTHORIZED,
-      "Unauthorized",
-    );
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
   }
 
-  await auth.api.signOut({
+  await auth.api.deleteUser({
+    body: {},
     headers: fromNodeHeaders(req.headers),
   });
 
-  await db.delete(schema.user).where(eq(schema.user.id, req.user.id));
+  const result = await auth.api.signOut({
+    headers: fromNodeHeaders(req.headers),
+    returnHeaders: true,
+  });
+
+  for (const cookie of result.headers.getSetCookie()) {
+    res.append("Set-Cookie", cookie);
+  }
 
   return res.status(httpStatusCodes.OK).json({ success: true });
 });
