@@ -78,6 +78,7 @@ node-cron (Every few hours or as per user conf, per user)
          ├─ Write to recommendations table
          └─ Deliver (app feed / Notion)
 ```
+learn more about the architecture of Workflows [here.](apps/workflows/README.md)
 
 ---
 
@@ -128,7 +129,6 @@ When you interact with a recommendation, we ingest that event into your personal
 - [ ] Dashboard AI Assistant
 - [ ] Notion integration 
 - [ ] Dynamic per-user scheduling
-- [ ] MCP server — Claude, Codex, Gemini, OpenCode integrations
 - [ ] Program modes — GSoC, LFX, Hacktoberfest
 - [ ] WhatsApp / push notifications
 
