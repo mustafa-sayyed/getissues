@@ -1,16 +1,36 @@
 import { Octokit } from "octokit";
 
 /**
- * Singleton Octokit client shared across all workflow tasks.
+ * Octokit clients keyed by token. When GITHUB_ACCESS_TOKEN contains multiple
+ * comma-separated tokens, each call picks one at random.
  */
-let _octokit: Octokit | null = null;
+const octokitClients = new Map<string, Octokit>();
+
+const parseGithubTokens = (value?: string) =>
+  value
+    ?.split(",")
+    .map((token) => token.trim())
+    .filter(Boolean) ?? [];
+
+const getRandomGithubToken = () => {
+  const tokens = parseGithubTokens(process.env.GITHUB_ACCESS_TOKEN);
+
+  if (!tokens.length) {
+    throw new Error("GITHUB_ACCESS_TOKEN environment variable is not set.");
+  }
+
+  return tokens[Math.floor(Math.random() * tokens.length)];
+};
 
 export function getOctokit(): Octokit {
-  if (!_octokit) {
-    if (!process.env.GITHUB_ACCESS_TOKEN) {
-      throw new Error("GITHUB_ACCESS_TOKEN environment variable is not set.");
-    }
-    _octokit = new Octokit({ auth: process.env.GITHUB_ACCESS_TOKEN });
+  const token = getRandomGithubToken();
+  const existingClient = octokitClients.get(token);
+
+  if (existingClient) {
+    return existingClient;
   }
-  return _octokit;
+
+  const client = new Octokit({ auth: token });
+  octokitClients.set(token, client);
+  return client;
 }
