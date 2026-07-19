@@ -1,4 +1,3 @@
-// storeRecommendation.task.ts
 import { schema } from "@packages/db";
 import { task } from "@renderinc/sdk/workflows";
 import { WorkflowLogger as logger } from "@packages/logging";
@@ -12,21 +11,21 @@ export const storeRecommendationTask = task(
   async (
     userId: string,
     agentRunId: string,
-    evaluations: IssueEvaluation[]
+    evaluations: IssueEvaluation[],
   ) => {
-    const toRecommend = evaluations.filter(e => e.score >= SCORE_THRESHOLD);
-    const toEvaluate = evaluations.filter(e => e.score < SCORE_THRESHOLD);
+    const toRecommend = evaluations.filter((e) => e.score >= SCORE_THRESHOLD);
+    const toEvaluate = evaluations.filter((e) => e.score < SCORE_THRESHOLD);
 
     // Bulk insert recommendations in one DB call
     if (toRecommend.length > 0) {
       await db.insert(schema.recommendations).values(
-        toRecommend.map(e => ({
+        toRecommend.map((e) => ({
           userId,
           issueId: e.issueId,
           agentRunId,
           matchScore: e.score,
           reason: e.reason,
-        }))
+        })),
       );
       logger.info(
         { stored: toRecommend.length },
@@ -37,13 +36,13 @@ export const storeRecommendationTask = task(
     // Bulk insert below-threshold evaluations in one DB call
     if (toEvaluate.length > 0) {
       await db.insert(schema.agentIssueEvaluation).values(
-        toEvaluate.map(e => ({
+        toEvaluate.map((e) => ({
           agentId: agentRunId,
           issueId: e.issueId,
           userId,
           matchScore: e.score,
           reason: e.reason,
-        }))
+        })),
       );
       logger.info(
         { stored: toEvaluate.length },
@@ -56,5 +55,5 @@ export const storeRecommendationTask = task(
       recommended: toRecommend.length,
       belowThreshold: toEvaluate.length,
     };
-  }
+  },
 );

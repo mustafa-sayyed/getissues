@@ -2,7 +2,7 @@ import { task } from "@renderinc/sdk/workflows";
 import { WorkflowLogger as logger } from "@packages/logging";
 import { db, eq, schema, sql } from "../../lib/db.js";
 import { issue } from "../../types/common.types.js";
-import { and, notInArray } from "drizzle-orm";
+import { and, isNotNull, notInArray } from "drizzle-orm";
 
 /**
  * Task: Semantic similarity search over stored issues.
@@ -32,6 +32,10 @@ export const semanticSearchIssuesTask = task(
       .from(schema.issue)
       .where(
         and(
+          eq(schema.issue.status, "open"),
+          eq(schema.issue.isAssigned, false),
+          eq(schema.issue.isActive, true),
+          isNotNull(schema.issue.embedding),
           notInArray(
             schema.issue.id,
             recommendedIssues.map((rec) => rec.issueId),

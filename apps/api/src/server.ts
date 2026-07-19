@@ -27,7 +27,24 @@ cron.schedule("0 */2 * * *", async () => {
   }
 });
 
-// Workflow 2: User Specific Agent Runs
+// Workflow 2: Issue Cleanup (runs every hour)
+cron.schedule("30 * * * *", async () => {
+  logger.info("Triggering cleanupIssueWorkflow via cron...");
+  try {
+    const cleanupIssueWorkflow = await render.workflows.startTask(
+      "getissues-workflows/cleanupIssueWorkflow",
+      [100],
+    );
+    logger.info(
+      { cleanupWorkflowTaskId: cleanupIssueWorkflow.taskRunId },
+      "[cleanupIssueWorkflow] task started:",
+    );
+  } catch (err) {
+    logger.error(err, "Cron Error (cleanupIssueWorkflow):");
+  }
+});
+
+// Workflow 3: User Specific Agent Runs
 // To keep it simple, we run it every 4 hours
 cron.schedule("0 */4 * * *", async () => {
   logger.info("Triggering userAgentRunsWorkflow via cron...");
