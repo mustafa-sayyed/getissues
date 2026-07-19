@@ -3,27 +3,27 @@ const since14days = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(
 
 export const SEARCH_QUERIES = [
   {
-    query: 'is:issue is:open label:"good first issue" no:assignee stars:>100 sort:updated-desc',
-    limit: 30,
+    query: 'is:issue is:open label:"good first issue" no:assignee',
+    limit: 50,
   },
   {
-    query: 'is:issue is:open label:"help wanted" no:assignee stars:>500 sort:updated-desc',
-    limit: 30,
+    query: 'is:issue is:open label:"help wanted" no:assignee',
+    limit: 50,
   },
   {
-    query: 'is:issue is:open label:"up-for-grabs" no:assignee stars:>100 sort:updated-desc',
+    query: 'is:issue is:open label:"up-for-grabs" no:assignee',
     limit: 20,
   },
   {
-    query: 'is:issue is:open label:"good first issue" label:"bug" no:assignee stars:>100 sort:updated-desc',
+    query: 'is:issue is:open label:"good first issue" label:"bug" no:assignee',
     limit: 20,
   },
   {
-    query: `is:issue is:open label:"good first issue" no:assignee stars:>100 created:>${since7days} sort:created-desc`,
+    query: `is:issue is:open label:"good first issue" no:assignee created:>${since7days}`,
     limit: 30,
   },
   {
-    query: `is:issue is:open label:"help wanted" no:assignee stars:>200 created:>${since14days} sort:updated-desc`,
+    query: `is:issue is:open label:"help wanted" no:assignee stars:>200 created:>${since14days}`,
     limit: 25,
   },
 ];
