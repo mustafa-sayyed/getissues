@@ -8,6 +8,7 @@ import { storeRecommendationTask } from "./tasks/storeRecommendation.task.js";
 import { completeAgentRunTask } from "./tasks/completeAgentRun.task.js";
 import { getUserSkillsTask } from "./tasks/getUserSkills.tesk.js";
 import { getUserDecisionContext } from "../utils/cognee.js";
+import { skills } from "../../../../packages/db/src/schema/skills.model.js";
 
 /**
  * User Recommendation Workflow
@@ -38,8 +39,17 @@ export const userAgentRunsWorkflow = task(
       agentRunId = await startAgentRunTask(userId);
 
       // Step 2: Embed user preferences
-      const { embedding: userSkillsEmbedding, skills } =
-        await getUserSkillsTask(userId);
+      const userSkills = await getUserSkillsTask(userId);
+      if (!userSkills) {
+        return {
+          success: false,
+          message: `Failed to retrieve skills for user ${userId}.`,
+          agentRunId,
+        };
+      }
+
+      const userSkillsEmbedding = userSkills.embedding;
+      const skills = userSkills.skills;
 
       const decisionContext = await getUserDecisionContext(userId, skills);
 

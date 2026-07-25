@@ -9,26 +9,35 @@ export const getUserSkillsTask = task(
   ): Promise<{
     embedding: number[];
     skills: string;
-  }> => {
-    const [userSkills] = await db
-      .select()
-      .from(schema.skills)
-      .where(eq(schema.skills.userId, userId))
-      .limit(1);
+  } | null> => {
+    try {
+      const [userSkills] = await db
+        .select()
+        .from(schema.skills)
+        .where(eq(schema.skills.userId, userId))
+        .limit(1);
 
-    if (!userSkills) {
-      throw new Error(`No skills found for user ${userId}.`);
+      if (!userSkills) {
+        logger.info(`No skills found for user ${userId}.`);
+        return null;
+      }
+
+      const skills = `Known Programming to User: ${userSkills.languages.join(", ")}, \n\n User interested in Working: ${userSkills.interests}`;
+
+      logger.info(
+        { userId, interests: userSkills.interests },
+        `Retrieved skills for user ${userId}: ${userSkills.interests}.`,
+      );
+      return {
+        embedding: userSkills.embedding,
+        skills: skills,
+      };
+    } catch (error) {
+      logger.error(
+        { userId, error },
+        `Error retrieving skills for user ${userId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      return null;
     }
-
-    const skills = `Known Programming to User: ${userSkills.languages.join(", ")}, \n\n User interested in Working: ${userSkills.interests}`;
-
-    logger.info(
-      { userId, interests: userSkills.interests },
-      `Retrieved skills for user ${userId}: ${userSkills.interests}.`,
-    );
-    return {
-      embedding: userSkills.embedding,
-      skills: skills,
-    };
   },
 );
