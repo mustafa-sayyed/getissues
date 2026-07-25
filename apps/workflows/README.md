@@ -61,3 +61,34 @@ graph TD
 ```
 **Note**: There also constraints and ratelimits on the number of issues to be recommended to the user based on user plan.(free, pro, premium). The workflow will check the user plan and recommend issues accordingly.
 It will check the user plan first, then based on that proceed for this workflow to recommend issues to the user. If the user has reached the limit of recommended issues, it will not recommend any more issues to the user until the next cycle.
+
+
+# Workflow 3: Cleanup Issue Workflow
+This workflow keeps stored GitHub issues fresh so the recommendation workflow only recommends issues that are still open, active, and unassigned. It periodically checks issues from the database against the GitHub API and updates their stored availability fields.
+
+This workflow is useful because an issue can change after ingestion. A good first issue may later be assigned, closed, locked, deleted, or made unavailable. Without cleanup, the recommendation system can keep suggesting stale issues.
+
+Workflow Steps:
+1. **Fetch Cleanup Candidates**: Select a batch of issues from the database that are still active or not marked as closed.
+2. **Parse GitHub Issue URL**: Extract the owner, repository, and issue number from the stored GitHub issue URL.
+3. **Check Live GitHub Status**: Fetch the current issue details from GitHub.
+4. **Detect Availability**: Mark the issue as closed, assigned, or open based on GitHub state, assignees, and locked status.
+5. **Update DB Status**: Update `status`, `isAssigned`, and `isActive` in the database when the live GitHub state differs from the stored state.
+
+# Flow:
+```mermaid
+graph TD
+    START[Cron runs cleanupIssueWorkflow] --> A
+    A[Fetch cleanup candidates from DB]
+    A --> B[For each issue]
+    B --> C[Parse owner/repo/issue number from URL]
+    C --> D[Fetch live issue status from GitHub]
+    D --> E{Issue open, unassigned, and unlocked?}
+    E -- Yes --> F[Set status open, isAssigned false, isActive true]
+    E -- No: assigned --> G[Set status assigned, isAssigned true, isActive false]
+    E -- No: closed/unavailable/locked --> H[Set status closed or inactive]
+    F --> I[Update DB if changed]
+    G --> I
+    H --> I
+    I --> J[End cleanup batch]
+```
