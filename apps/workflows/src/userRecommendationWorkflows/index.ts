@@ -1,14 +1,12 @@
 import { task } from "@renderinc/sdk/workflows";
 import { WorkflowLogger as logger } from "@packages/logging";
 import { startAgentRunTask } from "./tasks/startAgentRun.task.js";
-import { embedPreferencesTask } from "./tasks/embedPreferences.task.js";
 import { semanticSearchIssuesTask } from "./tasks/searchIssues.task.js";
 import { scoreIssueTask } from "./tasks/scoreIssue.task.js";
 import { storeRecommendationTask } from "./tasks/storeRecommendation.task.js";
 import { completeAgentRunTask } from "./tasks/completeAgentRun.task.js";
 import { getUserSkillsTask } from "./tasks/getUserSkills.tesk.js";
 import { getUserDecisionContext } from "../utils/cognee.js";
-import { skills } from "../../../../packages/db/src/schema/skills.model.js";
 
 /**
  * User Recommendation Workflow
