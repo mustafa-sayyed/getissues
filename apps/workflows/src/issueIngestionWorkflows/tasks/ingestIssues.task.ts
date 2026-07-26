@@ -3,6 +3,7 @@ import { WorkflowLogger as logger } from "@packages/logging";
 import { getOctokit } from "../../lib/octokit.js";
 import { deduplicateIssueTask } from "./deduplicateIssue.task.js";
 import { SEARCH_QUERIES } from "../../lib/githubSearchQueries.js";
+import { ingestRepoIssuesTask } from "./ingestRepoIssues.task.js";
 
 /**
  * Workflow: Issue Ingestion Entry Point.
@@ -35,11 +36,16 @@ export const ingestIssuesWorkflow = task(
       deduplicateIssueTask(issues);
     }
 
+    const repoIngestionResult = await ingestRepoIssuesTask();
+
     logger.info("Issue ingestion tasks dispatched.");
 
     return {
       success: true,
-      message: `Ingested ${totalIssuesIngested} issues and dispatched deduplication tasks.`,
+      labelBasedIssues: totalIssuesIngested,
+      repoBasedIssues: repoIngestionResult.issues,
+      discoveredRepos: repoIngestionResult.repos,
+      message: `Ingested ${totalIssuesIngested} label-based issues and ${repoIngestionResult.issues} repo-based issues.`,
     };
   },
 );

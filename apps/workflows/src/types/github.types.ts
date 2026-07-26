@@ -5,7 +5,6 @@ import { Octokit } from "octokit";
 // (this is a type-only construct, no actual API calls happen here)
 declare const octokit: InstanceType<typeof Octokit>;
 
-
 /**
  * A single item from the GitHub issue/PR search results.
  * Sourced from `octokit.rest.search.issuesAndPullRequests` → `data.items[number]`
@@ -16,6 +15,14 @@ export type GitHubIssueSearchData = GetResponseDataTypeFromEndpointMethod<
 
 export type GitHubIssueSearchItem = GitHubIssueSearchData["items"][number];
 
+/**
+ * Repository search data returned by `octokit.rest.search.repos`.
+ */
+export type GitHubRepoSearchData = GetResponseDataTypeFromEndpointMethod<
+  typeof octokit.rest.search.repos
+>;
+
+export type GitHubRepoSearchItem = GitHubRepoSearchData["items"][number];
 
 /**
  * Repository data returned by `octokit.rest.repos.get`.
@@ -23,7 +30,6 @@ export type GitHubIssueSearchItem = GitHubIssueSearchData["items"][number];
 export type GitHubRepoData = GetResponseDataTypeFromEndpointMethod<
   typeof octokit.rest.repos.get
 >;
-
 
 /**
  * Parsed owner/repo identifier extracted from a GitHub repository URL.
@@ -33,7 +39,6 @@ export interface RepoIdentifier {
   repo: string;
   githubRepoId: string;
 }
-
 
 export interface RepoDetails {
   name: string;
