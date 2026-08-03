@@ -2,8 +2,10 @@ import express from "express";
 import {
   getGithubUserData,
   getUserSkills,
+  getUserPreferences,
   createUserSkills,
   updateUserSkills,
+  updateUserPreferences,
   logoutUser,
   deleteAccount,
 } from "../controllers/user.controller.js";
@@ -12,11 +14,19 @@ import { validate } from "../middlewares/validate.middleware.js";
 import {
   createUserSkillsSchema,
   updateUserSkillsSchema,
+  updateUserPreferencesSchema,
 } from "../validations/user.validation.js";
 
 const router = express.Router();
 
 router.get("/skills", requireAuth, getUserSkills);
+router.get("/preferences", requireAuth, getUserPreferences);
+router.patch(
+  "/preferences",
+  requireAuth,
+  validate(updateUserPreferencesSchema),
+  updateUserPreferences,
+);
 router.post(
   "/skills",
   requireAuth,

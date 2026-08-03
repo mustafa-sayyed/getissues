@@ -49,10 +49,16 @@ cron.schedule("30 * * * *", async () => {
 cron.schedule("0 */4 * * *", async () => {
   logger.info("Triggering userAgentRunsWorkflow via cron...");
   try {
-    const users = await db.select().from(schema.user);
+    const users = await db
+      .select()
+      .from(schema.user)
+      .where(eq(schema.user.searchIssues, true));
     for (const user of users) {
       try {
-        const userSkills = await db.select().from(schema.skills).where(eq(schema.skills.userId, user.id));
+        const userSkills = await db
+          .select()
+          .from(schema.skills)
+          .where(eq(schema.skills.userId, user.id));
         if (userSkills.length === 0) {
           logger.info(
             { userId: user.id },

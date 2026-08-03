@@ -154,6 +154,48 @@ const updateUserSkills = asyncHandler(async (req, res) => {
   return res.status(httpStatusCodes.OK).json({ success: true, updated: true });
 });
 
+const getUserPreferences = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+  }
+
+  const [userPreferences] = await db
+    .select({
+      searchIssues: schema.user.searchIssues,
+    })
+    .from(schema.user)
+    .where(eq(schema.user.id, req.user.id))
+    .limit(1);
+
+  if (!userPreferences) {
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "User not found");
+  }
+
+  return res.status(httpStatusCodes.OK).json(userPreferences);
+});
+
+const updateUserPreferences = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+  }
+
+  const { searchIssues } = req.body as { searchIssues: boolean };
+
+  const [userPreferences] = await db
+    .update(schema.user)
+    .set({ searchIssues })
+    .where(eq(schema.user.id, req.user.id))
+    .returning({
+      searchIssues: schema.user.searchIssues,
+    });
+
+  if (!userPreferences) {
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "User not found");
+  }
+
+  return res.status(httpStatusCodes.OK).json(userPreferences);
+});
+
 const logoutUser = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
@@ -198,8 +240,10 @@ const deleteAccount = asyncHandler(async (req, res) => {
 export {
   getGithubUserData,
   getUserSkills,
+  getUserPreferences,
   createUserSkills,
   updateUserSkills,
+  updateUserPreferences,
   logoutUser,
   deleteAccount,
 };

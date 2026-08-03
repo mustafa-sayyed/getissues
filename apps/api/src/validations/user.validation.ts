@@ -7,3 +7,7 @@ const skillsSchema = z.object({
 
 export const createUserSkillsSchema = skillsSchema;
 export const updateUserSkillsSchema = skillsSchema;
+
+export const updateUserPreferencesSchema = z.object({
+  searchIssues: z.boolean(),
+});
