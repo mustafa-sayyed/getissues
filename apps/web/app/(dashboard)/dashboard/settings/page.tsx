@@ -17,7 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Settings, Shield, Palette, Trash2, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Settings,
+  Shield,
+  Palette,
+  Trash2,
+  Check,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { FaGithub } from "react-icons/fa6";
@@ -36,6 +44,7 @@ const sections = [
   // { id: "notifications", label: "Notifications", icon: Bell },
   // { id: "ai", label: "AI Preferences", icon: Bot },
   { id: "skills", label: "Skills", icon: NotebookPen },
+  { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "integrations", label: "Integrations", icon: GrConnect },
   { id: "security", label: "Security", icon: Shield },
@@ -49,6 +58,9 @@ export default function SettingsPage() {
   const [hasSkills, setHasSkills] = useState(false);
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isSavingSkills, setIsSavingSkills] = useState(false);
+  const [searchIssues, setSearchIssues] = useState(true);
+  const [isLoadingPreferences, setIsLoadingPreferences] = useState(true);
+  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -91,6 +103,30 @@ export default function SettingsPage() {
       toast.error("Failed to load skills.");
     } finally {
       setIsLoadingSkills(false);
+    }
+  }, [apiUrl]);
+
+  const loadPreferences = useCallback(async () => {
+    if (!apiUrl) {
+      setIsLoadingPreferences(false);
+      toast.error("Internal Server Error");
+      return;
+    }
+
+    try {
+      setIsLoadingPreferences(true);
+      const { data } = await axios.get<{ searchIssues: boolean }>(
+        `${apiUrl}/users/preferences`,
+        {
+          withCredentials: true,
+        },
+      );
+      setSearchIssues(data.searchIssues);
+    } catch (error) {
+      console.error("Error loading user preferences:", error);
+      toast.error("Failed to load preferences.");
+    } finally {
+      setIsLoadingPreferences(false);
     }
   }, [apiUrl]);
 
@@ -141,8 +177,39 @@ export default function SettingsPage() {
     loadSkills();
   }, [loadSkills]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPreferences();
+  }, [loadPreferences]);
+
   const areSkillFieldsDisabled =
     isLoadingSkills || isSavingSkills || (hasSkills && !isEditingSkills);
+
+  const handleUpdateSearchIssues = async (value: boolean) => {
+    if (!apiUrl || isSavingPreferences) return;
+
+    const previousValue = searchIssues;
+    setSearchIssues(value);
+    setIsSavingPreferences(true);
+
+    try {
+      const { data } = await axios.patch<{ searchIssues: boolean }>(
+        `${apiUrl}/users/preferences`,
+        { searchIssues: value },
+        { withCredentials: true },
+      );
+      setSearchIssues(data.searchIssues);
+      toast.success(
+        data.searchIssues ? "Issue search enabled." : "Issue search paused.",
+      );
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      setSearchIssues(previousValue);
+      toast.error("Failed to update preferences.");
+    } finally {
+      setIsSavingPreferences(false);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     if (isDeleting) return;
@@ -291,6 +358,36 @@ export default function SettingsPage() {
                       "Save Changes"
                     )}
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Preferences */}
+          {activeSection === "preferences" && (
+            <Card className="border-border/60">
+              <CardHeader>
+                <CardTitle className="text-base">Preferences</CardTitle>
+                <CardDescription>
+                  Control how the recommendation agent works for your account
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-border/60 p-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-foreground">
+                      Search issues
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Allow scheduled agent runs to search and recommend issues
+                    </p>
+                  </div>
+                  <Switch
+                    checked={searchIssues}
+                    disabled={isLoadingPreferences || isSavingPreferences}
+                    onCheckedChange={handleUpdateSearchIssues}
+                    aria-label="Toggle issue search"
+                  />
                 </div>
               </CardContent>
             </Card>
