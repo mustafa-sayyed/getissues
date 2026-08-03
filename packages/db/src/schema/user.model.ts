@@ -7,6 +7,7 @@ export const user = pgTable(
     id: t.uuid().primaryKey().defaultRandom(),
     name: t.text().notNull(),
     email: t.varchar({ length: 255 }).unique().notNull(),
+    searchIssues: t.boolean("search_issues").notNull().default(true),
     avatarUrl: t.text("avatar_url").notNull(),
     emailVerified: t.boolean("email_verified").notNull(),
     githubId: t.text("github_id"),

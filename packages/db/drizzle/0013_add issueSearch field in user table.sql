@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "search_issues" boolean DEFAULT true NOT NULL;

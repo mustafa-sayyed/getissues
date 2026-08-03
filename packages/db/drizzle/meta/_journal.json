@@ -92,6 +92,13 @@
       "when": 1785747635069,
       "tag": "0012_fix agentconfig table, set default values",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785752320455,
+      "tag": "0013_add issueSearch field in user table",
+      "breakpoints": true
     }
   ]
 }
