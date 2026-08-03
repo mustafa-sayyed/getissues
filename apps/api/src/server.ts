@@ -3,7 +3,7 @@ import "./utils/instrumentation.js";
 import { Render } from "@renderinc/sdk";
 import { app } from "./app.js";
 import { ApiLogger as logger } from "@packages/logging";
-import { db, schema } from "./lib/db.js";
+import { db, eq, schema } from "./lib/db.js";
 import cron from "node-cron";
 
 const PORT = Number(process.env.PORT ?? 4000);
@@ -52,6 +52,15 @@ cron.schedule("0 */4 * * *", async () => {
     const users = await db.select().from(schema.user);
     for (const user of users) {
       try {
+        const userSkills = await db.select().from(schema.skills).where(eq(schema.skills.userId, user.id));
+        if (userSkills.length === 0) {
+          logger.info(
+            { userId: user.id },
+            `Skipping userAgentRunsWorkflow for user ${user.id} as they have no skills.`,
+          );
+          continue;
+        }
+
         const userAgentWorkflow = await render.workflows.startTask(
           "getissues-workflows/userAgentRunsWorkflow",
           [user.id],
