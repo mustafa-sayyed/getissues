@@ -85,6 +85,13 @@
       "when": 1784400606099,
       "tag": "0011_fix user id reference in agent runs table",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785747635069,
+      "tag": "0012_fix agentconfig table, set default values",
+      "breakpoints": true
     }
   ]
 }
