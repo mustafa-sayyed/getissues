@@ -1,95 +1,10 @@
 import "dotenv/config";
 import "./utils/instrumentation.ts";
-import { Render } from "@renderinc/sdk";
 import { app } from "./app.ts";
 import { ApiLogger as logger } from "@packages/logging";
-import { db, eq, schema } from "./lib/db.ts";
-import cron from "node-cron";
 import serverless from "serverless-http";
 
 const PORT = Number(process.env.PORT ?? 4000);
-const render = new Render();
-
-// Setup Cron Jobs
-// Workflow 1: Issues Ingestion (runs every 2 hours)
-cron.schedule("0 */2 * * *", async () => {
-  logger.info("Triggering ingestIssuesWorkflow via cron...");
-  try {
-    const ingestIssuesWorkflows = await render.workflows.startTask(
-      "getissues-workflows/ingestIssuesWorkflow",
-      [],
-    );
-    logger.info(
-      { ingestWorkflowTaskId: ingestIssuesWorkflows.taskRunId },
-      "[ingestIssuesWorkflow] task started:",
-    );
-  } catch (err) {
-    logger.error(err, "Cron Error (ingestIssuesWorkflow):");
-  }
-});
-
-// Workflow 2: Issue Cleanup (runs every hour)
-cron.schedule("30 * * * *", async () => {
-  logger.info("Triggering cleanupIssueWorkflow via cron...");
-  try {
-    const cleanupIssueWorkflow = await render.workflows.startTask(
-      "getissues-workflows/cleanupIssueWorkflow",
-      [100],
-    );
-    logger.info(
-      { cleanupWorkflowTaskId: cleanupIssueWorkflow.taskRunId },
-      "[cleanupIssueWorkflow] task started:",
-    );
-  } catch (err) {
-    logger.error(err, "Cron Error (cleanupIssueWorkflow):");
-  }
-});
-
-// Workflow 3: User Specific Agent Runs
-// To keep it simple, we run it every 4 hours
-cron.schedule("0 */4 * * *", async () => {
-  logger.info("Triggering userAgentRunsWorkflow via cron...");
-  try {
-    const users = await db
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.searchIssues, true));
-    for (const user of users) {
-      try {
-        const userSkills = await db
-          .select()
-          .from(schema.skills)
-          .where(eq(schema.skills.userId, user.id));
-        if (userSkills.length === 0) {
-          logger.info(
-            { userId: user.id },
-            `Skipping userAgentRunsWorkflow for user ${user.id} as they have no skills.`,
-          );
-          continue;
-        }
-
-        const userAgentWorkflow = await render.workflows.startTask(
-          "getissues-workflows/userAgentRunsWorkflow",
-          [user.id],
-        );
-        logger.info(
-          {
-            taskRunId: userAgentWorkflow.taskRunId,
-            userId: user.id,
-          },
-          "[userAgentWorkflow] task started",
-        );
-      } catch (error) {
-        logger.error(
-          { error, userId: user.id },
-          `Error running userAgentRunsWorkflow for user ${user.id}:`,
-        );
-      }
-    }
-  } catch (err) {
-    logger.error(err, "Cron Error (userAgentRunsWorkflow):");
-  }
-});
 
 // Start the Server
 if (process.env.NODE_ENV !== "production") {
@@ -108,7 +23,6 @@ process.on("SIGINT", async () => {
     },
     "Shutting down gracefully...",
   );
-  await db.$client.end();
 });
 
 process.on("SIGTERM", async () => {
@@ -119,5 +33,4 @@ process.on("SIGTERM", async () => {
     },
     "Shutting down gracefully...",
   );
-  await db.$client.end();
 });
