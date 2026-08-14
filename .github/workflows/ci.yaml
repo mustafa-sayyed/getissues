@@ -1,4 +1,6 @@
 name: Run Typecheck and Build
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
 on:
  push:
