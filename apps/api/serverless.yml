@@ -1,0 +1,60 @@
+org: mustafasayyed
+service: getissues-api
+app: getissues
+frameworkVersion: '4'
+useDotenv: true
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    platform: "node"
+    target: "node22"
+    format: "esm"
+    tsconfig: ./tsconfig.json
+    external:
+      - '@aws-sdk/*'
+      - '@huggingface/transformers'
+    banner:
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ap-south-1
+  stage: production
+  timeout: 29
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    DATABASE_URL: ${env:DATABASE_URL}
+    BETTER_AUTH_COOKIE_DOMAIN: ${env:BETTER_AUTH_COOKIE_DOMAIN}
+    CORS_ORIGIN: ${env:CORS_ORIGIN}
+    BETTER_AUTH_SECRET: ${env:BETTER_AUTH_SECRET}
+    BETTER_AUTH_URL: ${env:BETTER_AUTH_URL}
+    GITHUB_CLIENT_ID: ${env:GITHUB_CLIENT_ID}
+    GITHUB_CLIENT_SECRET: ${env:GITHUB_CLIENT_SECRET}
+    GITHUB_ACCESS_TOKEN: ${env:GITHUB_ACCESS_TOKEN}
+    RENDER_API_KEY: ${env:RENDER_API_KEY}
+    VOYAGE_API_KEY: ${env:VOYAGE_API_KEY}
+    VOYAGE_API_KEY2: ${env:VOYAGE_API_KEY2}
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    COGNEE_BASE_URL: ${env:COGNEE_BASE_URL}
+    COGNEE_API_KEY: ${env:COGNEE_API_KEY}
+    COGNEE_ENABLED: ${env:COGNEE_ENABLED}
+    OTEL_SERVICE_NAME: ${env:OTEL_SERVICE_NAME}
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
+    OTEL_EXPORTER_OTLP_HEADERS: ${env:OTEL_EXPORTER_OTLP_HEADERS}
+    OTEL_EXPORTER_OTLP_TOKEN: ${env:OTEL_EXPORTER_OTLP_TOKEN}
+  domain:
+    name: api.getissues.tech
+    certificateArn: ${env:ACM_CERTIFICATE_ARN}
+    createRoute53Record: false
+    apiType: http
+    endpointType: regional
+
+functions:
+  api:
+    handler: src/server.handler
+    events:
+      - httpApi: "*"
+      
