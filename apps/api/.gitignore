@@ -31,3 +31,8 @@ Thumbs.db
 .env
 .env.local
 .env.production
+
+# Serverless Framework generation directories
+.serverless/
+.build/
+.webpack/
