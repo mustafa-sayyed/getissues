@@ -1,10 +1,11 @@
 import "dotenv/config";
-import "./utils/instrumentation.js";
+import "./utils/instrumentation.ts";
 import { Render } from "@renderinc/sdk";
-import { app } from "./app.js";
+import { app } from "./app.ts";
 import { ApiLogger as logger } from "@packages/logging";
-import { db, eq, schema } from "./lib/db.js";
+import { db, eq, schema } from "./lib/db.ts";
 import cron from "node-cron";
+import serverless from "serverless-http";
 
 const PORT = Number(process.env.PORT ?? 4000);
 const render = new Render();
@@ -91,9 +92,13 @@ cron.schedule("0 */4 * * *", async () => {
 });
 
 // Start the Server
-app.listen(PORT, () => {
-  logger.info(`API listening on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    logger.info(`API listening on port ${PORT}`);
+  });
+}
+
+export const handler = serverless(app);
 
 process.on("SIGINT", async () => {
   logger.info(

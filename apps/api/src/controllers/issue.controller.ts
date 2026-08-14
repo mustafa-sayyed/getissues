@@ -1,10 +1,10 @@
 import { and, desc, ilike, or, sql, type SQL } from "drizzle-orm";
 import { ApiLogger as logger } from "@packages/logging";
-import { db, schema, eq } from "../lib/db.js";
-import { getVoyageClient } from "../lib/voyage.js";
-import { asyncHandler } from "../utils/asyncRequest.js";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
-import ApiError from "../utils/ApiError.js";
+import { db, schema, eq } from "../lib/db.ts";
+import { getVoyageClient } from "../lib/voyage.ts";
+import { asyncHandler } from "../utils/asyncRequest.ts";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
+import ApiError from "../utils/ApiError.ts";
 
 const searchModes = ["keyword", "semantic"] as const;
 type SearchMode = (typeof searchModes)[number];

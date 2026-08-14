@@ -1,10 +1,10 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { ApiLogger as logger } from "@packages/logging";
-import { db, schema } from "../lib/db.js";
-import { asyncHandler } from "../utils/asyncRequest.js";
-import { captureRecommendationDecision } from "../utils/cognee.js";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
-import ApiError from "../utils/ApiError.js";
+import { db, schema } from "../lib/db.ts";
+import { asyncHandler } from "../utils/asyncRequest.ts";
+import { captureRecommendationDecision } from "../utils/cognee.ts";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
+import ApiError from "../utils/ApiError.ts";
 
 const recommendationStatuses = [
   "notviewed",

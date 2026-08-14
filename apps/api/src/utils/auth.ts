@@ -1,6 +1,6 @@
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db, schema } from "../lib/db.js";
+import { db, schema } from "../lib/db.ts";
 
 const parseOrigins = (value?: string) =>
   value

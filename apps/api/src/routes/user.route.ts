@@ -8,14 +8,14 @@ import {
   updateUserPreferences,
   logoutUser,
   deleteAccount,
-} from "../controllers/user.controller.js";
-import { requireAuth } from "../middlewares/auth.middleware.js";
-import { validate } from "../middlewares/validate.middleware.js";
+} from "../controllers/user.controller.ts";
+import { requireAuth } from "../middlewares/auth.middleware.ts";
+import { validate } from "../middlewares/validate.middleware.ts";
 import {
   createUserSkillsSchema,
   updateUserSkillsSchema,
   updateUserPreferencesSchema,
-} from "../validations/user.validation.js";
+} from "../validations/user.validation.ts";
 
 const router = express.Router();
 

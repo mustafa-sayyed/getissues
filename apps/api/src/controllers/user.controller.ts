@@ -1,12 +1,12 @@
-import { asyncHandler } from "../utils/asyncRequest.js";
-import { auth } from "../utils/auth.js";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
-import { getOctokit } from "../utils/octokit.js";
-import { db, schema, eq, sql } from "../lib/db.js";
+import { asyncHandler } from "../utils/asyncRequest.ts";
+import { auth } from "../utils/auth.ts";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
+import { getOctokit } from "../utils/octokit.ts";
+import { db, schema, eq, sql } from "../lib/db.ts";
 import { fromNodeHeaders } from "better-auth/node";
 import { ApiLogger as logger } from "@packages/logging";
-import { ai } from "../lib/google.js";
-import ApiError from "../utils/ApiError.js";
+import { ai } from "../lib/google.ts";
+import ApiError from "../utils/ApiError.ts";
 
 const buildSkillsEmbedding = async (languages: string[], interests: string) => {
   try {

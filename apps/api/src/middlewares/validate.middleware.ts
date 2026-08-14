@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { z, ZodType } from "zod";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
+import type { Request, Response, NextFunction } from "express";
+import { z, type ZodType } from "zod";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 
 export const validate = (schema: ZodType) => {
   return async (req: Request, res: Response, next: NextFunction) => {

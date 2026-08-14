@@ -4,8 +4,8 @@ import {
   getRecommendations,
   getRecommendationStats,
   updateRecommendationStatus,
-} from "../controllers/recommendation.controller.js";
-import { requireAuth } from "../middlewares/auth.middleware.js";
+} from "../controllers/recommendation.controller.ts";
+import { requireAuth } from "../middlewares/auth.middleware.ts";
 
 const router = express.Router();
 

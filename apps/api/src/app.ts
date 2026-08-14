@@ -1,13 +1,13 @@
 import express from "express";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./utils/auth.js";
+import { auth } from "./utils/auth.ts";
 import cors from "cors";
-import userRouter from "./routes/user.route.js";
-import issueRouter from "./routes/issue.route.js";
-import recommendationRouter from "./routes/recommendation.route.js";
-import agentRunRouter from "./routes/agentRun.route.js";
-import agentConfigRouter from "./routes/agentConfig.route.js";
-import globalErrorHandler from "./middlewares/errorHandler.middleware.js";
+import userRouter from "./routes/user.route.ts";
+import issueRouter from "./routes/issue.route.ts";
+import recommendationRouter from "./routes/recommendation.route.ts";
+import agentRunRouter from "./routes/agentRun.route.ts";
+import agentConfigRouter from "./routes/agentConfig.route.ts";
+import globalErrorHandler from "./middlewares/errorHandler.middleware.ts";
 import compression from "compression";
 import { pinoHttp } from "pino-http";
 
@@ -24,19 +24,25 @@ app.use(
   }),
 );
 
-app.use(
-  compression({
-    filter: (req, res) => {
-      if (req.headers["x-no-compression"]) {
-        // don't compress responses if this request header is present
-        return false;
-      }
+app.use((req, res, next) => {
+  // Forces Node to allow immediate event-loop termination on AWS Lambda
+  res.setHeader('Connection', 'close');
+  next();
+});
 
-      // fallback to standard filter function
-      return compression.filter(req, res);
-    },
-  }),
-);
+// app.use(
+//   compression({
+//     filter: (req, res) => {
+//       if (req.headers["x-no-compression"]) {
+//         // don't compress responses if this request header is present
+//         return false;
+//       }
+
+//       // fallback to standard filter function
+//       return compression.filter(req, res);
+//     },
+//   }),
+// );
 
 app.use(pinoHttp({ quietReqLogger: true, quietResLogger: true }));
 
@@ -51,6 +57,14 @@ app.use("/api/v1/agent-config", agentConfigRouter);
 
 app.get("/health", (_request, response) => {
   response.json({ status: "ok" });
+});
+
+app.use((req, res) => {
+  console.log(`Express received an unhandled request for path: ${req.path}`);
+  res.status(404).json({
+    error: "Route not found",
+    receivedPath: req.path
+  });
 });
 
 // Global Error Handler

@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { db, schema } from "../lib/db.js";
-import { asyncHandler } from "../utils/asyncRequest.js";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
-import ApiError from "../utils/ApiError.js";
+import { db, schema } from "../lib/db.ts";
+import { asyncHandler } from "../utils/asyncRequest.ts";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
+import ApiError from "../utils/ApiError.ts";
 
 const getAgentConfig = asyncHandler(async (req, res) => {
   if (!req.user) {

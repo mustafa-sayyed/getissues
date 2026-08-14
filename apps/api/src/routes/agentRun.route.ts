@@ -2,8 +2,8 @@ import express from "express";
 import {
   getAgentRuns,
   getAgentRunStats,
-} from "../controllers/agentRun.controller.js";
-import { requireAuth } from "../middlewares/auth.middleware.js";
+} from "../controllers/agentRun.controller.ts";
+import { requireAuth } from "../middlewares/auth.middleware.ts";
 
 const router = express.Router();
 

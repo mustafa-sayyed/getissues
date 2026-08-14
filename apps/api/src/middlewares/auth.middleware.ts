@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import { ApiLogger as logger } from "@packages/logging";
-import { auth } from "../utils/auth.js";
-import { httpStatusCodes } from "../utils/httpStatusCodes.js";
+import { auth } from "../utils/auth.ts";
+import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 
 export const requireAuth = async (
   req: Request,

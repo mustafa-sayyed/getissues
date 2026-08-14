@@ -1,6 +1,6 @@
 import express from "express";
-import { getAgentConfig } from "../controllers/agentConfig.controller.js";
-import { requireAuth } from "../middlewares/auth.middleware.js";
+import { getAgentConfig } from "../controllers/agentConfig.controller.ts";
+import { requireAuth } from "../middlewares/auth.middleware.ts";
 
 const router = express.Router();
 

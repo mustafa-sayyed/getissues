@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiLogger as logger } from "@packages/logging";
-import { ApiError } from "../types.js";
+import type { ApiError } from "../types.ts";
 
 const globalErrorHandler = (
   err: ApiError,
