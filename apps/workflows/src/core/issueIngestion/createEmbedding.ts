@@ -1,10 +1,8 @@
 import { WorkflowLogger as logger } from "@packages/logging";
-import { getVoyageClient } from "../../lib/voyage.js";
 import type {
   GitHubIssueSearchItem,
   RepoDetails,
 } from "../../types/github.types.js";
-import { storeIssueTask } from "./storeIssue.js";
 import { getEmbeddings } from "../../lib/embeddings.js";
 
 /**
@@ -12,7 +10,7 @@ import { getEmbeddings } from "../../lib/embeddings.js";
  *
  * - Concatenates issue details (title, body, repo name, descrption, languauges) into a single text blob.
  * - Sends it to VoyageAI `voyage-code-2` to produce a 1536-dim embedding.
- * - Passes the issue, githubRepoId, and embedding downstream to `storeIssueTask`.
+ * - Returns the embedding for downstream orchestration.
  *
  * Responsibility: ONE — create the issue embedding via VoyageAI.
  */
@@ -21,8 +19,6 @@ export const createIssueEmbeddingTask = async (
   githubRepoId: string,
   repo: RepoDetails,
 ) => {
-  const voyage = getVoyageClient();
-
   const textToEmbed =
     `${item.title}\n\n${item.body ?? ""} \n\n ${repo.name} ${repo.description} \n ${repo.languages}`.trim();
 
@@ -33,21 +29,19 @@ export const createIssueEmbeddingTask = async (
     if (embedding.length === 0) {
       logger.warn(
         { issueNumber: item.number },
-        `VoyageAI returned an empty embedding for issue #${item.number}. Skipping store.`,
+        `Empty embedding for issue #${item.number}. Skipping store.`,
       );
       return {
-        success: true,
-        skipped: true,
-        reason: "empty_embedding",
-        issueNumber: item.number,
+        success: false,
+        message: "Failed to generate embedding for issue.",
+        embedding: null,
       };
     }
 
-    storeIssueTask(item, githubRepoId, embedding);
-
     return {
       success: true,
-      message: `Embedding created and issue #${item.number} stored successfully.`,
+      message: `Embedding created for issue #${item.number}.`,
+      embedding,
     };
   } catch (error) {
     logger.error(

@@ -1,7 +1,6 @@
 import { WorkflowLogger as logger } from "@packages/logging";
 import { db, schema } from "../../lib/db.js";
 import type { GitHubIssueSearchItem } from "../../types/github.types.js";
-import { ensureRepoTask } from "./ensureRepo.js";
 import { inArray } from "drizzle-orm";
 
 /**
@@ -11,8 +10,8 @@ import { inArray } from "drizzle-orm";
         `Issue #${existingIssues.length} already exists — skipping.`,
       );
  * Checks whether the given GitHub issue already exists in the database.
- * - If it exists -> logs and returns early (no further processing).
- * - If it doesn't exist -> passes the item downstream to `ensureRepoTask`.
+ * - If it exists -> logs and returns early.
+ * - If it doesn't exist -> returns the unique issues for orchestration.
  *
  * Responsibility: ONE — deduplicate issues.
  */
@@ -42,17 +41,16 @@ export const deduplicateIssueTask = async (issues: GitHubIssueSearchItem[]) => {
       skipped: true,
       reason: `Found ${existingIssues.length} existing issues in the database. No new issues to process.`,
       existingIssues: existingIssues.length,
+      newIssues: 0,
+      issues: [],
     };
-  }
-
-  for (const item of uniqueIssues) {
-    await ensureRepoTask(item);
   }
 
   return {
     success: true,
     existingIssues: existingIssues.length,
     newIssues: uniqueIssues.length,
+    issues: uniqueIssues,
     message: `Issue #${uniqueIssues.length} is new and has passed to other tasks for further processing.`,
   };
 };

@@ -1,5 +1,4 @@
 import { WorkflowLogger as logger } from "@packages/logging";
-import { deduplicateIssueTask } from "./deduplicateIssue.js";
 import { discoverReposTask } from "./discoverRepos.js";
 import { fetchRepoIssuesTask } from "./fetchRepoIssues.js";
 
@@ -17,10 +16,6 @@ export const ingestRepoIssuesTask = async (
     try {
       const issues = await fetchRepoIssuesTask(repo, issuesPerRepo);
       totalIssues += issues.length;
-
-      if (issues.length > 0) {
-        await deduplicateIssueTask(issues);
-      }
     } catch (error) {
       logger.error(
         { error, repo: repo.full_name },

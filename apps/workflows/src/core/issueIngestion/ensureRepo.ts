@@ -6,7 +6,6 @@ import type {
   RepoDetails,
   RepoIdentifier,
 } from "../../types/github.types.js";
-import { createIssueEmbeddingTask } from "./createEmbedding.js";
 
 /**
  * Parses the `repository_url` field from a GitHub issue search item
@@ -25,7 +24,7 @@ function parseRepoUrl(repositoryUrl: string): RepoIdentifier {
  * - Checks if the repo is already in `repo_analysis`.
  * - If NOT -> fetches repo metadata from GitHub and inserts it.
  * - If YES -> skips the fetch (no redundant GitHub API calls).
- * - Then forwards the issue item to `createIssueEmbeddingTask`.
+ * - Returns repo details for downstream orchestration.
  *
  * Responsibility: ONE — ensure repo exists in DB.
  */
@@ -86,10 +85,10 @@ export const ensureRepoTask = async (item: GitHubIssueSearchItem) => {
     );
   }
 
-  createIssueEmbeddingTask(item, githubRepoId, repoDetails);
-
   return {
     success: true,
+    githubRepoId,
+    repoDetails,
     message: `Repo ${githubRepoId} ensured in DB and issue #${item.number} passed to embedding task.`,
   };
 };

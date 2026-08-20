@@ -1,14 +1,45 @@
 import { schema } from "@packages/db";
 
-export type issue = typeof schema.issue.$inferSelect;
+type issue = typeof schema.issue.$inferSelect;
 
-export type LLMModel = {
+type LLMModel = {
   id: `${string}/${string}`;
   apiKey: string;
 };
 
-export type IssueEvaluation = {
+type IssueEvaluation = {
   issueId: string;
   score: number;
   reason: string;
+};
+
+type IssueCleanupUpdateResult = {
+  checked: boolean;
+  updated: boolean;
+  unavailable: boolean;
+};
+
+type LiveIssueStatus = {
+  id: string;
+  status: "open" | "closed" | "assigned";
+  isAssigned: boolean;
+  isActive: boolean;
+  unavailable: boolean;
+};
+
+type CleanupIssueCandidate = {
+  id: string;
+  url: string;
+  status: "open" | "closed" | "assigned";
+  isAssigned: boolean | null;
+  isActive: boolean | null;
+};
+
+export type {
+  CleanupIssueCandidate,
+  IssueCleanupUpdateResult,
+  IssueEvaluation,
+  LLMModel,
+  LiveIssueStatus,
+  issue,
 };
