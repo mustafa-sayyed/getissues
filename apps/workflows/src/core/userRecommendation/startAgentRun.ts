@@ -1,0 +1,23 @@
+import { WorkflowLogger as logger } from "@packages/logging";
+import { db, schema } from "../../lib/db.js";
+
+/**
+ * Task: Create an Agent Run record in the database.
+ *
+ * Inserts a new `agent_runs` row with status "running" and returns its ID
+ * for downstream tasks to reference.
+ *
+ * Responsibility: ONE — create the agent run record.
+ */
+export const startAgentRunTask = async (userId: string): Promise<string> => {
+  const [agentRun] = await db
+    .insert(schema.agentRuns)
+    .values({ userId, status: "running" })
+    .returning();
+
+  logger.info(
+    { agentRunId: agentRun.id, userId },
+    `Agent run ${agentRun.id} started for user ${userId}.`,
+  );
+  return agentRun.id;
+};
