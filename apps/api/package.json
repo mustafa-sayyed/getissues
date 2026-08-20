@@ -31,7 +31,6 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.1.0",
-    "node-cron": "^4.4.1",
     "octokit": "^5.0.5",
     "pino-http": "^11.0.0",
     "postgres": "^3.4.9",
