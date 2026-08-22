@@ -49,19 +49,18 @@ export const ingestIssuesWorkflow = inngest.createFunction(
   async ({ step }) => {
     logger.info("Starting issue ingestion workflow.");
 
-    const labelIssues = await step.run(
-      "fetch-label-search-issues",
-      async () => {
-        const octokit = getOctokit();
-        const issues: GitHubIssueSearchItem[] = [];
-
-        for (const searchQuery of SEARCH_QUERIES) {
+    const octokit = getOctokit();
+    const labelIssues: GitHubIssueSearchItem[] = [];
+    for (const searchQuery of SEARCH_QUERIES) {
+      await step.run(
+        `fetch-label-search-issues-${searchQuery.query}`,
+        async () => {
           const searchRes = await octokit.rest.search.issuesAndPullRequests({
             q: searchQuery.query,
             per_page: searchQuery.limit,
           });
 
-          issues.push(...searchRes.data.items);
+          labelIssues.push(...searchRes.data.items);
 
           logger.info(
             {
@@ -71,10 +70,8 @@ export const ingestIssuesWorkflow = inngest.createFunction(
             "Fetched label-search issues.",
           );
         }
-
-        return issues;
-      },
-    );
+      );
+    }
 
     const labelBatches = chunk(labelIssues, ISSUE_BATCH_SIZE);
 
@@ -186,7 +183,6 @@ export const processIssueWorkflow = inngest.createFunction(
         repoResult.repoDetails,
       ),
     );
-
 
     if (embeddingResult.embedding === null) {
       return {
