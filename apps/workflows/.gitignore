@@ -2,3 +2,8 @@ node_modules
 dist
 .env
 .env.*
+
+# Serverless Framework generation directories
+.serverless/
+.build/
+.webpack/

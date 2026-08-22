@@ -1,0 +1,58 @@
+service: getissues-workflows
+frameworkVersion: '4'
+
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    platform: "node"
+    target: "node22"
+    format: "esm"  
+    tsconfig: ./tsconfig.json
+    banner:
+      js: |
+        import { createRequire as __createRequire } from 'module';
+        import { fileURLToPath as __fileURLToPath } from 'url';
+        import { dirname as __pathDirname } from 'path';
+        
+        // Scope variables globally without overlapping standard names
+        const require = __createRequire(import.meta.url);
+        const __filename = __fileURLToPath(import.meta.url);
+        const __dirname = __pathDirname(__filename);
+    external:
+      - '@aws-sdk/*'
+      - '@huggingface/transformers'
+      - 'tty'
+      - 'node:tty'
+
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: ap-south-1
+  stage: production
+  timeout: 29
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    DATABASE_URL: ${env:DATABASE_URL}
+    GITHUB_ACCESS_TOKEN: ${env:GITHUB_ACCESS_TOKEN}
+    VOYAGE_API_KEY: ${env:VOYAGE_API_KEY}
+    VOYAGE_API_KEY2: ${env:VOYAGE_API_KEY2}
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    GROQ_API_KEY: ${env:GROQ_API_KEY}
+    CLOUDFLARE_API_KEY: ${env:CLOUDFLARE_API_KEY}
+    CLOUDFLARE_ACCOUNT_ID: ${env:CLOUDFLARE_ACCOUNT_ID}
+    COGNEE_BASE_URL: ${env:COGNEE_BASE_URL}
+    COGNEE_API_KEY: ${env:COGNEE_API_KEY}
+    COGNEE_ENABLED: ${env:COGNEE_ENABLED}
+    OTEL_SERVICE_NAME: ${env:OTEL_SERVICE_NAME}
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
+    OTEL_EXPORTER_OTLP_HEADERS: ${env:OTEL_EXPORTER_OTLP_HEADERS}
+    INNGEST_SIGNING_KEY: ${env:INNGEST_SIGNING_KEY}
+    INNGEST_DEV: ${env:INNGEST_DEV}
+
+functions:
+  api:
+    handler: src/index.handler
+    events:
+      - httpApi: "*"
