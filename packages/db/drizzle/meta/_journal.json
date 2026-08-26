@@ -99,6 +99,13 @@
       "when": 1785752320455,
       "tag": "0013_add issueSearch field in user table",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1787773517321,
+      "tag": "0014_add chat related tables",
+      "breakpoints": true
     }
   ]
 }
