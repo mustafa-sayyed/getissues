@@ -1,7 +1,7 @@
 import { and, desc, ilike, or, sql, type SQL } from "drizzle-orm";
 import { ApiLogger as logger } from "@packages/logging";
 import { db, schema, eq } from "../lib/db.ts";
-import { getVoyageClient } from "../lib/voyage.ts";
+import { embedText, toPgVector } from "../lib/ai.ts";
 import { asyncHandler } from "../utils/asyncRequest.ts";
 import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 import ApiError from "../utils/ApiError.ts";
@@ -10,28 +10,14 @@ const searchModes = ["keyword", "semantic"] as const;
 type SearchMode = (typeof searchModes)[number];
 
 const getQueryEmbedding = async (query: string) => {
-  try {
-    const voyage = getVoyageClient();
-    const embedResponse = await voyage.embed({
-      input: [query],
-      model: "voyage-code-2",
-    });
+  const embedding = await embedText(query);
 
-    const embedding = embedResponse.data?.[0]?.embedding ?? [];
-
-    if (!embedding.length) {
-      logger.error(
-        { query, embedResponse },
-        "Failed to generate embedding for issue search",
-      );
-      return null;
-    }
-
-    return `[${embedding.join(",")}]`;
-  } catch (error) {
-    logger.error({ error }, "Error while generating Embedding in issue search");
+  if (!embedding?.length) {
+    logger.error({ query }, "Failed to generate embedding for issue search");
     return null;
   }
+
+  return toPgVector(embedding);
 };
 
 const getIssues = asyncHandler(async (req, res) => {

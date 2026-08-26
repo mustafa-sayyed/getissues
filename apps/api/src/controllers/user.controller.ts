@@ -5,24 +5,19 @@ import { getOctokit } from "../utils/octokit.ts";
 import { db, schema, eq, sql } from "../lib/db.ts";
 import { fromNodeHeaders } from "better-auth/node";
 import { ApiLogger as logger } from "@packages/logging";
-import { ai } from "../lib/google.ts";
+import { embedText } from "../lib/ai.ts";
 import ApiError from "../utils/ApiError.ts";
 
 const buildSkillsEmbedding = async (languages: string[], interests: string) => {
-  try {
-    const result = await ai.models.embedContent({
-      contents: [languages.join(", ") + "\n\n" + interests],
-      model: "gemini-embedding-2",
-      config: {
-        outputDimensionality: 1536,
-      },
-    });
+  const embedding = await embedText(
+    languages.join(", ") + "\n\n" + interests,
+  );
 
-    return result.embeddings?.[0]?.values ?? null;
-  } catch (error) {
-    logger.error({ error }, "Error building skills embedding:");
-    return null;
+  if (!embedding) {
+    logger.error("Failed to build skills embedding");
   }
+
+  return embedding;
 };
 
 const getGithubUserData = asyncHandler(async (req, res) => {
