@@ -7,6 +7,7 @@ import issueRouter from "./routes/issue.route.ts";
 import recommendationRouter from "./routes/recommendation.route.ts";
 import agentRunRouter from "./routes/agentRun.route.ts";
 import agentConfigRouter from "./routes/agentConfig.route.ts";
+import chatRouter from "./routes/chat.route.ts";
 import globalErrorHandler from "./middlewares/errorHandler.middleware.ts";
 import { pinoHttp } from "pino-http";
 
@@ -33,6 +34,7 @@ app.use("/api/v1/issues", issueRouter);
 app.use("/api/v1/recommendations", recommendationRouter);
 app.use("/api/v1/agent-runs", agentRunRouter);
 app.use("/api/v1/agent-config", agentConfigRouter);
+app.use("/api/v1/chats", chatRouter);
 
 app.get("/health", (_request, response) => {
   response.json({ status: "ok" });
