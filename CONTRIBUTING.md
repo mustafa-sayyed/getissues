@@ -8,10 +8,11 @@ getissues codebase is structured as a monorepo using pnpm workspaces and tuborep
 .
 ├── apps/
 │   ├── web/          # frontend (getissues.tech)
-│   └── api/           # backend (api.getissues.tech)
+│   ├── api/          # backend (api.getissues.tech)
+│   └── workflows/    # Inngest functions + Mastra agents (issue ingest & recommendations)
 ├── packages/
-│   ├── db/            # Drizzle schema + migrations
-│   └── workflows/         # issue ingest and reccommendation workflows
+│   ├── db/           # Drizzle schema + migrations
+│   └── logging/      # pino logger wrapper
 ```
 
 ### Prerequisites
@@ -19,8 +20,6 @@ getissues codebase is structured as a monorepo using pnpm workspaces and tuborep
 - Node.js 22+
 - A Postgres database (with `pgvector` enabled)
 - A GitHub App/OAuth App for issue ingestion and user auth (see [GitHub docs](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app) for setup)
-- getissues uses [Render Workflows](https://render.com/workflows) for issue ingestion and recommendation.
-To setup render workflows, see [Docs](https://render.com/docs/workflows-local-development) for more information.
 
 ### Installation
 
@@ -32,34 +31,28 @@ cd getissues
 # install dependencies
 pnpm install
 
-# biuld packages
+# build packages
 pnpm build
 
-# copy env template and fill in values
-cd aaps/api
-cp .env.example .env
-
-cd aaps/web
-cp .env.example .env
-
-cd packages/workflows
-cp .env.example .env
-
-cd packages/db
-cp .env.example .env
+# create env files for each app that needs one and fill in values.
+# There are no committed templates - see AGENTS.md for the required variables.
+# Typical locations:
+#   apps/api/.env            DATABASE_URL, BETTER_AUTH_URL, CORS_ORIGIN,
+#                            GITHUB_CLIENT_ID/GITHUB_CLIENT_SECRET, GOOGLE_API_KEY ...
+#   apps/web/.env.local       NEXT_PUBLIC_API_URL, NEXT_PUBLIC_BETTER_AUTH_API_URL ...
+#   apps/workflows/.env       DATABASE_URL, GITHUB_ACCESS_TOKEN, AI provider keys ...
+#   packages/db/.env          MIGRATION_DATABASE_URL
 
 # run database migrations
 cd packages/db
 pnpm run drizzle:generate # generates SQL migration files from Drizzle schema
 pnpm run drizzle:migrate # runs migrations against the database
 
-
-# start the dev server (frontend + backend)
+# start the dev server (frontend + backend + workflows)
 pnpm run dev # run from the root directory
-
 ```
 
-The app should now be running at `http://localhost:3000` (frontend) with the API on `http://localhost:5000` (or as configured).
+The app should now be running at `http://localhost:3000` (frontend) with the API on `http://localhost:4000` (or as configured via `PORT`).
 
 
 

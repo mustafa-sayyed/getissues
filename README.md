@@ -54,12 +54,12 @@ Issues can be delivered to your in-app feed, Notion database. The agent pushes r
 
 ## Architecture
 
-getissues is built on a two-pipeline architecture — one for system-level issue ingestion and another for per-user recommendation scoring. Both pipelines run on Render Workflows, which allows us to scale horizontally and run each pipeline independently.
+getissues is built on a two-pipeline architecture — one for system-level issue ingestion and another for per-user recommendation scoring. Both pipelines run as **Inngest** functions (`apps/workflows`), scheduled via cron triggers and deployed to AWS Lambda.
 
 ### Pipeline 1 — Issue ingestion (system-level)
 ```
-node-cron (runs every few hours)
-  └─ Render Workflow: crawl-issues
+Inngest cron (every 2 hours)
+  └─ ingestIssues function
        ├─ Fetch issues via GitHub API (system PAT, smart search queries)
        ├─ Per-query batch deduplication (in-memory + single batch DB check)
        ├─ Generate embeddings (title + body + labels)
@@ -69,14 +69,14 @@ node-cron (runs every few hours)
 
 ### Pipeline 2 — User recommendation (per-user)
 ```
-node-cron (Every few hours or as per user conf, per user)
-       Render Workflow: issue recommendations
-         ├─ Fetch user skill profile
-         ├─ Query Cognee memory for user preferences and history
-         ├─ pgvector similarity search → top 30 candidates
-         ├─ batched LLM calls → rerank + explain top results
-         ├─ Write to recommendations table
-         └─ Deliver (app feed / Notion)
+Inngest cron (per user configuration)
+  └─ user recommendation function
+       ├─ Fetch user skill profile
+       ├─ Query Cognee memory for user preferences and history
+       ├─ pgvector similarity search → top 30 candidates
+       ├─ batched LLM calls → rerank + explain top results
+       ├─ Write to recommendations table
+       └─ Deliver (app feed / Notion)
 ```
 learn more about the architecture of Workflows [here.](apps/workflows/README.md)
 
@@ -112,11 +112,11 @@ When you interact with a recommendation, we ingest that event into your personal
 | ORM | Drizzle ORM |
 | Vector search | pgvector |
 | Auth | Better Auth (GitHub OAuth) |
-| Background workflows | Render Workflows |
-| Scheduling | node-cron |
+| Background workflows | Inngest (AWS Lambda) |
+| Scheduling | Inngest cron triggers |
 | AI / agents | Mastra AI |
 | Contributor memory | Cognee |
-| Infrastructure | Render |
+| Infrastructure | AWS Lambda (Serverless Framework) |
 
 ---
 
@@ -124,7 +124,7 @@ When you interact with a recommendation, we ingest that event into your personal
 ## Roadmap
 
 - [x] Semantic issue matching
-- [x] Autonomous background agent (Render Workflows)
+- [x] Autonomous background agent (Inngest)
 - [x] Contributor memory with Cognee
 - [ ] Dashboard AI Assistant
 - [ ] Notion integration 
