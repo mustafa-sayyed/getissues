@@ -12,7 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
+  Activity,
   Bot,
+  BotMessageSquare,
   Home,
   Settings,
   CircleDot,
@@ -42,6 +44,18 @@ const dashboardRoutes: Route[] = [
     title: "AI Recommendations",
     icon: <Bot className="size-4" />,
     link: "/dashboard/recommendations",
+  },
+  {
+    id: "assistant",
+    title: "AI Assistant",
+    icon: <BotMessageSquare className="size-4" />,
+    link: "/dashboard/assistant",
+  },
+  {
+    id: "agentRuns",
+    title: "Agent Runs",
+    icon: <Activity className="size-4" />,
+    link: "/dashboard/agent-runs",
   },
   {
     id: "profile",
