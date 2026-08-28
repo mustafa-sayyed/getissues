@@ -46,7 +46,7 @@ pnpm lint                     # API lint == tsc --noEmit; web lint == eslint
 ## AI stack
 
 - Chat assistant = Mastra agent (`apps/api/src/lib/assistant-agent.ts`) using **model-router string arrays** for fallbacks (`google/gemini-2.5-flash → groq/openai/gpt-oss-120b → cloudflare-workers-ai/@cf/openai/gpt-oss-120b`) — same pattern as the scoring agent in `apps/workflows/src/lib/agent.ts`. Tools are Mastra `createTool` with zod.
-- Streaming bridge: `toAISdkStream(output, { from: "agent", version: "v7" })` from `@mastra/ai-sdk`, hand-framed as SSE (`data: {...}\n\n` … `data: [DONE]\n\n`) into Express `res`. Frontend consumes with `useChat` (`@ai-sdk/react`).
+- Streaming bridge: `toAISdkStream(output, { from: "agent", version: "v7" })` from `@mastra/ai-sdk`, hand-framed as SSE (`data: {...}\n\n` … `data: [DONE]\n\n`) into Express `res`. Frontend consumes with **assistant-ui** (`@assistant-ui/react` + `@assistant-ui/ai-sdk` via `useChatRuntime`/`AssistantChatTransport` and `<Thread>` from `components/assistant-ui/thread.tsx`). See `apps/web/components.json` (`@assistant-ui` registry).
 - Embeddings use Vercel AI SDK `embedMany` (`@ai-sdk/google`, gemini-embedding, `outputDimensionality: 1536`) — helper in `apps/api/src/lib/ai.ts`.
 - Env keys: `GOOGLE_API_KEY` (embeddings + google models), `GROQ_API_KEY`, `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_API_TOKEN` (model router fallbacks). Cognee memory is gated by `COGNEE_ENABLED`/`COGNEE_BASE_URL`.
 
