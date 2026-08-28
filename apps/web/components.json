@@ -22,6 +22,7 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@blocks-so": "https://blocks.so/r/{name}.json"
+    "@blocks-so": "https://blocks.so/r/{name}.json",
+    "@assistant-ui": "https://r.assistant-ui.com/styles/{style}/{name}.json"
   }
 }
