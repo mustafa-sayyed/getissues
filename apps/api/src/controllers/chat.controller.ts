@@ -1,7 +1,9 @@
-﻿import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
-import { and, desc, eq, sql } from "drizzle-orm";
-import type { UIMessage } from "ai";
+﻿import { and, desc, eq, sql } from "drizzle-orm";
+import {
+  createUIMessageStream,
+  pipeUIMessageStreamToResponse,
+  type UIMessage,
+} from "ai";
 import { toAISdkStream } from "@mastra/ai-sdk";
 import { ApiLogger as logger } from "@packages/logging";
 import { db, schema } from "../lib/db.ts";
@@ -39,7 +41,10 @@ const buildSystemPrompt = async (userId: string): Promise<string> => {
       repoName: schema.repoAnalysis.name,
     })
     .from(schema.recommendations)
-    .innerJoin(schema.issue, eq(schema.recommendations.issueId, schema.issue.id))
+    .innerJoin(
+      schema.issue,
+      eq(schema.recommendations.issueId, schema.issue.id),
+    )
     .leftJoin(
       schema.repoAnalysis,
       eq(schema.issue.githubRepoId, schema.repoAnalysis.githubRepoId),
@@ -160,6 +165,65 @@ const assertSessionOwnership = async (sessionId: string, userId: string) => {
   }
 };
 
+const getUserId = (req: { user?: { id: string } }) => {
+  if (!req.user) {
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+  }
+  return req.user.id;
+};
+
+const getLastUserText = (messages: unknown): string => {
+  const lastUserMessage = (Array.isArray(messages) ? messages : []).findLast(
+    (message): message is UIMessage =>
+      typeof message === "object" &&
+      message !== null &&
+      (message as UIMessage).role === "user",
+  );
+
+  if (!lastUserMessage) {
+    throw new ApiError(httpStatusCodes.BAD_REQUEST, "No user message provided");
+  }
+
+  const text = extractMessageText(lastUserMessage);
+  if (!text || text.length > MAX_MESSAGE_LENGTH) {
+    throw new ApiError(httpStatusCodes.BAD_REQUEST, "Invalid message content");
+  }
+
+  return text;
+};
+
+const getOrCreateSession = async (
+  sessionId: string | undefined,
+  userId: string,
+  title: string,
+) => {
+  if (sessionId) {
+    await assertSessionOwnership(sessionId, userId);
+    return sessionId;
+  }
+
+  const [session] = await db
+    .insert(schema.chatSessions)
+    .values({ userId, title: title.slice(0, 80) })
+    .returning({ id: schema.chatSessions.id });
+
+  return session.id;
+};
+
+const isClientDisconnect = (error: unknown) => {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? (error as { code?: string }).code
+      : undefined;
+
+  return (
+    ["ERR_STREAM_PREMATURE_CLOSE", "ECONNRESET", "EPIPE"].includes(
+      code ?? "",
+    ) ||
+    (error instanceof Error && error.name === "AbortError")
+  );
+};
+
 const getChatSessionMessages = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
@@ -190,48 +254,21 @@ const deleteChatSession = asyncHandler(async (req, res) => {
   const sessionId = req.params.sessionId as string;
   await assertSessionOwnership(sessionId, req.user!.id);
 
-  await db.delete(schema.chatSessions).where(eq(schema.chatSessions.id, sessionId));
+  await db
+    .delete(schema.chatSessions)
+    .where(eq(schema.chatSessions.id, sessionId));
 
   return res.status(httpStatusCodes.OK).json({ success: true });
 });
 
 const streamChatResponse = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
-  }
-  const userId = req.user.id;
-
-  const sessionId = req.body?.sessionId as string | undefined;
-  const rawMessages = Array.isArray(req.body?.messages)
-    ? (req.body.messages as UIMessage[])
-    : [];
-
-  const lastUserMessage = [...rawMessages]
-    .reverse()
-    .find((message) => message.role === "user");
-
-  if (!lastUserMessage) {
-    throw new ApiError(httpStatusCodes.BAD_REQUEST, "No user message provided");
-  }
-
-  const userText = extractMessageText(lastUserMessage);
-  if (!userText || userText.length > MAX_MESSAGE_LENGTH) {
-    throw new ApiError(httpStatusCodes.BAD_REQUEST, "Invalid message content");
-  }
-
-  let activeSessionId = sessionId;
-  if (!activeSessionId) {
-    const [session] = await db
-      .insert(schema.chatSessions)
-      .values({
-        userId,
-        title: userText.slice(0, 80),
-      })
-      .returning({ id: schema.chatSessions.id });
-    activeSessionId = session.id;
-  } else {
-    await assertSessionOwnership(activeSessionId, userId);
-  }
+  const userId = getUserId(req);
+  const userText = getLastUserText(req.body?.messages);
+  const activeSessionId = await getOrCreateSession(
+    req.body?.sessionId as string | undefined,
+    userId,
+    userText,
+  );
 
   const history = await db
     .select({
@@ -250,8 +287,7 @@ const streamChatResponse = asyncHandler(async (req, res) => {
     content: userText,
   });
 
-  const isFirstExchange = history.length === 0;
-  if (isFirstExchange) {
+  if (!history.length) {
     await db
       .update(schema.chatSessions)
       .set({ title: userText.slice(0, 80) })
@@ -260,18 +296,9 @@ const streamChatResponse = asyncHandler(async (req, res) => {
 
   const systemPrompt = await buildSystemPrompt(userId);
 
-  const historyMessages = history.map((message) =>
-    message.role === "user"
-      ? { role: "user" as const, content: message.content }
-      : { role: "assistant" as const, content: message.content },
-  );
-
   const agent = createAssistantAgent({ userId, instructions: systemPrompt });
 
-  const messages = [
-    ...historyMessages,
-    { role: "user" as const, content: userText },
-  ];
+  const messages = [...history, { role: "user" as const, content: userText }];
 
   let output;
   try {
@@ -284,31 +311,47 @@ const streamChatResponse = asyncHandler(async (req, res) => {
     );
   }
 
-  res.writeHead(httpStatusCodes.OK, {
-    "Content-Type": "text/event-stream; charset=utf-8",
-    "Cache-Control": "no-cache, no-transform",
-    "Connection": "keep-alive",
-    "x-vercel-ai-ui-message-stream": "v1",
+  const llmStream = toAISdkStream(output, {
+    from: "agent",
+    version: "v7",
+  });
+
+  const messageStream = createUIMessageStream({
+    async execute({ writer }) {
+      writer.write({
+        type: "data-custom",
+        data: {
+          sessionId: activeSessionId,
+        },
+      });
+
+      writer.merge(llmStream);
+    },
   });
 
   try {
-    await pipeline(
-      Readable.fromWeb(
-        toAISdkStream(output, {
-          from: "agent",
-          version: "v7",
-        }) as import("node:stream/web").ReadableStream,
-      ),
-      async function* (source) {
-        for await (const chunk of source) {
-          yield `data: ${JSON.stringify(chunk)}\n\n`;
-        }
-        yield "data: [DONE]\n\n";
-      },
-      res,
-    );
-  } catch (error) {
-    logger.error({ error }, "Client disconnected during chat stream");
+    await pipeUIMessageStreamToResponse({
+      response: res,
+      stream: messageStream,
+    });
+  } catch (error: unknown) {
+    // Client aborts the fetch when navigating away or closing the tab.
+    // Node surfaces this as aborted / ECONNRESET / EPIPE - not an app error.
+    if (isClientDisconnect(error)) {
+      logger.info({ error }, "Client aborted chat stream");
+      return;
+    }
+
+    logger.error({ error }, "Error streaming chat response");
+    if (!res.headersSent) {
+      res.status(httpStatusCodes.INTERNAL_SERVER_ERROR).end();
+    } else {
+      try {
+        res.end();
+      } catch {
+        // ignore - response already torn down
+      }
+    }
     return;
   }
 
