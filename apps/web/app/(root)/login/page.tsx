@@ -25,7 +25,7 @@ export default function LoginPage() {
         provider: "github",
         callbackURL: `${baseUrl}/login?success=true`,
         errorCallbackURL: `${baseUrl}/login`,
-        newUserCallbackURL: `${baseUrl}/dashboard?newUser=true`,
+        newUserCallbackURL: `${baseUrl}/onboarding`,
       });
 
       if (res.error) {

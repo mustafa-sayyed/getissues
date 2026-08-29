@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
@@ -193,7 +192,7 @@ export function LanguageCombobox({
               onFocus={handleFocus}
               onBlur={handleBlur}
               placeholder={value.length ? "Add another..." : placeholder}
-              className="h-8 min-w-36 flex-1 border-0 bg-transparent px-1 py-1 shadow-none focus-visible:ring-0"
+              className="h-9 p-2 min-w-36 flex-1 border-0 bg-transparent px-1 py-1 shadow-none focus-visible:ring-0"
             />
           )}
         </div>

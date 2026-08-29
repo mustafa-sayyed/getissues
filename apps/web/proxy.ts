@@ -3,6 +3,7 @@ import { getSessionCookie } from "better-auth/cookies";
 
 export async function proxy(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isOnboardingRoute = request.nextUrl.pathname.startsWith("/onboarding");
   const isLoginRoute = request.nextUrl.pathname.startsWith("/login");
 
   const sessionCookie = getSessionCookie(request, {
@@ -10,7 +11,7 @@ export async function proxy(request: NextRequest) {
   });
 
   // If user not logged in, redirect it to login
-  if (isDashboardRoute && !sessionCookie) {
+  if ((isDashboardRoute || isOnboardingRoute) && !sessionCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
