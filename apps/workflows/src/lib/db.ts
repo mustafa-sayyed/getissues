@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
 import { schema } from "@packages/db";
 import { neon } from "@neondatabase/serverless";
