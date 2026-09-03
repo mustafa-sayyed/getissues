@@ -35,13 +35,6 @@ export const auth = betterAuth({
   },
   usePlural: true,
   user: {
-    additionalFields: {
-      searchIssues: {
-        type: "boolean",
-        defaultValue: true,
-        fieldName: "search_issues",
-      },
-    },
     fields: {
       image: "avatarUrl",
     },
