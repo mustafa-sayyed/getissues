@@ -7,6 +7,9 @@ import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// The request body limit is set to 4MB to parse larger payloads
+app.use(express.json({ limit: "4mb" }));
+
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
 app.listen(PORT, () => {
