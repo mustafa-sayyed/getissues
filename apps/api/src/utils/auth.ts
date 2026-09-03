@@ -33,15 +33,8 @@ export const auth = betterAuth({
       domain: cookieDomain,
     },
   },
-  usePlural: true,
+  usePlural: false,
   user: {
-    additionalFields: {
-      searchIssues: {
-        type: "boolean",
-        defaultValue: true,
-        fieldName: "search_issues",
-      },
-    },
     fields: {
       image: "avatarUrl",
     },
