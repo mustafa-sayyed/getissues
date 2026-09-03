@@ -1,10 +1,10 @@
+import "dotenv/config";
 import { serve } from "inngest/lambda";
 import { inngest } from "./inngest/client.js";
 import { cleanupIssueWorkflow } from "./inngest/functions/cleanupIssues.js";
 import {
   ingestIssuesWorkflow,
   processIssueBatchWorkflow,
-  processIssueWorkflow,
 } from "./inngest/functions/ingestIssues.js";
 import {
   userAgentWorkflow,
@@ -14,7 +14,6 @@ import {
 const functions = [
   ingestIssuesWorkflow,
   processIssueBatchWorkflow,
-  processIssueWorkflow,
   cleanupIssueWorkflow,
   userRecommendationSchedulerWorkflow,
   userAgentWorkflow,

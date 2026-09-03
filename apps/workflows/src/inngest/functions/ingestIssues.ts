@@ -25,11 +25,6 @@ type ProcessIssueBatchEvent = {
   batchIndex: number;
 };
 
-type ProcessIssueEvent = {
-  issue: GitHubIssueSearchItem;
-  source: ProcessIssueBatchEvent["source"];
-};
-
 const chunk = <T>(items: T[], size: number): T[][] => {
   const chunks: T[][] = [];
 
@@ -44,6 +39,7 @@ export const ingestIssuesWorkflow = inngest.createFunction(
   {
     id: "ingest-issues-workflow",
     name: "Issues Ingestion Workflow",
+    description: "Ingest issues from GitHub and process them.",
     triggers: [{ cron: "0 */2 * * *" }],
   },
   async ({ step }) => {
@@ -69,10 +65,10 @@ export const ingestIssuesWorkflow = inngest.createFunction(
           );
 
           return searchRes.data.items;
-        }
+        },
       );
 
-      if(fetchedIssues.length > 0) {
+      if (fetchedIssues.length > 0) {
         labelIssues = [...labelIssues, ...fetchedIssues];
       }
     }
@@ -149,63 +145,44 @@ export const processIssueBatchWorkflow = inngest.createFunction(
       return dedupeResult;
     }
 
-    await step.sendEvent(
-      "dispatch-unique-issues",
-      dedupeResult.issues.map((issue) => ({
-        name: INNGEST_EVENTS.processIssue,
-        data: {
-          issue,
-          source,
-        },
-      })),
-    );
+    for (const issue of dedupeResult.issues) {
+      if (issue) {
+        const repoResult = await step.run(`ensure-repo-${issue.id}`, () =>
+          ensureRepoTask(issue),
+        );
 
-    return {
-      ...dedupeResult,
-      dispatchedIssues: dedupeResult.issues.length,
-    };
-  },
-);
+        const embeddingResult = await step.run(
+          `create-embedding-${issue.id}`,
+          () =>
+            createIssueEmbeddingTask(
+              issue,
+              repoResult.githubRepoId,
+              repoResult.repoDetails,
+            ),
+        );
 
-export const processIssueWorkflow = inngest.createFunction(
-  {
-    id: "process-issue",
-    name: "Process Issue",
-    triggers: [{ event: INNGEST_EVENTS.processIssue }],
-  },
-  async ({ event, step }) => {
-    const { issue, source } = event.data as ProcessIssueEvent;
+        if (embeddingResult.embedding === null) {
+          return {
+            ...embeddingResult,
+            issueId: issue.id,
+            source,
+          };
+        }
 
-    const repoResult = await step.run(`ensure-repo-${issue.id}`, () =>
-      ensureRepoTask(issue),
-    );
-
-    const embeddingResult = await step.run(`create-embedding-${issue.id}`, () =>
-      createIssueEmbeddingTask(
-        issue,
-        repoResult.githubRepoId,
-        repoResult.repoDetails,
-      ),
-    );
-
-    if (embeddingResult.embedding === null) {
-      return {
-        ...embeddingResult,
-        issueId: issue.id,
-        source,
-      };
+        await step.run(`store-issue-${issue.id}`, () =>
+          storeIssueTask(
+            issue,
+            repoResult.githubRepoId,
+            embeddingResult.embedding,
+          ),
+        );
+      }
     }
 
-    const storeResult = await step.run(`store-issue-${issue.id}`, () =>
-      storeIssueTask(issue, repoResult.githubRepoId, embeddingResult.embedding),
-    );
-
     return {
-      success: storeResult.success,
+      success: true,
       source,
-      issueId: issue.id,
-      repo: repoResult.githubRepoId,
-      storeResult,
+      dispatchedIssues: dedupeResult.issues.length,
     };
   },
 );
