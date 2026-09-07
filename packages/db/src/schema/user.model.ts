@@ -1,6 +1,11 @@
 import { pgTable } from "drizzle-orm/pg-core";
 import * as t from "drizzle-orm/pg-core";
 
+export const recommendationQuotaWindowEnum = t.pgEnum(
+  "recommendation_quota_window",
+  ["day", "week", "month"],
+);
+
 export const user = pgTable(
   "user",
   {
@@ -8,6 +13,19 @@ export const user = pgTable(
     name: t.text().notNull(),
     email: t.varchar({ length: 255 }).unique().notNull(),
     searchIssues: t.boolean("search_issues").notNull().default(true),
+    maxPendingRecommendations: t
+      .integer("max_pending_recommendations")
+      .notNull()
+      .default(15),
+    recommendationQuotaLimit: t
+      .integer("recommendation_quota_limit")
+      .notNull()
+      .default(5),
+    recommendationQuotaWindow: recommendationQuotaWindowEnum(
+      "recommendation_quota_window",
+    )
+      .notNull()
+      .default("day"),
     avatarUrl: t.text("avatar_url").notNull(),
     emailVerified: t.boolean("email_verified").notNull(),
     githubId: t.text("github_id"),
