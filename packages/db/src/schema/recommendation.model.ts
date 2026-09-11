@@ -6,9 +6,14 @@ import { agentRuns } from "./agentRuns.model.js";
 
 export const recommendationStatusEnum = t.pgEnum("recommendation_status", [
   "viewed",
-  "deleted",
+  "notinterested",
   "bookmarked",
   "notviewed",
+]);
+
+export const recommendationFeedbackEnum = t.pgEnum("recommendation_feedback", [
+  "helpful",
+  "not_helpful",
 ]);
 
 export const recommendations = pgTable("recommendations", {
@@ -28,6 +33,8 @@ export const recommendations = pgTable("recommendations", {
   reason: t.text("reason"),
   matchScore: t.real("match_score"),
   status: recommendationStatusEnum("status").default("notviewed").notNull(),
+  feedback: recommendationFeedbackEnum("feedback"),
+  dismissReason: t.text("dismiss_reason"),
   recommendedAt: t
     .timestamp("recommended_at", { withTimezone: true })
     .defaultNow(),
