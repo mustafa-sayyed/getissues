@@ -13,14 +13,18 @@ import {
   ExternalLink,
   RefreshCw,
   Star,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import axios from "axios";
 
 type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
+type RecommendationStatus =
+  | "notviewed"
+  | "viewed"
+  | "bookmarked"
+  | "notinterested";
 type AgentRunStatus = "failed" | "success" | "running";
 type AgentConfigStatus = "idle" | "running" | "paused";
 
@@ -170,6 +174,42 @@ const formatScore = (score: number | null) => {
 const formatStatus = (status: string) =>
   status.charAt(0).toUpperCase() + status.slice(1);
 
+const formatCountdown = (target: string | null, current: number) => {
+  if (!target) return "Not scheduled";
+
+  const diffMs = new Date(target).getTime() - current;
+
+  if (Number.isNaN(diffMs)) return "Not scheduled";
+  if (diffMs <= 0) return "Due now";
+
+  const totalSeconds = Math.floor(diffMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0)
+    return `${hours}h ${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  if (minutes > 0) return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  return `${seconds}s`;
+};
+
+const formatDateTime = (value: string | null) => {
+  if (!value) return "No run scheduled";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "No run scheduled";
+
+  return date.toLocaleString("en-US", {
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 export default function DashboardHomePage() {
   const [recommendationStats, setRecommendationStats] = useState(
     defaultRecommendationStats,
@@ -180,8 +220,12 @@ export default function DashboardHomePage() {
   const [agentConfigs, setAgentConfigs] = useState<AgentConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liveRun, setLiveRun] = useState<AgentRun | null>(null);
+  const liveRunRef = useRef<{ id: string; status: AgentRunStatus } | null>(
+    null,
+  );
 
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async (silent = false) => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (!apiUrl) {
@@ -190,7 +234,9 @@ export default function DashboardHomePage() {
       return;
     }
 
-    setIsLoading(true);
+    if (!silent) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -240,6 +286,62 @@ export default function DashboardHomePage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  // Live pipeline status: poll the latest agent run. When a run finishes,
+  // refresh the dashboard quietly and notify the user.
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) return;
+
+    let cancelled = false;
+
+    const pollLiveRun = async () => {
+      try {
+        const { data } = await axios.get<AgentRunsResponse>(
+          `${apiUrl}/agent-runs?limit=1`,
+          { withCredentials: true },
+        );
+        if (cancelled) return;
+
+        const latest = data.agentRuns[0] ?? null;
+        setLiveRun(latest);
+
+        const prev = liveRunRef.current;
+        if (latest) {
+          liveRunRef.current = { id: latest.id, status: latest.status };
+        }
+
+        if (
+          prev &&
+          latest &&
+          prev.id === latest.id &&
+          prev.status === "running" &&
+          latest.status !== "running"
+        ) {
+          if (latest.status === "success") {
+            toast.success(
+              latest.recommendationsCreated
+                ? `${latest.recommendationsCreated} new recommendations found.`
+                : "Agent run finished.",
+            );
+          } else {
+            toast.error("Agent run failed.");
+          }
+          void fetchDashboardData(true);
+        }
+      } catch {
+        // Polling must never break the dashboard.
+      }
+    };
+
+    void pollLiveRun();
+    const intervalId = setInterval(() => void pollLiveRun(), 15000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [fetchDashboardData]);
+
   const primaryAgentConfig = useMemo(
     () =>
       agentConfigs.find((config) => config.configType === "general") ??
@@ -247,6 +349,19 @@ export default function DashboardHomePage() {
       null,
     [agentConfigs],
   );
+
+  // Ticking clock for the "Next Agent Run" countdown. Only ticks while a
+  // future run is scheduled so the page doesn't re-render every second
+  // for no reason.
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!primaryAgentConfig?.nextRunAt) return;
+
+    const intervalId = setInterval(() => setNow(Date.now()), 1000);
+
+    return () => clearInterval(intervalId);
+  }, [primaryAgentConfig?.nextRunAt]);
 
   const stats = [
     {
@@ -278,14 +393,10 @@ export default function DashboardHomePage() {
       bg: "bg-sky-500/10",
     },
     {
-      label: "Agent Status",
-      value: primaryAgentConfig
-        ? formatStatus(primaryAgentConfig.status)
-        : "Idle",
-      detail: primaryAgentConfig?.nextRunAt
-        ? `Next ${formatRelativeTime(primaryAgentConfig.nextRunAt)}`
-        : `${agentRunStats.running} running now`,
-      icon: Zap,
+      label: "Next Agent Run",
+      value: formatCountdown(primaryAgentConfig?.nextRunAt ?? null, now),
+      detail: formatDateTime(primaryAgentConfig?.nextRunAt ?? null),
+      icon: Clock,
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
     },
@@ -307,6 +418,42 @@ export default function DashboardHomePage() {
           {error}
         </div>
       )}
+
+      {liveRun &&
+        (liveRun.status === "running" ? (
+          <div className="flex items-center gap-3 rounded-lg border border-sky-500/30 bg-sky-500/5 p-4">
+            <span className="relative flex size-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-60" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-sky-500" />
+            </span>
+            <p className="text-sm text-foreground">
+              <span className="font-medium">Agent is finding new matches…</span>{" "}
+              <span className="text-muted-foreground">
+                Started {formatRelativeTime(liveRun.startedAt)}
+              </span>
+            </p>
+            <Link
+              href="/dashboard/agent-runs"
+              className="ml-auto shrink-0 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
+            >
+              View runs
+            </Link>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 rounded-lg border border-border/60 p-4">
+            <Bot className="size-4 shrink-0 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Last run {formatRelativeTime(liveRun.startedAt)} ·{" "}
+              {liveRun.recommendationsCreated ?? 0} new matches
+            </p>
+            <Link
+              href="/dashboard/agent-runs"
+              className="ml-auto shrink-0 text-sm font-medium text-primary hover:underline"
+            >
+              View runs
+            </Link>
+          </div>
+        ))}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (

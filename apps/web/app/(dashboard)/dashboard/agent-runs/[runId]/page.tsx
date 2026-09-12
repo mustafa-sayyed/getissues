@@ -52,7 +52,7 @@ type Evaluation = {
   evaluatedAt: string | null;
   recommendation: {
     id: string;
-    status: "notviewed" | "viewed" | "bookmarked" | "deleted" | null;
+    status: "notviewed" | "viewed" | "bookmarked" | "notinterested" | null;
   } | null;
   issue: {
     id: string;

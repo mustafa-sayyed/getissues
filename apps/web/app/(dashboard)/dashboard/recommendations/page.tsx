@@ -32,15 +32,22 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
+import {
+  DismissReasonDialog,
+  FeedbackButtons,
+  type RecommendationFeedbackValue,
+} from "@/components/dashboard/recommendation-feedback";
 
 type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
+type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "notinterested";
 
 type Recommendation = {
   id: string;
   reason: string | null;
   matchScore: number | null;
   status: RecommendationStatus;
+  feedback: RecommendationFeedbackValue;
+  dismissReason: string | null;
   recommendedAt: string | null;
   issue: {
     id: string;
@@ -81,7 +88,7 @@ const recommendationStatusColor: Record<RecommendationStatus, string> = {
   notviewed: "bg-primary/10 text-primary border-0",
   viewed: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-0",
   bookmarked: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-0",
-  deleted: "bg-muted text-muted-foreground border-0",
+  notinterested: "bg-muted text-muted-foreground border-0",
 };
 
 const langColor: Record<string, string> = {
@@ -101,6 +108,7 @@ const formatIssueStatus = (status: IssueStatus) =>
 
 const formatRecommendationStatus = (status: RecommendationStatus) => {
   if (status === "notviewed") return "New";
+  if (status === "notinterested") return "Not interested";
   return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
@@ -141,6 +149,7 @@ export default function RecommendationsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [dismissId, setDismissId] = useState<string | null>(null);
 
   const fetchRecommendations = useCallback(async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -177,6 +186,7 @@ export default function RecommendationsPage() {
   const updateRecommendationStatus = async (
     recommendationId: string,
     status: RecommendationStatus,
+    successMessage?: string,
   ) => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -194,7 +204,7 @@ export default function RecommendationsPage() {
       );
 
       setRecommendations((current) =>
-        status === "deleted"
+        status === "notinterested"
           ? current.filter(
               (recommendation) => recommendation.id !== recommendationId,
             )
@@ -206,9 +216,10 @@ export default function RecommendationsPage() {
       );
 
       toast.success(
-        status === "bookmarked"
-          ? "Recommendation bookmarked."
-          : "Recommendation hidden.",
+        successMessage ??
+          (status === "bookmarked"
+            ? "Recommendation bookmarked."
+            : "Recommendation hidden."),
       );
     } catch (err) {
       console.error("Error updating recommendation:", err);
@@ -222,6 +233,28 @@ export default function RecommendationsPage() {
     () => recommendations,
     [recommendations],
   );
+
+  const handleFeedbackSaved = (
+    recommendationId: string,
+    feedback: RecommendationFeedbackValue,
+  ) => {
+    setRecommendations((current) =>
+      current.map((recommendation) =>
+        recommendation.id === recommendationId
+          ? { ...recommendation, feedback }
+          : recommendation,
+      ),
+    );
+  };
+
+  const handleDismissed = (recommendationId: string) => {
+    setDismissId(null);
+    void updateRecommendationStatus(
+      recommendationId,
+      "notinterested",
+      "Noted — you'll see fewer like this.",
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -392,7 +425,15 @@ export default function RecommendationsPage() {
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+                    <div className="flex shrink-0 items-center gap-1 self-start sm:self-auto">
+                      <FeedbackButtons
+                        recommendationId={recommendation.id}
+                        feedback={recommendation.feedback}
+                        disabled={updatingId === recommendation.id}
+                        onSaved={(feedback) =>
+                          handleFeedbackSaved(recommendation.id, feedback)
+                        }
+                      />
                       <Button
                         variant="outline"
                         size="sm"
@@ -416,10 +457,7 @@ export default function RecommendationsPage() {
                         disabled={updatingId === recommendation.id}
                         onClick={(event) => {
                           event.stopPropagation();
-                          void updateRecommendationStatus(
-                            recommendation.id,
-                            "deleted",
-                          );
+                          setDismissId(recommendation.id);
                         }}
                       >
                         <ThumbsDown className="size-3.5" />
@@ -432,6 +470,17 @@ export default function RecommendationsPage() {
             );
           })}
         </div>
+      )}
+
+      {dismissId && (
+        <DismissReasonDialog
+          recommendationId={dismissId}
+          open={dismissId !== null}
+          onOpenChange={(open) => {
+            if (!open) setDismissId(null);
+          }}
+          onDismissed={() => handleDismissed(dismissId)}
+        />
       )}
     </div>
   );

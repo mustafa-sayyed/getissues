@@ -27,15 +27,22 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import axios from "axios";
+import {
+  DismissReasonDialog,
+  FeedbackButtons,
+  type RecommendationFeedbackValue,
+} from "@/components/dashboard/recommendation-feedback";
 
 type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "deleted";
+type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "notinterested";
 
 type Recommendation = {
   id: string;
   reason: string | null;
   matchScore: number | null;
   status: RecommendationStatus;
+  feedback: RecommendationFeedbackValue;
+  dismissReason: string | null;
   recommendedAt: string | null;
   issue: {
     id: string;
@@ -80,7 +87,7 @@ const recommendationStatusColor: Record<RecommendationStatus, string> = {
   notviewed: "bg-primary/10 text-primary border-0",
   viewed: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-0",
   bookmarked: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-0",
-  deleted: "bg-muted text-muted-foreground border-0",
+  notinterested: "bg-muted text-muted-foreground border-0",
 };
 
 const langColor: Record<string, string> = {
@@ -97,6 +104,7 @@ const langColor: Record<string, string> = {
 
 const formatStatus = (status: string) => {
   if (status === "notviewed") return "New";
+  if (status === "notinterested") return "Not interested";
   return status.charAt(0).toUpperCase() + status.slice(1);
 };
 
@@ -203,6 +211,7 @@ export default function RecommendationDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDismissOpen, setIsDismissOpen] = useState(false);
 
   const updateRecommendationStatus = useCallback(
     async (status: RecommendationStatus, showToast = true) => {
@@ -306,6 +315,16 @@ export default function RecommendationDetailPage() {
 
         {recommendation && (
           <div className="flex flex-wrap items-center gap-2">
+            <FeedbackButtons
+              recommendationId={recommendation.id}
+              feedback={recommendation.feedback}
+              disabled={isUpdating}
+              onSaved={(feedback) =>
+                setRecommendation((current) =>
+                  current ? { ...current, feedback } : current,
+                )
+              }
+            />
             <Button
               variant="outline"
               size="sm"
@@ -321,7 +340,7 @@ export default function RecommendationDetailPage() {
               size="sm"
               className="h-9 gap-1.5 text-muted-foreground hover:text-foreground"
               disabled={isUpdating}
-              onClick={() => void updateRecommendationStatus("deleted")}
+              onClick={() => setIsDismissOpen(true)}
             >
               <ThumbsDown className="size-3.5" />
               Not interested
@@ -329,6 +348,30 @@ export default function RecommendationDetailPage() {
           </div>
         )}
       </div>
+
+      <DismissReasonDialog
+        recommendationId={recommendationId}
+        open={isDismissOpen}
+        onOpenChange={setIsDismissOpen}
+        onDismissed={() => {
+          // Feedback is already saved by the dialog; hide the card too.
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          void axios
+            .patch(
+              `${apiUrl}/recommendations/${recommendationId}/status`,
+              { status: "notinterested" },
+              { withCredentials: true },
+            )
+            .catch((err: unknown) =>
+              console.error("Error hiding recommendation:", err),
+            )
+            .finally(() => {
+              setIsDismissOpen(false);
+              toast.success("Noted — you'll see fewer like this.");
+              router.push("/dashboard/recommendations");
+            });
+        }}
+      />
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 py-16 text-sm text-muted-foreground">
@@ -455,6 +498,16 @@ export default function RecommendationDetailPage() {
                     {formatScore(recommendation.matchScore)}
                   </span>
                 </div>
+                {typeof recommendation.matchScore === "number" && (
+                  <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${Math.round(recommendation.matchScore * 100)}%`,
+                      }}
+                    />
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Assigned</span>
                   <span className="font-semibold text-foreground">
