@@ -14,6 +14,7 @@ import { and, isNotNull, notInArray } from "drizzle-orm";
 export const semanticSearchIssuesTask = async (
   userEmbedding: number[],
   userId: string,
+  blockedRepoIds: string[] = [],
 ): Promise<issue[]> => {
   const embeddingStr = `[${userEmbedding.join(",")}]`;
 
@@ -27,25 +28,30 @@ export const semanticSearchIssuesTask = async (
     .from(schema.agentIssueEvaluation)
     .where(eq(schema.agentIssueEvaluation.userId, userId));
 
+  const filters = [
+    eq(schema.issue.status, "open"),
+    eq(schema.issue.isAssigned, false),
+    eq(schema.issue.isActive, true),
+    isNotNull(schema.issue.embedding),
+    notInArray(
+      schema.issue.id,
+      recommendedIssues.map((rec) => rec.issueId),
+    ),
+    notInArray(
+      schema.issue.id,
+      alreadyEvaluatedIssues.map((agentEval) => agentEval.issueId),
+    ),
+  ];
+
+  // Hard exclusion: never surface repos the user keeps rejecting.
+  if (blockedRepoIds.length > 0) {
+    filters.push(notInArray(schema.issue.githubRepoId, blockedRepoIds));
+  }
+
   const matchedIssues = await db
     .select()
     .from(schema.issue)
-    .where(
-      and(
-        eq(schema.issue.status, "open"),
-        eq(schema.issue.isAssigned, false),
-        eq(schema.issue.isActive, true),
-        isNotNull(schema.issue.embedding),
-        notInArray(
-          schema.issue.id,
-          recommendedIssues.map((rec) => rec.issueId),
-        ),
-        notInArray(
-          schema.issue.id,
-          alreadyEvaluatedIssues.map((agentEval) => agentEval.issueId),
-        ),
-      ),
-    )
+    .where(and(...filters))
     .orderBy(sql`${schema.issue.embedding} <=> ${embeddingStr}`)
     .limit(20);
 

@@ -4,6 +4,8 @@ import { inngest } from "../client.js";
 import { INNGEST_EVENTS } from "../events.js";
 import {
   completeAgentRunTask,
+  getBlockedRepoIdsTask,
+  getNegativeSignalsTextTask,
   getRecommendationQuotaUsageTask,
   getUserSkillsTask,
   scoreIssueTask,
@@ -20,6 +22,10 @@ const BATCH_SIZE = 3;
 
 // Users who haven't been seen for longer than this get no runs dispatched.
 const ACTIVE_WINDOW_DAYS = 7;
+
+// Hours between scheduler ticks. MUST match the cron below ("0 */4 * * *") —
+// it drives the nextRunAt published to agent_config for the dashboard countdown.
+const SCHEDULER_INTERVAL_HOURS = 4;
 
 type RunUserRecommendationEvent = {
   userId: string;
@@ -168,6 +174,44 @@ export const userRecommendationSchedulerWorkflow = inngest.createFunction(
       );
     }
 
+    // 4. Publish the schedule to agent_config so the dashboard "Next Agent
+    // Run" countdown and the General Agent card stay truthful.
+    // nextRunAt = next scheduler tick (set for every active user, even
+    // skipped ones — they get re-evaluated then). lastRunAt = this tick,
+    // but only for users a run was actually dispatched for.
+    const nextTickAt = new Date(
+      now.getTime() + SCHEDULER_INTERVAL_HOURS * 60 * 60 * 1000,
+    );
+    const dispatchedIds = new Set(dispatchable.map((u) => u.id));
+
+    await step.run("update-agent-config-schedule", async () => {
+      await db
+        .insert(schema.agentConfig)
+        .values(
+          activeUsers.map((u) => ({
+            userId: u.id,
+            configType: "general" as const,
+            nextRunAt: nextTickAt,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [schema.agentConfig.userId, schema.agentConfig.configType],
+          set: { nextRunAt: nextTickAt },
+        });
+
+      if (dispatchedIds.size > 0) {
+        await db
+          .update(schema.agentConfig)
+          .set({ lastRunAt: now })
+          .where(
+            and(
+              inArray(schema.agentConfig.userId, [...dispatchedIds]),
+              eq(schema.agentConfig.configType, "general"),
+            ),
+          );
+      }
+    });
+
     logger.info(
       {
         dispatched: dispatchable.length,
@@ -183,6 +227,7 @@ export const userRecommendationSchedulerWorkflow = inngest.createFunction(
     return {
       success: true,
       dispatchedUsers: dispatchable.length,
+      scheduledUsers: activeUsers.length,
       skippedUsers: {
         inactive: skippedInactive,
         pendingIssuesCapReached: skippedPendingCap,
@@ -270,14 +315,29 @@ export const userAgentWorkflow = inngest.createFunction(
 
       const candidateIssues = await step.run(
         `semantic-search-issues-${userId}`,
-        () => semanticSearchIssuesTask(userSkills.embedding, userId),
+        async () => {
+          // Cheap DB reads: excluded repos + rejection examples for scoring.
+          const [blockedRepoIds, negativeSignalsText] = await Promise.all([
+            getBlockedRepoIdsTask(userId),
+            getNegativeSignalsTextTask(userId),
+          ]);
+          const issues = await semanticSearchIssuesTask(
+            userSkills.embedding,
+            userId,
+            blockedRepoIds,
+          );
+          return { issues, negativeSignalsText };
+        },
       );
+
+      const candidates = candidateIssues.issues;
+      const negativeSignalsText = candidateIssues.negativeSignalsText;
 
       let recommended = 0;
       let belowThreshold = 0;
       let skippedByCap = 0;
 
-      for (let i = 0; i < candidateIssues.length; i += BATCH_SIZE) {
+      for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
         // Stop scoring more batches once this run's allowance is spent —
         // scoring is the expensive part (LLM calls per issue).
         if (recommended >= maxNewForRun) {
@@ -288,7 +348,7 @@ export const userAgentWorkflow = inngest.createFunction(
           break;
         }
 
-        const batch = candidateIssues.slice(i, i + BATCH_SIZE);
+        const batch = candidates.slice(i, i + BATCH_SIZE);
         const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
 
         const evaluations = await step.run(
@@ -298,6 +358,7 @@ export const userAgentWorkflow = inngest.createFunction(
               batch as unknown as issue[],
               userSkills.skills,
               decisionContext,
+              negativeSignalsText,
             ),
         );
 
@@ -330,7 +391,7 @@ export const userAgentWorkflow = inngest.createFunction(
         success: true,
         userId,
         agentRunId,
-        candidateIssues: candidateIssues.length,
+        candidateIssues: candidates.length,
         recommended,
         belowThreshold,
         skippedByCap,

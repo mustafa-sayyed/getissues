@@ -31,6 +31,7 @@ export const scoreIssueTask = async (
   issues: issue[],
   userSkillsText: string,
   userDecisionContext = "",
+  negativeSignalsText = "",
 ): Promise<IssueEvaluation[]> => {
   const issuesList = issues
     .map(
@@ -57,6 +58,12 @@ export const scoreIssueTask = async (
         - Not interested recommendations are strong negative signals.
         - Viewed recommendations are weak positive signals.
         - Do not ignore skill fit; user decisions should adjust ranking, not replace technical matching.
+
+        ${
+          negativeSignalsText
+            ? `Recent rejections (strong negative signals — score similar issues low):\n${negativeSignalsText}`
+            : ""
+        }
 
         Evaluate the following ${issues.length} GitHub issues for this developer:
 
