@@ -16,8 +16,8 @@ export const faqs = [
   },
   {
     value: "item-4",
-    q: "Which contribution programs does it support?",
-    a: "getissues currently supports generals issue resommendation, Support for GSoC, LFX Mentorship, and Hacktoberfest is coming soon.",
+    q: "Do I need to configure filters or rules?",
+    a: "No. There is nothing to configure — just vote issues up or down and tell the agent why when you dismiss one. It learns your taste from your feedback and adjusts every future run automatically.",
   },
 ];
 

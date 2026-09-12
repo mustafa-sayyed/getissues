@@ -27,9 +27,6 @@ function Header() {
           <Link href="/#features" className="transition hover:text-primary">
             Features
           </Link>
-          <Link href="/#programs" className="transition hover:text-primary">
-            Programs
-          </Link>
           {isPending ? (
             <Skeleton className="rounded-none w-25 h-9" />
           ) : data ? (
@@ -74,13 +71,6 @@ function Header() {
               onClick={() => setIsOpen(false)}
             >
               Features
-            </Link>
-            <Link
-              href="/#programs"
-              className="transition hover:text-primary"
-              onClick={() => setIsOpen(false)}
-            >
-              Programs
             </Link>
             {isPending ? (
               <Skeleton className="rounded-none w-full h-9" />

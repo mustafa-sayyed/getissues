@@ -7,6 +7,56 @@ import {
 } from "@/components/ui/accordion";
 import { faqs, howItWorks, memory, problemSolution } from "./constant";
 import * as motion from "framer-motion/client";
+import {
+  ArrowRight,
+  Bookmark,
+  Bot,
+  Check,
+  Diamond,
+  EyeOff,
+  Hourglass,
+  Inbox,
+  MessagesSquare,
+  Puzzle,
+  ShieldCheck,
+  Target,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+
+const problemIcons = [Hourglass, Zap, Puzzle];
+const memoryIcons = [EyeOff, Bookmark, MessagesSquare];
+
+const tickerItems = [
+  "Find your first issue",
+  "Skip dead repos",
+  "Know why it matches",
+  "Never search manually",
+  "Ship your first PR",
+];
+
+const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+function SectionHeading({
+  index,
+  kicker,
+  title,
+}: {
+  index: string;
+  kicker: string;
+  title: string;
+}) {
+  return (
+    <div className="mb-12">
+      <p className="font-mono text-xs font-medium uppercase tracking-[0.35em] text-primary">
+        {index} — {kicker}
+      </p>
+      <h2 className="mt-4 max-w-2xl font-heading text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+        {title}
+      </h2>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -14,155 +64,190 @@ export default function Home() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_12%_15%,rgba(var(--spotlight-emerald),.18),transparent_45%),radial-gradient(circle_at_86%_20%,rgba(var(--spotlight-amber),.14),transparent_42%),radial-gradient(circle_at_55%_85%,rgba(var(--spotlight-sky),.15),transparent_40%)]" />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 px-6 pb-16 pt-14 text-center sm:px-10 lg:px-12 lg:pt-20">
+      <section className="mx-auto w-full max-w-6xl px-6 pb-10 pt-10 text-center sm:px-10 lg:px-12 lg:pt-14">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
-          className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-sm font-medium text-primary"
+          transition={{ duration: 0.6, ease: EASE }}
+          className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1 text-xs font-medium tracking-wider text-primary"
         >
-          Built for open-source contributors
+          Built for Open Source Contributors
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: EASE }}
+          className="mx-auto mt-8 font-heading text-5xl font-black uppercase leading-[0.95] tracking-tighter sm:text-7xl lg:text-8xl"
+        >
+          Stop{" "}
+          <motion.span
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0.3 }}
+            transition={{ duration: 0.6, delay: 0.7, ease: "easeInOut" }}
+            className="relative inline-block"
+          >
+            searching.
+            <motion.span
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.6, delay: 0.7, ease: "easeInOut" }}
+              className="absolute left-[-1%] top-[45%] h-[0.2em] w-full origin-left rounded-full bg-black"
+            />
+          </motion.span>
+          <span className="block text-primary">Start contributing.</span>
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.9, ease: EASE }}
+          className="mx-auto mt-10 max-w-2xl text-lg leading-relaxed text-muted-foreground"
+        >
+          Lost in GitHub&rsquo;s millions of repos? Tell us your stack once —
+          agents score open issues against your skills and drop curated matches
+          in your feed, while you sleep.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.05, ease: EASE }}
+          className="mt-10 flex flex-col justify-center gap-3 sm:flex-row"
+        >
+          <Button
+            asChild
+            size="lg"
+            className="h-12 rounded-none px-8 text-base text-white dark:text-black"
+          >
+            <Link href="/login">Start contributing</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="h-12 rounded-none border-border/70 bg-card/80 px-8 text-base text-foreground"
+          >
+            <Link href="#how-it-works">See how it works</Link>
+          </Button>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.1, ease: [0.2, 0.8, 0.2, 1] }}
-          className="flex flex-col items-center gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.2 }}
+          className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground"
         >
-          <h1 className="max-w-3xl text-3xl font-bold font-heading leading-tight tracking-tight sm:text-5xl lg:text-6xl">
-            Stop searching issues manually.
-            <span className="block text-primary">
-              AI Agents find them for you.
-            </span>
-          </h1>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            AI agents match your skills to real open issues, filter noisy
-            repositories, and send curated opportunities to your app feed or
-            Notion.
-          </p>
-          <div className="flex flex-col gap-3 mt-4 sm:flex-row">
-            <Button
-              asChild
-              size="lg"
-              className="h-12 px-6 text-base text-white dark:text-black rounded-none"
-            >
-              <a href="/login">Start your Contribution Journey</a>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="h-12 border-border/70 bg-card/80 px-6 text-base text-foreground rounded-none"
-            >
-              <a href="#how-it-works">See How It Works</a>
-            </Button>
-          </div>
+          {["Free to Use", "60-second setup", "No filters to configure"].map(
+            (item) => (
+              <span key={item} className="flex items-center gap-2">
+                <Check className="size-3.5 text-primary" />
+                {item}
+              </span>
+            ),
+          )}
         </motion.div>
       </section>
 
-      {/* ── PROBLEM VS SOLUTION ──────────────────────────────────── */}
+      {/* ── TICKER ───────────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.7, delay: 1.3 }}
+        className="overflow-hidden bg-primary mt-15"
+      >
+        <motion.div
+          className="flex w-max items-center gap-10 py-3 pl-10"
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ repeat: Infinity, duration: 36, ease: "linear" }}
+        >
+          {[...tickerItems, ...tickerItems].map((item, i) => (
+            <span
+              key={i}
+              className="flex items-center gap-10 font-mono text-sm font-semibold uppercase tracking-[0.2em] text-white dark:text-black"
+            >
+              {item}
+              <span className="opacity-60">
+                <Diamond />
+              </span>
+            </span>
+          ))}
+        </motion.div>
+      </motion.div>
+
+      {/* ── 01 PROBLEM ───────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
+        transition={{ duration: 0.8, ease: EASE }}
         className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 lg:px-12 lg:py-24"
       >
-        <div className="mb-14 text-center">
-          <p className="mb-2 text-sm font-medium text-primary">
-            The old way is broken
-          </p>
-          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            Why finding issues feels like a full-time job.
-          </h2>
-          <p className="mt-3 mx-auto max-w-xl text-muted-foreground">
-            There are millions of repos in github, finding from them is hard
-          </p>
-        </div>
+        <SectionHeading
+          index="01"
+          kicker="The problem"
+          title="Finding issues feels like a full-time job."
+        />
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {problemSolution.map((item, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{
-                duration: 0.8,
-                delay: i * 0.15,
-                ease: [0.2, 0.8, 0.2, 1],
-              }}
-              className="relative group"
-            >
-              <div className="flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card/40 backdrop-blur-md transition-all duration-300 hover:border-primary/40 hover:shadow-xl">
-                <div className="p-6 border-b border-border/40 bg-muted/20">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-2xl">
-                    {item.icon}
-                  </div>
-                  <h3 className="text-sm font-medium leading-relaxed text-muted-foreground">
-                    <span className="font-bold text-foreground block mb-1">
-                      Problem:
-                    </span>
-                    {item.problem}
-                  </h3>
-                </div>
-                <div className="p-6 bg-primary/5 grow">
-                  <h3 className="text-sm font-medium leading-relaxed text-primary/90">
-                    <span className="font-bold text-primary block mb-1">
-                      How we solve it:
-                    </span>
-                    {item.solution}
-                  </h3>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+        <div className="border-b border-border/60">
+          {problemSolution.map((item, i) => {
+            const Icon = problemIcons[i % problemIcons.length];
+            const step = String(i + 1).padStart(2, "0");
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.1 }}
+                transition={{ duration: 0.7, delay: i * 0.1, ease: EASE }}
+                className="grid gap-3 border-t border-border/60 py-8 md:grid-cols-12 md:items-center md:gap-6"
+              >
+                <span className="font-heading text-5xl font-black tracking-tighter text-primary/25 md:col-span-2">
+                  {step}
+                </span>
+                <p className="font-heading text-2xl font-bold leading-snug text-foreground md:col-span-5">
+                  {item.problem}
+                </p>
+                <p className="flex items-start gap-3 text-sm leading-6 text-muted-foreground md:col-span-5">
+                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Icon className="size-4 text-primary" />
+                  </span>
+                  {item.solution}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
       </motion.div>
 
-      {/* ── HOW IT WORKS ─────────────────────────────────────────── */}
+      {/* ── 02 HOW IT WORKS ──────────────────────────────────────── */}
       <motion.div
         id="how-it-works"
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="mx-auto w-full max-w-6xl px-6 py-14 sm:px-10 lg:px-12 lg:py-20"
+        className="mx-auto w-full max-w-6xl scroll-mt-20 px-6 py-14 sm:px-10 lg:px-12 lg:py-20"
       >
-        <div className="mb-12 text-center">
-          <p className="mb-2 text-sm font-medium text-primary">
-            Simple process
-          </p>
-          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            How it works
-          </h2>
-          <p className="mt-3 mx-auto max-w-xl text-muted-foreground">
-            Three steps, then the agent handles everything else.
-          </p>
-        </div>
+        <SectionHeading
+          index="02"
+          kicker="How it works"
+          title="Three steps. Zero searching."
+        />
 
-        <div className="relative grid gap-6 sm:grid-cols-3">
-          {/* Connector line between step cards */}
-          <div className="absolute top-10 left-[calc(16.6%+16px)] right-[calc(16.6%+16px)] hidden h-px bg-gradient-to-r from-primary/30 via-primary/60 to-primary/30 sm:block" />
-
+        <div className="grid gap-10 sm:grid-cols-3 sm:gap-6">
           {howItWorks.map((s, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
-              transition={{
-                duration: 0.8,
-                delay: i * 0.12,
-                ease: [0.2, 0.8, 0.2, 1],
-              }}
-              className="relative rounded-2xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-md"
+              transition={{ duration: 0.7, delay: i * 0.12, ease: EASE }}
             >
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-sm font-bold text-primary">
+              <p className="font-heading text-7xl font-black tracking-tighter text-primary">
                 {s.step}
-              </div>
-              <h3 className="text-base font-semibold text-foreground">
+              </p>
+              <h3 className="mt-4 font-heading text-xl font-bold text-foreground">
                 {s.title}
               </h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -173,7 +258,7 @@ export default function Home() {
         </div>
       </motion.div>
 
-      {/* ── MEMORY SECTION ───────────────────────────────────────── */}
+      {/* ── 03 MEMORY ────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -182,265 +267,89 @@ export default function Home() {
         className="mx-auto w-full max-w-6xl px-6 py-14 sm:px-10 lg:px-12 lg:py-20"
       >
         <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-[oklch(var(--accent-wash-1))] to-[oklch(var(--accent-wash-2))] px-8 py-12 sm:px-12">
-          <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
-            <span>🧠</span> Memory &amp; context powered by Cognee
-          </div>
-          <h2 className="max-w-xl text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            It learns you. Not just your stack — your taste.
+          <p className="font-mono text-xs font-medium uppercase tracking-[0.35em] text-primary">
+            03 — Memory
+          </p>
+          <h2 className="mt-4 max-w-xl font-heading text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+            It learns your taste. Not just your stack.
           </h2>
-          <p className="mt-3 max-w-xl text-muted-foreground">
-            Persistent preferences that improve with every session — no manual
-            tuning required.
+          <p className="mt-4 max-w-xl text-muted-foreground">
+            Every vote and dismissal teaches the agent. No settings, no manual
+            filters — your feed reshapes itself around what you actually pick.
           </p>
 
           <div className="mt-10 grid gap-5 sm:grid-cols-3">
-            {memory.map((c, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.1 }}
-                transition={{
-                  duration: 0.5,
-                  delay: i * 0.1 + 0.1,
-                  ease: "easeOut",
-                }}
-                className="rounded-2xl border border-border/60 bg-background/60 p-5 backdrop-blur-sm transition-[border-color,background-color] duration-300 hover:border-primary/30 hover:bg-background/80"
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-xl">{c.icon}</span>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    {c.label}
-                  </span>
-                </div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  {c.title}
-                </h3>
-                <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-                  {c.desc}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── PROGRAMS ─────────────────────────────────────────────── */}
-      <motion.div
-        id="programs"
-        initial={{ opacity: 0, y: 32 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="mx-auto w-full max-w-6xl px-6 py-14 sm:px-10 lg:px-12 lg:py-20"
-      >
-        <div className="mb-12 text-center">
-          <p className="mb-2 text-sm font-medium text-primary">Programs</p>
-          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            Built for every contribution program.
-          </h2>
-          <p className="mt-3 mx-auto max-w-xl text-muted-foreground">
-            Whether you&apos;re applying to GSoC, LFX, or hunting Hacktoberfest
-            issues — the agent has a dedicated mode for it.
-          </p>
-        </div>
-
-        {/* Bento-style layout: big GSoC card + 2 stacked cards */}
-        <div className="grid gap-5 lg:grid-cols-5">
-          {/* GSoC — wide featured card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-            className="lg:col-span-3"
-          >
-            <div className="group relative flex h-full min-h-[280px] flex-col justify-between overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-[oklch(var(--accent-wash-1))] to-[oklch(var(--accent-wash-2))] p-8 transition-all duration-300 hover:border-primary/50 hover:shadow-xl">
-              {/* Decorative circle */}
-              <div className="pointer-events-none absolute -right-10 -top-10 h-48 w-48 rounded-full bg-primary/8 transition-transform duration-500 group-hover:scale-125" />
-              <div className="absolute right-5 top-5">
-                <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary ring-1 ring-primary/25">
-                  Coming Soon
-                </span>
-              </div>
-              <div>
-                <div className="mb-4 flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-2xl">
-                    🏆
-                  </span>
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-widest text-primary/70">
-                      GSoC
-                    </div>
-                    <h3 className="text-xl font-bold text-foreground">
-                      Google Summer of Code
-                    </h3>
-                  </div>
-                </div>
-                <p className="text-sm leading-6 text-muted-foreground max-w-sm">
-                  Match your skills to project ideas from{" "}
-                  <span className="font-semibold text-foreground">
-                    180+ orgs
-                  </span>{" "}
-                  before proposals open. Get ahead of the crowd with semantic
-                  skill matching and personalised org recommendations.
-                </p>
-              </div>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {[
-                  "Personalised Skill based project recommendation",
-                  "Org discovery",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-primary/20 bg-primary/5 px-3 py-0.5 text-xs font-medium text-primary"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right column — LFX + Hacktoberfest stacked */}
-          <div className="flex flex-col gap-5 lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{
-                duration: 0.8,
-                delay: 0.12,
-                ease: [0.2, 0.8, 0.2, 1],
-              }}
-              className="flex-1"
-            >
-              <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
-                <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-sky-500/6 transition-transform duration-500 group-hover:scale-125" />
-                <div className="absolute right-4 top-4">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
-                    Coming Soon
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-xl">
-                    🎓
-                  </span>
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-widest text-sky-500/80">
-                      LFX
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground">
-                      LFX Mentorship
-                    </h3>
-                  </div>
-                </div>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  Recommends mentorship projects that match with your skills so
-                  you can apply to the right ones.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {["Project recommendation", "Skill match"].map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full border border-sky-500/20 bg-sky-500/5 px-2.5 py-0.5 text-xs font-medium text-sky-600 dark:text-sky-400"
-                    >
-                      {tag}
+            {memory.map((c, i) => {
+              const Icon = memoryIcons[i % memoryIcons.length];
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: i * 0.1 + 0.1,
+                    ease: "easeOut",
+                  }}
+                  className="rounded-2xl border border-border/60 bg-background/60 p-5 backdrop-blur-sm transition-[border-color,background-color] duration-300 hover:border-primary/30 hover:bg-background/80"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
+                      <Icon className="size-5 text-primary" />
                     </span>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.1 }}
-              transition={{
-                duration: 0.8,
-                delay: 0.2,
-                ease: [0.2, 0.8, 0.2, 1],
-              }}
-              className="flex-1"
-            >
-              <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-3xl border border-border/70 bg-card/80 p-6 transition-all duration-300 hover:border-primary/40 hover:shadow-lg">
-                <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-orange-500/6 transition-transform duration-500 group-hover:scale-125" />
-                <div className="absolute right-4 top-4">
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary ring-1 ring-primary/20">
-                    Coming Soon
-                  </span>
-                </div>
-                <div className="mb-3 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/10 text-xl">
-                    🎃
-                  </span>
-                  <div>
-                    <div className="text-xs font-bold uppercase tracking-widest text-orange-500/80">
-                      Hacktoberfest
-                    </div>
-                    <h3 className="text-base font-semibold text-foreground">
-                      Hacktoberfest
-                    </h3>
+                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                      {c.label}
+                    </span>
                   </div>
-                </div>
-                <p className="text-xs leading-5 text-muted-foreground">
-                  Agent scans repos with the hacktoberfest label so you never
-                  miss a valid issue during the event.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {["Label based issue search", "Instant notifications"].map(
-                    (tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-orange-500/20 bg-orange-500/5 px-2.5 py-0.5 text-xs font-medium text-orange-600 dark:text-orange-400"
-                      >
-                        {tag}
-                      </span>
-                    ),
-                  )}
-                </div>
-              </div>
-            </motion.div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {c.title}
+                  </h3>
+                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                    {c.desc}
+                  </p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </motion.div>
 
-      {/* ── FEATURE DEEP-DIVE ────────────────────────────────────── */}
+      {/* ── 04 FEATURES ──────────────────────────────────────────── */}
       <motion.div
         id="features"
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-        className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 lg:px-12 lg:py-24"
+        transition={{ duration: 0.8, ease: EASE }}
+        className="mx-auto w-full max-w-6xl scroll-mt-20 px-6 py-16 sm:px-10 lg:px-12 lg:py-24"
       >
-        <div className="mb-16 text-center">
-          <p className="mb-2 text-sm font-medium text-primary">Features</p>
-          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            Everything the agent does for you.
-          </h2>
-        </div>
+        <SectionHeading
+          index="04"
+          kicker="Features"
+          title="Everything the agent does for you."
+        />
 
         <div className="grid gap-6 md:grid-cols-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-            className="md:col-span-8 flex"
+            transition={{ duration: 0.8, ease: EASE }}
+            className="flex md:col-span-8"
           >
-            <div className="flex flex-col justify-between rounded-3xl border border-border/40 bg-gradient-to-br from-card/60 to-background/30 backdrop-blur-xl p-8 w-full transition-all hover:border-primary/40 hover:shadow-xl">
+            <div className="flex w-full flex-col justify-between rounded-3xl border border-border/40 bg-gradient-to-br from-card/60 to-background/30 p-8 backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-xl">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                <Target className="size-7 text-primary" />
+              </div>
               <div>
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-3xl">
-                  🎯
-                </div>
                 <h3 className="mb-2 text-xl font-bold text-foreground">
                   Skill-aware semantic matching
                 </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground max-w-lg">
-                  LLM-powered semantic ranking understands your full stack — not
-                  just keyword overlap. It distinguishes between "used React
-                  once" and "built production apps with React."
+                <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+                  LLM-powered ranking understands your full stack — not just
+                  keyword overlap. It knows the difference between &ldquo;used
+                  React once&rdquo; and &ldquo;ships production React.&rdquo;
                 </p>
               </div>
             </div>
@@ -450,20 +359,20 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: [0.2, 0.8, 0.2, 1] }}
-            className="md:col-span-4 flex"
+            transition={{ duration: 0.8, delay: 0.1, ease: EASE }}
+            className="flex md:col-span-4"
           >
-            <div className="flex flex-col justify-between rounded-3xl border border-border/40 bg-card/40 backdrop-blur-md p-8 w-full transition-all hover:border-primary/40 hover:shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/20 text-2xl">
-                📊
+            <div className="flex w-full flex-col justify-between rounded-3xl border border-border/40 bg-card/40 p-8 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-lg">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10">
+                <ShieldCheck className="size-6 text-emerald-500" />
               </div>
               <div>
                 <h3 className="mb-2 text-lg font-bold text-foreground">
-                  Repo Checks
+                  Repo health checks
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  The agent checks last commit date, maintainer response time,
-                  CONTRIBUTING.md, and Filter out Spams.
+                  Last commit date, maintainer response time, contributing docs
+                  — spam filtered before it reaches you.
                 </p>
               </div>
             </div>
@@ -473,21 +382,20 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
-            className="md:col-span-5 flex"
+            transition={{ duration: 0.8, delay: 0.2, ease: EASE }}
+            className="flex md:col-span-5"
           >
-            <div className="flex flex-col justify-between rounded-3xl border border-border/40 bg-card/40 backdrop-blur-md p-8 w-full transition-all hover:border-primary/40 hover:shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-2xl">
-                🤖
+            <div className="flex w-full flex-col justify-between rounded-3xl border border-border/40 bg-card/40 p-8 backdrop-blur-md transition-all hover:border-primary/40 hover:shadow-lg">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10">
+                <Bot className="size-6 text-amber-500" />
               </div>
               <div>
                 <h3 className="mb-2 text-lg font-bold text-foreground">
-                  Autonomous Agent
+                  Runs while you sleep
                 </h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Our agent wakes up every few hours, searches issues for you,
-                  score them gainst your evolving profile adn recommend them to
-                  you.
+                  The agent wakes every few hours, scores fresh issues against
+                  your evolving profile, and queues your next matches.
                 </p>
               </div>
             </div>
@@ -497,21 +405,20 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: [0.2, 0.8, 0.2, 1] }}
-            className="md:col-span-7 flex"
+            transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
+            className="flex md:col-span-7"
           >
-            <div className="flex flex-col justify-between rounded-3xl border border-border/40 bg-gradient-to-tr from-card/60 to-background/30 backdrop-blur-xl p-8 w-full transition-all hover:border-primary/40 hover:shadow-xl">
+            <div className="flex w-full flex-col justify-between rounded-3xl border border-border/40 bg-gradient-to-tr from-card/60 to-background/30 p-8 backdrop-blur-xl transition-all hover:border-primary/40 hover:shadow-xl">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10">
+                <Inbox className="size-7 text-indigo-500" />
+              </div>
               <div>
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-3xl">
-                  📬
-                </div>
                 <h3 className="mb-2 text-xl font-bold text-foreground">
-                  Delivers to app, Notion, or email
+                  Delivered where you work
                 </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground max-w-md">
-                  Get a ranked feed inside the app, sync issues to a Notion
-                  database with match score + labels, or receive a digest email.
-                  You choose the delivery channel.
+                <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+                  A ranked feed in the app, synced to Notion, or in your inbox.
+                  Every match ships with a score and the reason it picked you.
                 </p>
               </div>
             </div>
@@ -519,42 +426,54 @@ export default function Home() {
         </div>
       </motion.div>
 
-      {/* ── FAQ ──────────────────────────────────────────────────── */}
+      {/* ── 05 FAQ ───────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-        className="mx-auto w-full max-w-3xl px-6 py-14 sm:px-10 lg:py-20"
+        transition={{ duration: 0.8, ease: EASE }}
+        className="mx-auto w-full max-w-6xl px-6 py-14 sm:px-10 lg:px-12 lg:py-20"
       >
-        <div className="mb-10 text-center">
-          <p className="mb-2 text-sm font-medium text-primary">FAQ</p>
-          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
-            Common questions
-          </h2>
+        <div className="grid gap-10 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24">
+              <p className="font-mono text-xs font-medium uppercase tracking-[0.35em] text-primary">
+                05 - FAQ
+              </p>
+              <h2 className="mt-4 font-heading text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+                Questions, answered.
+              </h2>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+                Anything else on your mind? Log in and ask the in-app assistant
+                — it knows every corner of the product.
+              </p>
+            </div>
+          </div>
+          <Accordion
+            collapsible={true}
+            type="single"
+            defaultValue={"item-1"}
+            className="border-b border-border/60 lg:col-span-7"
+          >
+            {faqs.map((faq, i) => (
+              <AccordionItem
+                key={faq.value}
+                value={faq.value}
+                className="cursor-pointer border-t border-border/60 px-2"
+              >
+                <AccordionTrigger className="cursor-pointer gap-4 py-5 text-left font-heading text-lg font-bold hover:no-underline sm:text-xl">
+                  <span className="shrink-0 font-mono text-sm font-medium text-primary">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="pb-6 pl-10 text-[15px] leading-7 text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
-        <Accordion
-          collapsible={true}
-          autoCapitalize="sentences"
-          type="single"
-          defaultValue={"item-1"}
-          className="py-4 px-10"
-        >
-          {faqs.map((faq) => (
-            <AccordionItem
-              key={faq.value}
-              value={faq.value}
-              className="cursor-pointer text-base rounded-md py-1 px-4"
-            >
-              <AccordionTrigger className="text-base cursor-pointer">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-[14px]">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
       </motion.div>
 
       {/* ── FINAL CTA ─────────────────────────────────── */}
@@ -563,29 +482,33 @@ export default function Home() {
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.1 }}
-        transition={{ duration: 0.8, ease: [0.2, 0.8, 0.2, 1] }}
-        className="mx-auto w-full max-w-4xl px-6 pb-20 pt-8 sm:px-10 lg:pb-28"
+        transition={{ duration: 0.8, ease: EASE }}
+        className="w-full scroll-mt-20 bg-primary"
       >
-        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-[oklch(var(--accent-wash-1))] to-[oklch(var(--accent-wash-2))] p-10 text-center sm:p-16 shadow-lg">
-          <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
-
-          <div className="relative z-10">
-            <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-5xl">
-              Get early access — it&apos;s free.
+        <div className="mx-auto w-full max-w-6xl px-6 py-16 text-center sm:px-10 sm:py-24 lg:px-12">
+          <div>
+            <p className="font-mono text-xs font-medium uppercase tracking-[0.35em] text-white/80 dark:text-black/70">
+              06 — Get started
+            </p>
+            <h2 className="mx-auto mt-4 max-w-4xl font-heading text-5xl font-black uppercase leading-[0.95] tracking-tighter text-white dark:text-black sm:text-7xl">
+              Your first match is waiting.
             </h2>
-            <p className="mt-4 mx-auto max-w-lg text-lg text-muted-foreground">
-              Start using the AI agent now{" "}
-                to search issues on behalf of you
+            <p className="mx-auto mt-6 max-w-xl text-lg text-white/85 dark:text-black/70">
+              Free to start. Tell the agent your stack once — wake up to issues
+              worth your time.
             </p>
 
             <div className="mt-10 flex justify-center">
               <Button
                 asChild
                 size="lg"
-                className="h-14 px-10 text-base font-semibold text-white dark:text-black rounded-full shadow-lg hover:scale-101 transition-transform duration-300"
+                variant="secondary"
+                className="h-14 rounded-none px-10 text-base font-semibold "
               >
-                <a href="/login">Log in to get started &rarr;</a>
+                <Link href="/login" className="flex items-center gap-2">
+                  Log in to get started
+                  <ArrowRight className="size-5" />
+                </Link>
               </Button>
             </div>
           </div>
@@ -607,9 +530,6 @@ export default function Home() {
             <nav className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted-foreground">
               <a href="#how-it-works" className="transition hover:text-primary">
                 How it works
-              </a>
-              <a href="#programs" className="transition hover:text-primary">
-                Programs
               </a>
               <a href="#features" className="transition hover:text-primary">
                 Features
