@@ -4,12 +4,14 @@ type RecommendationDecisionStatus =
   | "notviewed"
   | "viewed"
   | "bookmarked"
-  | "deleted";
+  | "notinterested";
 
 type RecommendationDecision = {
   userId: string;
   recommendationId: string;
   status: RecommendationDecisionStatus;
+  feedback: "helpful" | "not_helpful" | null;
+  dismissReason: string | null;
   matchScore: number | null;
   reason: string | null;
   issueTitle: string;
@@ -97,7 +99,7 @@ const statusMeaning: Record<RecommendationDecisionStatus, string> = {
     "The user opened this recommendation, which is a weak positive interest signal.",
   bookmarked:
     "The user bookmarked this recommendation, which is a strong positive preference signal.",
-  deleted:
+  notinterested:
     "The user marked this recommendation as not interested, which is a strong negative preference signal.",
 };
 
@@ -113,6 +115,8 @@ User ID: ${decision.userId}
 Recommendation ID: ${decision.recommendationId}
 Decision status: ${decision.status}
 Decision meaning: ${statusMeaning[decision.status]}
+User feedback: ${decision.feedback ?? "none"}
+Dismiss reason: ${decision.dismissReason ?? "none"}
 Original AI match score: ${decision.matchScore ?? "Unknown"}
 
 Issue:

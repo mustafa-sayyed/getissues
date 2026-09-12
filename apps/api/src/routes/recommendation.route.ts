@@ -3,6 +3,7 @@ import {
   getRecommendation,
   getRecommendations,
   getRecommendationStats,
+  updateRecommendationFeedback,
   updateRecommendationStatus,
 } from "../controllers/recommendation.controller.ts";
 import { requireAuth } from "../middlewares/auth.middleware.ts";
@@ -15,6 +16,11 @@ router.patch(
   "/:recommendationId/status",
   requireAuth,
   updateRecommendationStatus,
+);
+router.patch(
+  "/:recommendationId/feedback",
+  requireAuth,
+  updateRecommendationFeedback,
 );
 router.get("/", requireAuth, getRecommendations);
 

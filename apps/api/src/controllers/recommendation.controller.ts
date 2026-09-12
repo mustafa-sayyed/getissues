@@ -10,10 +10,14 @@ const recommendationStatuses = [
   "notviewed",
   "viewed",
   "bookmarked",
-  "deleted",
+  "notinterested",
 ] as const;
 
 type RecommendationStatus = (typeof recommendationStatuses)[number];
+
+const recommendationFeedbacks = ["helpful", "not_helpful"] as const;
+
+type RecommendationFeedback = (typeof recommendationFeedbacks)[number];
 
 const getRecommendationDecisionSnapshot = async (
   recommendationId: string,
@@ -25,6 +29,8 @@ const getRecommendationDecisionSnapshot = async (
       reason: schema.recommendations.reason,
       matchScore: schema.recommendations.matchScore,
       status: schema.recommendations.status,
+      feedback: schema.recommendations.feedback,
+      dismissReason: schema.recommendations.dismissReason,
       issue: {
         title: schema.issue.title,
         description: schema.issue.description,
@@ -84,6 +90,8 @@ const getRecommendations = asyncHandler(async (req, res) => {
       reason: schema.recommendations.reason,
       matchScore: schema.recommendations.matchScore,
       status: schema.recommendations.status,
+      feedback: schema.recommendations.feedback,
+      dismissReason: schema.recommendations.dismissReason,
       recommendedAt: schema.recommendations.recommendedAt,
       issue: {
         id: schema.issue.id,
@@ -170,6 +178,8 @@ const getRecommendation = asyncHandler(async (req, res) => {
       reason: schema.recommendations.reason,
       matchScore: schema.recommendations.matchScore,
       status: schema.recommendations.status,
+      feedback: schema.recommendations.feedback,
+      dismissReason: schema.recommendations.dismissReason,
       recommendedAt: schema.recommendations.recommendedAt,
       issue: {
         id: schema.issue.id,
@@ -269,6 +279,82 @@ const updateRecommendationStatus = asyncHandler(async (req, res) => {
       userId: req.user.id,
       recommendationId: decisionSnapshot.id,
       status: decisionSnapshot.status,
+      feedback: decisionSnapshot.feedback,
+      dismissReason: decisionSnapshot.dismissReason,
+      matchScore: decisionSnapshot.matchScore,
+      reason: decisionSnapshot.reason,
+      issueTitle: decisionSnapshot.issue.title,
+      issueDescription: decisionSnapshot.issue.description,
+      issueUrl: decisionSnapshot.issue.url,
+      repoName: decisionSnapshot.repo?.name ?? null,
+      repoUrl: decisionSnapshot.repo?.repoUrl ?? null,
+      repoLanguages: decisionSnapshot.repo?.languages ?? null,
+      repoDescription: decisionSnapshot.repo?.description ?? null,
+    }).catch((error) => {
+      logger.error({ error }, "Failed to capture recommendation decision in Cognee.");
+    });
+  }
+
+  return res.status(httpStatusCodes.OK).json({ recommendation });
+});
+
+const updateRecommendationFeedback = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+  }
+
+  const recommendationId = req.params.recommendationId as string;
+  const feedback =
+    req.body.feedback === null ? null : (req.body.feedback as RecommendationFeedback);
+  const dismissReason =
+    typeof req.body.dismissReason === "string" && req.body.dismissReason.trim()
+      ? req.body.dismissReason.trim().slice(0, 200)
+      : null;
+
+  if (
+    feedback !== null &&
+    !recommendationFeedbacks.includes(feedback as RecommendationFeedback)
+  ) {
+    throw new ApiError(
+      httpStatusCodes.BAD_REQUEST,
+      "Invalid recommendation feedback",
+    );
+  }
+
+  const [recommendation] = await db
+    .update(schema.recommendations)
+    .set({ feedback, dismissReason })
+    .where(
+      and(
+        eq(schema.recommendations.id, recommendationId),
+        eq(schema.recommendations.userId, req.user.id),
+      ),
+    )
+    .returning({
+      id: schema.recommendations.id,
+      feedback: schema.recommendations.feedback,
+      dismissReason: schema.recommendations.dismissReason,
+    });
+
+  if (!recommendation) {
+    throw new ApiError(
+      httpStatusCodes.NOT_FOUND,
+      "Recommendation not found",
+    );
+  }
+
+  const decisionSnapshot = await getRecommendationDecisionSnapshot(
+    recommendation.id,
+    req.user.id,
+  );
+
+  if (decisionSnapshot) {
+    captureRecommendationDecision({
+      userId: req.user.id,
+      recommendationId: decisionSnapshot.id,
+      status: decisionSnapshot.status,
+      feedback: decisionSnapshot.feedback,
+      dismissReason: decisionSnapshot.dismissReason,
       matchScore: decisionSnapshot.matchScore,
       reason: decisionSnapshot.reason,
       issueTitle: decisionSnapshot.issue.title,
@@ -291,4 +377,5 @@ export {
   getRecommendationStats,
   getRecommendation,
   updateRecommendationStatus,
+  updateRecommendationFeedback,
 };
