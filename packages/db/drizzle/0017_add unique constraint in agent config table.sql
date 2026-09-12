@@ -1,0 +1,2 @@
+ALTER TABLE "agent_config" ALTER COLUMN "cron_schedule" SET DEFAULT '0 */4 * * *';--> statement-breakpoint
+ALTER TABLE "agent_config" ADD CONSTRAINT "agent_config_user_type_unique" UNIQUE("user_id","config_type");

@@ -120,6 +120,13 @@
       "when": 1789151722013,
       "tag": "0016_update recommendation table to add feedback fields",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1789235588913,
+      "tag": "0017_add unique constraint in agent config table",
+      "breakpoints": true
     }
   ]
 }
