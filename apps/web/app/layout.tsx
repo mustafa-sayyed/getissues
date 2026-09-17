@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import StoreProvider from "@/lib/StoreProvider";
 import { Toaster } from "sonner";
+import { PHProvider } from "@/components/posthog/PostHogProvider";
+
 
 const manropeHeading = Manrope({
   subsets: ["latin"],
@@ -60,7 +62,9 @@ export default function RootLayout({
         <StoreProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <TooltipProvider>
-              {children}
+              <PHProvider>
+                {children}
+              </PHProvider>
               <Toaster richColors />
             </TooltipProvider>
           </ThemeProvider>
