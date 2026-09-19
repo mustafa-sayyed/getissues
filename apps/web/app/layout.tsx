@@ -8,7 +8,6 @@ import StoreProvider from "@/lib/StoreProvider";
 import { Toaster } from "sonner";
 import { PHProvider } from "@/components/posthog/PostHogProvider";
 
-
 const manropeHeading = Manrope({
   subsets: ["latin"],
   variable: "--font-heading",
@@ -31,11 +30,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "getissues - An AI agent that finds issues you can contribute to",
+  title: "getissues - Stop Searching, Start Contributing",
   description:
-    "Autonomous AI agents that find open issues you can contribute to while you sleep.",
+    "Autonomous AI agents find issues for you, so you can contribute",
   icons: {
     icon: "/favicon.svg",
+  },
+  openGraph: {
+    title: "getissues - Stop Searching, Start Contributing",
+    description:
+      "Autonomous AI agents find issues for you, so you can contribute",
+    type: "website",
+    images: "https://getissues.tech/getissues.png",
   },
 };
 
@@ -62,9 +68,7 @@ export default function RootLayout({
         <StoreProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <TooltipProvider>
-              <PHProvider>
-                {children}
-              </PHProvider>
+              <PHProvider>{children}</PHProvider>
               <Toaster richColors />
             </TooltipProvider>
           </ThemeProvider>
