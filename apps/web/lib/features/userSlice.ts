@@ -1,4 +1,4 @@
-import { GithubUserData } from "@/types";
+import { GithubUserData } from "@/types/github";
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState: GithubUserData | null = null;

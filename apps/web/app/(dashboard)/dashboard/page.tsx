@@ -11,120 +11,38 @@ import {
   CircleDot,
   Clock,
   ExternalLink,
-  RefreshCw,
   Star,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-
-type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus =
-  | "notviewed"
-  | "viewed"
-  | "bookmarked"
-  | "notinterested";
-type AgentRunStatus = "failed" | "success" | "running";
-type AgentConfigStatus = "idle" | "running" | "paused";
-
-type Recommendation = {
-  id: string;
-  reason: string | null;
-  matchScore: number | null;
-  status: RecommendationStatus;
-  recommendedAt: string | null;
-  issue: {
-    id: string;
-    title: string;
-    status: IssueStatus;
-    url: string;
-    createdAt: string | null;
-  };
-  repo: {
-    name: string | null;
-    languages: string[] | null;
-    stars: number | null;
-  } | null;
-};
-
-type AgentRun = {
-  id: string;
-  status: AgentRunStatus;
-  startedAt: string | null;
-  endedAt: string | null;
-  recommendationsCreated?: number;
-};
-
-type AgentConfig = {
-  id: string;
-  configType: string;
-  lastRunAt: string | null;
-  nextRunAt: string | null;
-  status: AgentConfigStatus;
-};
-
-type RecommendationStatsResponse = {
-  stats: {
-    total: number;
-    newCount: number;
-    bookmarkedCount: number;
-    averageMatchScore: number | null;
-  };
-};
-
-type RecommendationsResponse = {
-  recommendations: Recommendation[];
-};
-
-type AgentRunStatsResponse = {
-  stats: {
-    total: number;
-    successful: number;
-    failed: number;
-    running: number;
-    lastRun: AgentRun | null;
-  };
-};
-
-type AgentRunsResponse = {
-  agentRuns: AgentRun[];
-};
-
-type AgentConfigResponse = {
-  configs: AgentConfig[];
-};
-
-type RecommendationStats = RecommendationStatsResponse["stats"];
-type AgentRunStats = AgentRunStatsResponse["stats"];
-
-const issueStatusColor: Record<IssueStatus, string> = {
-  open: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  assigned: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-  closed: "bg-muted text-muted-foreground",
-};
-
-const agentRunColor: Record<AgentRunStatus, string> = {
-  success: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  running: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-  failed: "bg-red-500/15 text-red-600 dark:text-red-400",
-};
-
-const agentConfigColor: Record<AgentConfigStatus, string> = {
-  idle: "bg-muted text-muted-foreground",
-  running: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
-  paused: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-};
-
-const langColor: Record<string, string> = {
-  typescript: "bg-[#3178c6] text-white",
-  javascript: "bg-[#f1e05a] text-black",
-  python: "bg-[#3572A5] text-white",
-  rust: "bg-[#dea584] text-black",
-  go: "bg-[#00ADD8] text-black",
-  java: "bg-[#b07219] text-white",
-  default: "bg-[#64748b] text-white",
-};
+import {
+  AgentConfig,
+  AgentConfigResponse,
+  AgentRun,
+  AgentRunsResponse,
+  AgentRunStats,
+  AgentRunStatsResponse,
+  AgentRunStatus,
+  Recommendation,
+  RecommendationsResponse,
+  RecommendationStats,
+  RecommendationStatsResponse,
+} from "@/types/dashboard";
+import {
+  formatCountdown,
+  formatDateTime,
+  formatRelativeTime,
+  formatScore,
+  formatStatus,
+} from "@/lib/formatters";
+import {
+  agentConfigColor,
+  agentRunColor,
+  issueStatusColor,
+  langColor,
+} from "@/lib/colors";
 
 const defaultRecommendationStats: RecommendationStats = {
   total: 0,
@@ -139,75 +57,6 @@ const defaultAgentRunStats: AgentRunStats = {
   failed: 0,
   running: 0,
   lastRun: null,
-};
-
-const formatRelativeTime = (value: string | null) => {
-  if (!value) return "Never";
-
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-
-  if (Number.isNaN(diffMs)) return "Never";
-
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-
-  return date.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
-
-const formatScore = (score: number | null) => {
-  if (typeof score !== "number") return "N/A";
-  return `${Math.round(score * 100)}%`;
-};
-
-const formatStatus = (status: string) =>
-  status.charAt(0).toUpperCase() + status.slice(1);
-
-const formatCountdown = (target: string | null, current: number) => {
-  if (!target) return "Not scheduled";
-
-  const diffMs = new Date(target).getTime() - current;
-
-  if (Number.isNaN(diffMs)) return "Not scheduled";
-  if (diffMs <= 0) return "Due now";
-
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-  if (hours > 0)
-    return `${hours}h ${minutes}m ${String(seconds).padStart(2, "0")}s`;
-  if (minutes > 0) return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
-  return `${seconds}s`;
-};
-
-const formatDateTime = (value: string | null) => {
-  if (!value) return "No run scheduled";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "No run scheduled";
-
-  return date.toLocaleString("en-US", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
 };
 
 export default function DashboardHomePage() {
