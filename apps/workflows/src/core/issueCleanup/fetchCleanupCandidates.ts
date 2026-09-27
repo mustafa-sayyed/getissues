@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema, sql } from "../../lib/db.js";
 import { CleanupIssueCandidate } from "../../types/common.types.js";
 

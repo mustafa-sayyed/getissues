@@ -1,9 +1,9 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import type {
   GitHubIssueSearchItem,
   RepoDetails,
-} from "../../types/github.types.js";
-import { getEmbeddings } from "../../lib/embeddings.js";
+} from "@packages/shared";
+import { getEmbeddings } from "@packages/shared";
 
 /**
  * Task: Generate a vector embedding for a GitHub issue.

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import "./utils/instrumentation.ts";
 import { app } from "./app.ts";
-import { ApiLogger as logger } from "@packages/logging";
+import { ApiLogger as logger } from "@packages/shared";
 import serverless from "serverless-http";
 
 const PORT = Number(process.env.PORT ?? 4000);

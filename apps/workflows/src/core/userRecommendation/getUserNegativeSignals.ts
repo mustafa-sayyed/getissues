@@ -1,5 +1,5 @@
 import { and, desc, eq, gte, or, sql } from "drizzle-orm";
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema } from "../../lib/db.js";
 
 // A repo is blocked once the user rejects this many of its issues.

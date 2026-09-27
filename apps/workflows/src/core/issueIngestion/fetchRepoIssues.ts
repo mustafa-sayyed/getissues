@@ -1,9 +1,9 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { getOctokit } from "../../lib/octokit.js";
 import type {
   GitHubIssueSearchItem,
   GitHubRepoSearchItem,
-} from "../../types/github.types.js";
+} from "@packages/shared";
 
 const DEFAULT_ISSUES_PER_REPO = 10;
 const issueSorts = ["updated", "created"] as const;

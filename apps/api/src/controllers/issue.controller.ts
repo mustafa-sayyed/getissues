@@ -1,7 +1,7 @@
 import { and, desc, ilike, or, sql, type SQL } from "drizzle-orm";
-import { ApiLogger as logger } from "@packages/logging";
+import { ApiLogger as logger } from "@packages/shared";
 import { db, schema, eq } from "../lib/db.ts";
-import { embedText, toPgVector } from "../lib/ai.ts";
+import { embedText, toPgVector } from "@packages/shared";
 import { asyncHandler } from "../utils/asyncRequest.ts";
 import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 import ApiError from "../utils/ApiError.ts";
@@ -9,7 +9,7 @@ import ApiError from "../utils/ApiError.ts";
 const searchModes = ["keyword", "semantic"] as const;
 type SearchMode = (typeof searchModes)[number];
 
-const getQueryEmbedding = async (query: string) => {
+const getQueryEmbedding = async (query: string): Promise<string | null> => {
   const embedding = await embedText(query);
 
   if (!embedding?.length) {

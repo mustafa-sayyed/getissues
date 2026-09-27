@@ -1,5 +1,5 @@
 import { and, exists, gt, gte, inArray } from "drizzle-orm";
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { inngest } from "../client.js";
 import { INNGEST_EVENTS } from "../events.js";
 import {

@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, eq, schema } from "../../lib/db.js";
 
 export const getUserSkillsTask = async (

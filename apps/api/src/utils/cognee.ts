@@ -1,4 +1,4 @@
-import { ApiLogger as logger } from "@packages/logging";
+import { ApiLogger as logger } from "@packages/shared";
 
 type RecommendationDecisionStatus =
   | "notviewed"

@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { discoverReposTask } from "./discoverRepos.js";
 import { fetchRepoIssuesTask } from "./fetchRepoIssues.js";
 

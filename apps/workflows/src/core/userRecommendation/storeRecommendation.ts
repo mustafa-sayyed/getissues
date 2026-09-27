@@ -1,5 +1,5 @@
 import { schema } from "@packages/db";
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db } from "../../lib/db.js";
 import { IssueEvaluation } from "../../types/common.types.js";
 

@@ -4,8 +4,8 @@ import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 import { getOctokit } from "../utils/octokit.ts";
 import { db, schema, eq, sql } from "../lib/db.ts";
 import { fromNodeHeaders } from "better-auth/node";
-import { ApiLogger as logger } from "@packages/logging";
-import { embedText } from "../lib/ai.ts";
+import { ApiLogger as logger } from "@packages/shared";
+import { embedText } from "@packages/shared";
 import ApiError from "../utils/ApiError.ts";
 
 const buildSkillsEmbedding = async (languages: string[], interests: string) => {

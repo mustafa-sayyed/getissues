@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema, sql } from "../../lib/db.js";
 
 /**

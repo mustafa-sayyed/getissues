@@ -1,6 +1,6 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema } from "../../lib/db.js";
-import type { GitHubIssueSearchItem } from "../../types/github.types.js";
+import type { GitHubIssueSearchItem } from "@packages/shared";
 import { NeonDbError } from "@neondatabase/serverless";
 
 /**

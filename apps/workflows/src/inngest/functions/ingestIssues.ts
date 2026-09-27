@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { inngest } from "../client.js";
 import { INNGEST_EVENTS } from "../events.js";
 import { SEARCH_QUERIES } from "../../lib/githubSearchQueries.js";
@@ -14,7 +14,7 @@ import {
 import type {
   GitHubIssueSearchItem,
   GitHubRepoSearchItem,
-} from "../../types/github.types.js";
+} from "@packages/shared";
 
 const ISSUE_BATCH_SIZE = 10;
 const REPO_ISSUES_PER_REPO = 10;
@@ -133,7 +133,7 @@ export const processIssueBatchWorkflow = inngest.createFunction(
     name: "Process Issue Batch",
     triggers: [{ event: INNGEST_EVENTS.processIssueBatch }],
   },
-  async ({ event, step }) => {
+  async ({ event, step, logger }) => {
     const { issues, source } = event.data as ProcessIssueBatchEvent;
 
     const dedupeResult = await step.run(
@@ -162,6 +162,10 @@ export const processIssueBatchWorkflow = inngest.createFunction(
         );
 
         if (embeddingResult.embedding === null) {
+          logger.error(
+            { issueId: issue.id, source },
+            `Failed to create embedding for issue.`,
+          );
           return {
             ...embeddingResult,
             issueId: issue.id,

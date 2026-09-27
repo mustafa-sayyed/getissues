@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema, eq } from "../../lib/db.js";
 
 export type AgentRunStatus = "success" | "failed";

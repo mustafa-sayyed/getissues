@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, eq, schema, sql } from "../../lib/db.js";
 import { issue } from "../../types/common.types.js";
 import { and, isNotNull, notInArray } from "drizzle-orm";

@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { getOctokit } from "../../lib/octokit.js";
 import { CleanupIssueCandidate, LiveIssueStatus } from "../../types/common.types.js";
 

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { FaGithub } from "react-icons/fa6";
 import { authClient, User } from "@/lib/auth-client";
-import { GithubUserData, IssueOrPullRequestResponse } from "@/types";
+import { GithubUserData, IssueOrPullRequestResponse } from "@/types/github";
 import Link from "next/link";
 import { SlUserFollow, SlUserFollowing } from "react-icons/sl";
 import { GoRepo } from "react-icons/go";

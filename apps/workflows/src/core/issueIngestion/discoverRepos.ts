@@ -1,6 +1,6 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { getOctokit } from "../../lib/octokit.js";
-import type { GitHubRepoSearchItem } from "../../types/github.types.js";
+import type { GitHubRepoSearchItem } from "@packages/shared";
 
 const DEFAULT_REPO_LIMIT = 5;
 const REPO_SEARCH_PER_PAGE = 30;

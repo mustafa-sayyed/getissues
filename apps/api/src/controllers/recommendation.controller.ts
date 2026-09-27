@@ -1,5 +1,5 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { ApiLogger as logger } from "@packages/logging";
+import { ApiLogger as logger } from "@packages/shared";
 import { db, schema } from "../lib/db.ts";
 import { asyncHandler } from "../utils/asyncRequest.ts";
 import { captureRecommendationDecision } from "../utils/cognee.ts";

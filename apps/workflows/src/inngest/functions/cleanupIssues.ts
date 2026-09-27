@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { inngest } from "../client.js";
 import {
   checkGithubIssueStatusTask,

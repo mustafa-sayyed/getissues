@@ -3,7 +3,7 @@ import { createTool } from "@mastra/core/tools";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, schema } from "./db.ts";
-import { embedText, toPgVector } from "./ai.ts";
+import { embedText, toPgVector } from "@packages/shared";
 
 const assistantModels = [
   { model: "google/gemini-2.5-flash", maxRetries: 1 },

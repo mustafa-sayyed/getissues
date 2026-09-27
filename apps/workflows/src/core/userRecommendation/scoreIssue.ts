@@ -1,4 +1,4 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import z from "zod";
 import { issue, IssueEvaluation } from "../../types/common.types.js";
 import { scoringAgent } from "../../lib/agent.js";

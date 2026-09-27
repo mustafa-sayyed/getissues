@@ -1,11 +1,11 @@
-import { WorkflowLogger as logger } from "@packages/logging";
+import { WorkflowLogger as logger } from "@packages/shared";
 import { db, schema, eq } from "../../lib/db.js";
 import { getOctokit } from "../../lib/octokit.js";
 import type {
   GitHubIssueSearchItem,
   RepoDetails,
   RepoIdentifier,
-} from "../../types/github.types.js";
+} from "@packages/shared";
 
 /**
  * Parses the `repository_url` field from a GitHub issue search item
