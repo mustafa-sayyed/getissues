@@ -1,9 +1,8 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
+import { LiveRunBanner } from "@/components/dashboard/live-run-banner";
+import { NextRunCountdown } from "@/components/dashboard/next-run-countdown";
 import {
   Bot,
   Bookmark,
@@ -14,24 +13,19 @@ import {
   Star,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import axios from "axios";
 import {
-  AgentConfig,
   AgentConfigResponse,
-  AgentRun,
   AgentRunsResponse,
   AgentRunStats,
   AgentRunStatsResponse,
-  AgentRunStatus,
-  Recommendation,
-  RecommendationsResponse,
   RecommendationStats,
   RecommendationStatsResponse,
+  RecommendationsResponse,
 } from "@/types/dashboard";
 import {
-  formatCountdown,
   formatDateTime,
   formatRelativeTime,
   formatScore,
@@ -43,6 +37,9 @@ import {
   issueStatusColor,
   langColor,
 } from "@/lib/colors";
+import { authClient } from "@/lib/auth-client";
+
+export const dynamic = "force-dynamic";
 
 const defaultRecommendationStats: RecommendationStats = {
   total: 0,
@@ -59,158 +56,84 @@ const defaultAgentRunStats: AgentRunStats = {
   lastRun: null,
 };
 
-export default function DashboardHomePage() {
-  const [recommendationStats, setRecommendationStats] = useState(
-    defaultRecommendationStats,
-  );
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [agentRunStats, setAgentRunStats] = useState(defaultAgentRunStats);
-  const [agentRuns, setAgentRuns] = useState<AgentRun[]>([]);
-  const [agentConfigs, setAgentConfigs] = useState<AgentConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [liveRun, setLiveRun] = useState<AgentRun | null>(null);
-  const liveRunRef = useRef<{ id: string; status: AgentRunStatus } | null>(
-    null,
-  );
+export default async function DashboardHomePage() {
+  const requestHeaders = await headers();
+  const cookie = requestHeaders.get("cookie") ?? "";
+  const { data: session } = await authClient.getSession({
+    fetchOptions: {
+      headers: requestHeaders,
+    },
+  });
 
-  const fetchDashboardData = useCallback(async (silent = false) => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!session?.user) {
+    redirect("/login");
+  }
 
-    if (!apiUrl) {
-      setError("Internal Server Error");
-      setIsLoading(false);
-      return;
-    }
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    if (!silent) {
-      setIsLoading(true);
-    }
-    setError(null);
+  if (!apiUrl) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your recommendations, agent activity, and stats
+          </p>
+        </div>
+        <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-600 dark:text-red-400">
+          Internal Server Error
+        </div>
+      </div>
+    );
+  }
 
-    try {
-      const [
-        recommendationStatsResponse,
-        recommendationsResponse,
-        agentRunStatsResponse,
-        agentRunsResponse,
-        agentConfigResponse,
-      ] = await Promise.all([
-        axios.get<RecommendationStatsResponse>(
-          `${apiUrl}/recommendations/stats`,
-          { withCredentials: true },
-        ),
-        axios.get<RecommendationsResponse>(
-          `${apiUrl}/recommendations?limit=5`,
-          {
-            withCredentials: true,
-          },
-        ),
-        axios.get<AgentRunStatsResponse>(`${apiUrl}/agent-runs/stats`, {
-          withCredentials: true,
-        }),
-        axios.get<AgentRunsResponse>(`${apiUrl}/agent-runs?limit=5`, {
-          withCredentials: true,
-        }),
-        axios.get<AgentConfigResponse>(`${apiUrl}/agent-config`, {
-          withCredentials: true,
-        }),
-      ]);
+  let recommendationStats = defaultRecommendationStats;
+  let recommendations: RecommendationsResponse["recommendations"] = [];
+  let agentRunStats = defaultAgentRunStats;
+  let agentRuns: AgentRunsResponse["agentRuns"] = [];
+  let agentConfigs: AgentConfigResponse["configs"] = [];
+  let error: string | null = null;
 
-      setRecommendationStats(recommendationStatsResponse.data.stats);
-      setRecommendations(recommendationsResponse.data.recommendations);
-      setAgentRunStats(agentRunStatsResponse.data.stats);
-      setAgentRuns(agentRunsResponse.data.agentRuns);
-      setAgentConfigs(agentConfigResponse.data.configs);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load dashboard.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  try {
+    const [
+      recommendationStatsResponse,
+      recommendationsResponse,
+      agentRunStatsResponse,
+      agentRunsResponse,
+      agentConfigResponse,
+    ] = await Promise.all([
+      axios.get<RecommendationStatsResponse>(`${apiUrl}/recommendations/stats`, {
+        headers: { cookie },
+      }),
+      axios.get<RecommendationsResponse>(`${apiUrl}/recommendations?limit=5`, {
+        headers: { cookie },
+      }),
+      axios.get<AgentRunStatsResponse>(`${apiUrl}/agent-runs/stats`, {
+        headers: { cookie },
+      }),
+      axios.get<AgentRunsResponse>(`${apiUrl}/agent-runs?limit=5`, {
+        headers: { cookie },
+      }),
+      axios.get<AgentConfigResponse>(`${apiUrl}/agent-config`, {
+        headers: { cookie },
+      }),
+    ]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    recommendationStats = recommendationStatsResponse.data.stats;
+    recommendations = recommendationsResponse.data.recommendations;
+    agentRunStats = agentRunStatsResponse.data.stats;
+    agentRuns = agentRunsResponse.data.agentRuns;
+    agentConfigs = agentConfigResponse.data.configs;
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load dashboard.";
+  }
 
-  // Live pipeline status: poll the latest agent run. When a run finishes,
-  // refresh the dashboard quietly and notify the user.
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) return;
+  const primaryAgentConfig =
+    agentConfigs.find((config) => config.configType === "general") ??
+    agentConfigs[0] ??
+    null;
 
-    let cancelled = false;
-
-    const pollLiveRun = async () => {
-      try {
-        const { data } = await axios.get<AgentRunsResponse>(
-          `${apiUrl}/agent-runs?limit=1`,
-          { withCredentials: true },
-        );
-        if (cancelled) return;
-
-        const latest = data.agentRuns[0] ?? null;
-        setLiveRun(latest);
-
-        const prev = liveRunRef.current;
-        if (latest) {
-          liveRunRef.current = { id: latest.id, status: latest.status };
-        }
-
-        if (
-          prev &&
-          latest &&
-          prev.id === latest.id &&
-          prev.status === "running" &&
-          latest.status !== "running"
-        ) {
-          if (latest.status === "success") {
-            toast.success(
-              latest.recommendationsCreated
-                ? `${latest.recommendationsCreated} new recommendations found.`
-                : "Agent run finished.",
-            );
-          } else {
-            toast.error("Agent run failed.");
-          }
-          void fetchDashboardData(true);
-        }
-      } catch {
-        // Polling must never break the dashboard.
-      }
-    };
-
-    void pollLiveRun();
-    const intervalId = setInterval(() => void pollLiveRun(), 15000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(intervalId);
-    };
-  }, [fetchDashboardData]);
-
-  const primaryAgentConfig = useMemo(
-    () =>
-      agentConfigs.find((config) => config.configType === "general") ??
-      agentConfigs[0] ??
-      null,
-    [agentConfigs],
-  );
-
-  // Ticking clock for the "Next Agent Run" countdown. Only ticks while a
-  // future run is scheduled so the page doesn't re-render every second
-  // for no reason.
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!primaryAgentConfig?.nextRunAt) return;
-
-    const intervalId = setInterval(() => setNow(Date.now()), 1000);
-
-    return () => clearInterval(intervalId);
-  }, [primaryAgentConfig?.nextRunAt]);
+  const liveRun = agentRuns[0] ?? null;
 
   const stats = [
     {
@@ -241,14 +164,6 @@ export default function DashboardHomePage() {
       color: "text-sky-500",
       bg: "bg-sky-500/10",
     },
-    {
-      label: "Next Agent Run",
-      value: formatCountdown(primaryAgentConfig?.nextRunAt ?? null, now),
-      detail: formatDateTime(primaryAgentConfig?.nextRunAt ?? null),
-      icon: Clock,
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-    },
   ];
 
   return (
@@ -268,41 +183,7 @@ export default function DashboardHomePage() {
         </div>
       )}
 
-      {liveRun &&
-        (liveRun.status === "running" ? (
-          <div className="flex items-center gap-3 rounded-lg border border-sky-500/30 bg-sky-500/5 p-4">
-            <span className="relative flex size-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-500 opacity-60" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-sky-500" />
-            </span>
-            <p className="text-sm text-foreground">
-              <span className="font-medium">Agent is finding new matches…</span>{" "}
-              <span className="text-muted-foreground">
-                Started {formatRelativeTime(liveRun.startedAt)}
-              </span>
-            </p>
-            <Link
-              href="/dashboard/agent-runs"
-              className="ml-auto shrink-0 text-sm font-medium text-sky-600 hover:underline dark:text-sky-400"
-            >
-              View runs
-            </Link>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 rounded-lg border border-border/60 p-4">
-            <Bot className="size-4 shrink-0 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Last run {formatRelativeTime(liveRun.startedAt)} ·{" "}
-              {liveRun.recommendationsCreated ?? 0} new matches
-            </p>
-            <Link
-              href="/dashboard/agent-runs"
-              className="ml-auto shrink-0 text-sm font-medium text-primary hover:underline"
-            >
-              View runs
-            </Link>
-          </div>
-        ))}
+      <LiveRunBanner initialRun={liveRun} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
@@ -317,10 +198,10 @@ export default function DashboardHomePage() {
                     {stat.label}
                   </p>
                   <p className="text-2xl font-bold text-foreground truncate">
-                    {isLoading ? "..." : stat.value}
+                    {stat.value}
                   </p>
                   <p className="text-xs text-muted-foreground truncate">
-                    {isLoading ? "Loading" : stat.detail}
+                    {stat.detail}
                   </p>
                 </div>
                 <div
@@ -332,6 +213,28 @@ export default function DashboardHomePage() {
             </CardContent>
           </Card>
         ))}
+        <Card className="border-border/60 hover:border-primary/30 transition-colors group">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 min-w-0">
+                <p className="text-xs text-muted-foreground font-medium">
+                  Next Agent Run
+                </p>
+                <p className="text-2xl font-bold text-foreground truncate">
+                  <NextRunCountdown
+                    nextRunAt={primaryAgentConfig?.nextRunAt ?? null}
+                  />
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {formatDateTime(primaryAgentConfig?.nextRunAt ?? null)}
+                </p>
+              </div>
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 group-hover:scale-105 transition-transform -mt-6 md:-mt-1">
+                <Clock className="size-4 text-emerald-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -357,14 +260,7 @@ export default function DashboardHomePage() {
           </div>
 
           <div className="grid gap-3">
-            {isLoading ? (
-              <Card className="border-border/60">
-                <CardContent className="flex items-center justify-center p-10 text-sm text-muted-foreground">
-                  <Spinner className="mr-2" />
-                  Loading recommendations...
-                </CardContent>
-              </Card>
-            ) : recommendations.length === 0 ? (
+            {recommendations.length === 0 ? (
               <Card className="border-border/60">
                 <CardContent className="p-10 text-center">
                   <Bot className="mx-auto size-8 text-muted-foreground" />
@@ -403,15 +299,16 @@ export default function DashboardHomePage() {
                               variant="ghost"
                               size="icon"
                               className="size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() =>
-                                window.open(
-                                  recommendation.issue.url,
-                                  "_blank",
-                                  "noopener,noreferrer",
-                                )
-                              }
+                              asChild
                             >
-                              <ExternalLink className="size-3.5" />
+                              <a
+                                href={recommendation.issue.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Open issue in new tab"
+                              >
+                                <ExternalLink className="size-3.5" />
+                              </a>
                             </Button>
                           </div>
                           <p className="text-xs text-muted-foreground mt-0.5 font-mono">
@@ -474,12 +371,7 @@ export default function DashboardHomePage() {
           <Card className="border-border/60">
             <CardContent className="p-4">
               <div className="space-y-3">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
-                    <Spinner className="mr-2" />
-                    Loading runs...
-                  </div>
-                ) : agentRuns.length === 0 ? (
+                {agentRuns.length === 0 ? (
                   <div className="py-8 text-center">
                     <Clock className="mx-auto size-7 text-muted-foreground" />
                     <p className="mt-2 text-sm font-medium text-foreground">
