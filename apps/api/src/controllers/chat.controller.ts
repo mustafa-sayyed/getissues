@@ -2,6 +2,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import {
   createUIMessageStream,
   pipeUIMessageStreamToResponse,
+  type ModelMessage,
   type UIMessage,
 } from "ai";
 import { toAISdkStream } from "@mastra/ai-sdk";
@@ -210,8 +211,7 @@ const getOrCreateSession = async (
   return session.id;
 };
 
-const isClientDisconnect = (error: unknown) => {
-  const code =
+const isClientDisconnect = (error: unknown) => {  const code =
     typeof error === "object" && error !== null && "code" in error
       ? (error as { code?: string }).code
       : undefined;
@@ -261,6 +261,18 @@ const deleteChatSession = asyncHandler(async (req, res) => {
   return res.status(httpStatusCodes.OK).json({ success: true });
 });
 
+const toModelMessage = (
+  role: "user" | "assistant" | "system",
+  content: string,
+): ModelMessage => {
+  // Narrow the drizzle role union into a single discriminated variant —
+  // a `{ role: "user" | "assistant" | "system" }` object matches no single
+  // `ModelMessage` member, which breaks `agent.stream()` typing.
+  if (role === "assistant") return { role: "assistant", content };
+  if (role === "system") return { role: "system", content };
+  return { role: "user", content };
+};
+
 const streamChatResponse = asyncHandler(async (req, res) => {
   const userId = getUserId(req);
   const userText = getLastUserText(req.body?.messages);
@@ -298,7 +310,10 @@ const streamChatResponse = asyncHandler(async (req, res) => {
 
   const agent = createAssistantAgent({ userId, instructions: systemPrompt });
 
-  const messages = [...history, { role: "user" as const, content: userText }];
+  const messages: ModelMessage[] = [
+    ...history.map((m) => toModelMessage(m.role, m.content)),
+    { role: "user", content: userText },
+  ];
 
   let output;
   try {
