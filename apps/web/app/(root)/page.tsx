@@ -92,7 +92,7 @@ export default function Home() {
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ duration: 0.6, delay: 0.7, ease: "easeInOut" }}
-              className="absolute left-[-1%] top-[45%] h-[0.2em] w-full origin-left rounded-full bg-black"
+              className="absolute left-[-1%] top-[45%] h-[0.2em] w-full origin-left rounded-full bg-foreground"
             />
           </motion.span>
           <span className="block text-primary">Start contributing.</span>
