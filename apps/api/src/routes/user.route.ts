@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getGithubUserData,
+  getOnboardingProfile,
   getUserSkills,
   getUserPreferences,
   createUserSkills,
@@ -20,6 +21,7 @@ import {
 const router = express.Router();
 
 router.get("/skills", requireAuth, getUserSkills);
+router.get("/onboarding-profile", requireAuth, getOnboardingProfile);
 router.get("/preferences", requireAuth, getUserPreferences);
 router.patch(
   "/preferences",

@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncRequest.ts";
 import { auth } from "../utils/auth.ts";
 import { httpStatusCodes } from "../utils/httpStatusCodes.ts";
 import { getOctokit } from "../utils/octokit.ts";
+import { fetchOnboardingProfile } from "../services/onboarding.service.ts";
 import { db, schema, eq, sql } from "../lib/db.ts";
 import { fromNodeHeaders } from "better-auth/node";
 import { ApiLogger as logger } from "@packages/shared";
@@ -41,6 +42,24 @@ const getGithubUserData = asyncHandler(async (req, res) => {
     .status(httpStatusCodes.OK)
     .json({ ...data.data, pullRequests: pulls.data });
 });
+
+  const getOnboardingProfile = asyncHandler(async (req, res) => {
+    if (!req.user) {
+      throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+    }
+
+    const { accessToken } = await auth.api.getAccessToken({
+      body: {
+        providerId: "github",
+        userId: req.user.id,
+      },
+    });
+
+    const octokit = getOctokit(accessToken ?? process.env.GITHUB_ACCESS_TOKEN!);
+    const profile = await fetchOnboardingProfile(octokit);
+
+    return res.status(httpStatusCodes.OK).json(profile);
+  });
 
 const getUserSkills = asyncHandler(async (req, res) => {
   const { includeEmbedding = null } = req.query as { includeEmbedding: string };
@@ -234,6 +253,7 @@ const deleteAccount = asyncHandler(async (req, res) => {
 
 export {
   getGithubUserData,
+  getOnboardingProfile,
   getUserSkills,
   getUserPreferences,
   createUserSkills,
