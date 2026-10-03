@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { SkillIcon } from "@/components/skill-icon";
 import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
 import {
@@ -164,14 +165,15 @@ export function LanguageCombobox({
             <Badge
               key={item}
               variant="outline"
-              className="h-6 gap-1 px-2 text-xs"
+              className="h-7 gap-1.5 rounded-full py-0.5 pl-1.5 pr-2 text-xs font-medium"
             >
+              <SkillIcon name={item} className="size-3.5 text-primary" />
               {item}
               {!disabled && (
                 <button
                   type="button"
                   onClick={() => removeValue(item)}
-                  className="-mr-1 flex size-4 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="-mr-1 flex size-4 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label={`Remove ${item}`}
                 >
                   <X className="size-3" />
@@ -205,10 +207,11 @@ export function LanguageCombobox({
               type="button"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => addValues([customValue])}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
+              className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
             >
+              <SkillIcon name={customValue} className="size-4" />
               <Plus className="size-3.5" />
-              Add "{customValue}"
+              Add &quot;{customValue}&quot;
             </button>
           )}
           {suggestions.map((option) => (
@@ -217,9 +220,12 @@ export function LanguageCombobox({
               type="button"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => addValues([option])}
-              className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
+              className="flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs hover:bg-accent hover:text-accent-foreground"
             >
-              <span>{option}</span>
+              <span className="flex items-center gap-2">
+                <SkillIcon name={option} className="size-4 text-foreground" />
+                {option}
+              </span>
               <Plus className="size-3.5 opacity-50" />
             </button>
           ))}
