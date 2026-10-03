@@ -33,8 +33,6 @@ export async function ProfileLoader({
     }
   }
 
-  await new Promise((resolve) => setTimeout(resolve, 20000));
-
   return (
     <OnboardingWizard
       initialProfile={initialProfile}

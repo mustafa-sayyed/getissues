@@ -16,8 +16,8 @@ export async function proxy(request: NextRequest) {
   }
 
   // If user is logged in, redirect it to dashbaord
-  if(isLoginRoute && sessionCookie) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+  if (isLoginRoute && sessionCookie) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();
