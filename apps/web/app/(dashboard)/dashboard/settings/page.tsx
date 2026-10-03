@@ -20,11 +20,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   Settings,
-  Shield,
   Palette,
   Trash2,
   Check,
   SlidersHorizontal,
+  User
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -47,7 +47,7 @@ const sections = [
   { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
   { id: "appearance", label: "Appearance", icon: Palette },
   { id: "integrations", label: "Integrations", icon: GrConnect },
-  { id: "security", label: "Security", icon: Shield },
+  { id: "security", label: "Account", icon: User },
 ];
 
 export default function SettingsPage() {
@@ -244,7 +244,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your notifications, and preferences
+          Manage your account, skills, and preferences
         </p>
       </div>
 

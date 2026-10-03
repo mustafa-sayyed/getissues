@@ -155,6 +155,7 @@ export function DashboardNavbar() {
               className="cursor-pointer"
               onClick={() => setShowLogoutDialog(false)}
               disabled={isLoggingOut}
+              variant="outline"
             >
               Cancel
             </Button>
