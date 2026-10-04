@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LoadingStatements } from "./loading-statements";
+import * as motion from "framer-motion/client";
+
 
 const stages = [
   "Opening your GitHub",
@@ -26,13 +27,13 @@ export function FetchingState({
     if (stage !== undefined) return;
     const t = setInterval(
       () => setTick((s) => Math.min(s + 1, stages.length - 1)),
-      1500,
+      1000,
     );
     return () => clearInterval(t);
   }, [stage]);
 
   useEffect(() => {
-    const t = setTimeout(() => setSlow(true), 8000);
+    const t = setTimeout(() => setSlow(true), 4000);
     return () => clearTimeout(t);
   }, []);
 
@@ -65,10 +66,18 @@ export function FetchingState({
         </div>
       </div>
 
-      <h2 className="min-h-10 text-3xl font-semibold tracking-tight">
-        {/* {stages[active]}
-        <span className="text-primary">…</span> */}
-        <LoadingStatements />
+      <h2 className="min-h-10 text-3xl font-semibold tracking-tight flex items-end">
+        {stages[active]}
+        <span className="flex item-center gap-0.5 ml-0.5" aria-hidden>
+          {[0, 1, 2].map((d) => (
+            <motion.span
+              key={d}
+              className="size-1 rounded-full bg-foreground mb-1"
+              animate={{ opacity: [0.2, 1, 0.2] }}
+              transition={{ repeat: Infinity, duration: 1, delay: d * 0.2 }}
+            />
+          ))}
+        </span>
       </h2>
       <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
         {slow
