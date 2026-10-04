@@ -130,6 +130,7 @@ const toEcosystemSkill = (raw: string): string | null => {
   const candidates = [cleaned];
   if (cleaned.startsWith("@")) {
     candidates.push(cleaned.split("/")[1] ?? cleaned);
+    candidates.push(cleaned.split("/")[0].slice(1));
   }
   if (cleaned.includes("/")) {
     const parts = cleaned.split("/");
@@ -215,10 +216,22 @@ const MANIFEST_PARSERS: Record<string, (text: string) => string[]> = {
 
 const MANIFEST_PATHS = Object.keys(MANIFEST_PARSERS);
 
+const manifestBasename = (path: string): string =>
+  path.split("/").pop() ?? path;
+
+/** Parse a manifest by its filename (works for nested paths too). */
+const parseManifestFile = (path: string, text: string): string[] => {
+  const parse = MANIFEST_PARSERS[manifestBasename(path)];
+  return parse ? parse(text) : [];
+};
+
 const EXISTENCE_PATHS = Object.keys(EXISTENCE_SKILLS);
 
 // Top repos to scan — bounds extra GitHub API calls.
 const MAX_MANIFEST_REPOS = 6;
+
+// Max manifest files to read per repo when scanning a recursive tree.
+const MAX_TREE_FILES = 8;
 
 // Ranked cutoff for detected skills.
 const MAX_DETECTED_SKILLS = 10;
@@ -253,6 +266,63 @@ const rankSkills = (
     .slice(0, limit)
     .map(([name, repoCount]) => ({ name, repoCount }));
 
+type TreeSkillFiles = {
+  /** Manifest paths worth reading (capped). */
+  manifests: string[];
+  /** EXISTENCE_SKILLS keys proven present by the tree — no fetch needed. */
+  markers: string[];
+};
+
+const treeBasename = (path: string): string => path.split("/").pop() ?? path;
+
+// Committed dependency copies and build output carry no signal.
+const SKIP_DIRS = new Set([
+  "node_modules",
+  "vendor",
+  ".git",
+  "dist",
+  "build",
+  "coverage",
+  ".next",
+]);
+
+const isSkippedPath = (path: string): boolean =>
+  path.split("/").some((segment) => SKIP_DIRS.has(segment));
+
+/**
+ * Find skill-relevant files in a recursive git-tree path list. Pure —
+ * works for monorepos (apps/web/package.json) and flat repos alike.
+ */
+const findSkillFilesInTree = (paths: string[]): TreeSkillFiles => {
+  const manifests: string[] = [];
+  const markers = new Set<string>();
+  for (const path of paths) {
+    if (isSkippedPath(path)) {
+      continue;
+    }
+    const base = treeBasename(path);
+    if (MANIFEST_PARSERS[base]) {
+      if (!manifests.includes(path) && manifests.length < MAX_TREE_FILES) {
+        manifests.push(path);
+      }
+      continue;
+    }
+    if (base === "Dockerfile" || base.startsWith("Dockerfile.")) {
+      markers.add("Dockerfile");
+    } else if (/^docker-compose\.ya?ml$/.test(base)) {
+      markers.add(base);
+    } else if (path.startsWith(".github/workflows/")) {
+      markers.add(".github/workflows");
+    } else if (
+      base === "Jenkinsfile" ||
+      base === ".gitlab-ci.yml"
+    ) {
+      markers.add(base);
+    }
+  }
+  return { manifests, markers: [...markers] };
+};
+
 export {
   EXISTENCE_PATHS,
   EXISTENCE_SKILLS,
@@ -260,10 +330,13 @@ export {
   MANIFEST_PATHS,
   MAX_DETECTED_SKILLS,
   MAX_MANIFEST_REPOS,
+  MAX_TREE_FILES,
   TOPIC_LANGUAGES,
   countSkill,
+  findSkillFilesInTree,
   normalizeLanguage,
+  parseManifestFile,
   rankSkills,
   toEcosystemSkill,
 };
-export type { SkillCounts };
+export type { SkillCounts, TreeSkillFiles };

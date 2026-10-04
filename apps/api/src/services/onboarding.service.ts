@@ -3,13 +3,14 @@ import { ApiLogger as logger } from "@packages/shared";
 import {
   EXISTENCE_PATHS,
   EXISTENCE_SKILLS,
-  MANIFEST_PARSERS,
   MANIFEST_PATHS,
   MAX_DETECTED_SKILLS,
   MAX_MANIFEST_REPOS,
   TOPIC_LANGUAGES,
   countSkill,
+  findSkillFilesInTree,
   normalizeLanguage,
+  parseManifestFile,
   rankSkills,
   toEcosystemSkill,
   type SkillCounts,
@@ -52,6 +53,35 @@ export const pathExists = async (
   }
 };
 
+type ScanTarget = {
+  owner: string;
+  name: string;
+  branch: string;
+};
+
+/** Full file list via the recursive git tree. Null when unavailable or truncated. */
+const getTreePaths = async (
+  octokit: Octokit,
+  target: ScanTarget,
+): Promise<string[] | null> => {
+  try {
+    const { data } = await octokit.rest.git.getTree({
+      owner: target.owner,
+      repo: target.name,
+      tree_sha: target.branch,
+      recursive: "1",
+    });
+    if (data.truncated) {
+      return null;
+    }
+    return (data.tree ?? [])
+      .filter((entry) => entry.type === "blob" && entry.path)
+      .map((entry) => entry.path as string);
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Aggregate a GitHub user's onboarding profile: identity, repo stats,
  * and detected skills from primary languages, repo topics, dependency
@@ -90,12 +120,20 @@ const fetchOnboardingProfile = async (
     }
   }
 
-  // Frameworks never appear in GitHub's primary `language` field, so read
-  // them from dependency files in the top repos. Bounded and
-  // failure-tolerant.
-  const manifestRepos = repos.data
+  // Manifest scan: frameworks, libraries, and tools that never appear in GitHub's primary `language`
+  // field, so read them from dependency files. 
+  // Tree-first: one recursive listing finds manifests at any depth (monorepos included);
+  // root-only probing is the fallback for truncated/failed trees. 
+  // Bounded and failure-tolerant throughout.
+  
+  const manifestRepos: ScanTarget[] = repos.data
     .filter((repo) => !repo.fork && !repo.archived)
-    .slice(0, MAX_MANIFEST_REPOS);
+    .slice(0, MAX_MANIFEST_REPOS)
+    .map((repo) => ({
+      owner: repo.owner.login,
+      name: repo.name,
+      branch: repo.default_branch ?? "main",
+    }));
 
   const seenByRepo = new Map<string, Set<string>>();
   const getSeen = (repoKey: string): Set<string> => {
@@ -107,86 +145,97 @@ const fetchOnboardingProfile = async (
     return seen;
   };
 
-  // reads dependency manifests (package.json, requirements.txt, go.mod, etc.) in parallel
-  const manifestResults = await Promise.allSettled(
-    manifestRepos.flatMap((repo) =>
-      MANIFEST_PATHS.map(async (path) => {
-        try {
-          const text = await getFileText(
-            octokit,
-            repo.owner.login,
-            repo.name,
-            path,
-          );
-          if (text === null) {
-            return null;
-          }
-          return { owner: repo.owner.login, name: repo.name, path, text };
-        } catch (error) {
-          logger.error(
-            { error, owner: repo.owner.login, name: repo.name, path },
-            "Failed to read manifest file",
-          );
-          return null;
-        }
-      }),
-    ),
-  );
-
-  // Parse dependency manifests and count skills.
-  for (const result of manifestResults) {
-    if (result.status !== "fulfilled" || !result.value) {
-      continue;
+  const countDeps = (
+    repoKey: string,
+    path: string,
+    text: string | null,
+  ): void => {
+    if (!text) {
+      return;
     }
-    const { owner, name, path, text } = result.value;
-    const parse = MANIFEST_PARSERS[path];
-    if (!parse) {
-      continue;
-    }
-    for (const dep of parse(text)) {
+    for (const dep of parseManifestFile(path, text)) {
       const skill = toEcosystemSkill(dep);
       if (skill) {
-        countSkill(counts, getSeen(`${owner}/${name}`), skill);
+        countSkill(counts, getSeen(repoKey), skill);
       }
     }
-  }
-  // Check the file paths (e.g. Dockerfile, Makefile, etc.)
-  // to Count the skills that are indicated by the existence of files.
-  const existenceResults = await Promise.allSettled(
-    manifestRepos.flatMap((repo) =>
-      EXISTENCE_PATHS.map(async (path) => {
-        try {
-          const exists = await pathExists(
-            octokit,
-            repo.owner.login,
-            repo.name,
-            path,
-          );
-          return exists
-            ? { owner: repo.owner.login, name: repo.name, path }
-            : null;
-        } catch (error) {
-          logger.error(
-            { error, owner: repo.owner.login, name: repo.name, path },
-            "Failed to check existence of file",
-          );
-          return null;
-        }
-      }),
-    ),
-  );
+  };
 
-  // Count skills that are indicated by the existence of files.
-  for (const result of existenceResults) {
-    if (result.status !== "fulfilled" || !result.value) {
-      continue;
+  const scanRepoFromTree = async (
+    target: ScanTarget,
+    tree: string[],
+  ): Promise<void> => {
+    const repoKey = `${target.owner}/${target.name}`;
+    const seen = getSeen(repoKey);
+    const { manifests, markers } = findSkillFilesInTree(tree);
+    // Markers are proven present by the tree itself — no fetch needed.
+    for (const marker of markers) {
+      const skill = EXISTENCE_SKILLS[marker];
+      if (skill) {
+        countSkill(counts, seen, skill);
+      }
     }
-    const { owner, name, path } = result.value;
-    const skill = EXISTENCE_SKILLS[path];
-    if (skill) {
-      countSkill(counts, getSeen(`${owner}/${name}`), skill);
+    const results = await Promise.allSettled(
+      manifests.map(async (path) => ({
+        path,
+        text: await getFileText(octokit, target.owner, target.name, path),
+      })),
+    );
+    for (const result of results) {
+      if (result.status !== "fulfilled") {
+        continue;
+      }
+      countDeps(repoKey, result.value.path, result.value.text);
     }
-  }
+  };
+
+  const scanRepoFromRoot = async (target: ScanTarget): Promise<void> => {
+    const repoKey = `${target.owner}/${target.name}`;
+    const seen = getSeen(repoKey);
+
+    // Reads Root manifests, markers files
+    const rootTexts = await Promise.allSettled(
+      MANIFEST_PATHS.map(async (path) => ({
+        path,
+        text: await getFileText(octokit, target.owner, target.name, path),
+      })),
+    );
+    
+    for (const result of rootTexts) {
+      if (result.status !== "fulfilled") {
+        continue;
+      }
+      countDeps(repoKey, result.value.path, result.value.text);
+    }
+
+    const rootExists = await Promise.allSettled(
+      EXISTENCE_PATHS.map(async (path) => ({
+        path,
+        exists: await pathExists(octokit, target.owner, target.name, path),
+      })),
+    );
+    
+    for (const result of rootExists) {
+      if (result.status !== "fulfilled" || !result.value.exists) {
+        continue;
+      }
+      const skill = EXISTENCE_SKILLS[result.value.path];
+      if (skill) {
+        countSkill(counts, seen, skill);
+      }
+    }
+  };
+
+  const scanRepo = async (target: ScanTarget): Promise<void> => {
+    const tree = await getTreePaths(octokit, target);
+    if (tree) {
+      await scanRepoFromTree(target, tree);
+      return;
+    }
+    await scanRepoFromRoot(target);
+  };
+
+  await Promise.allSettled(manifestRepos.map((repo) => scanRepo(repo)));
 
   // Rank the top repos based on star count and return the top 3 with their primary language.
   const topRepos = [...repos.data]
