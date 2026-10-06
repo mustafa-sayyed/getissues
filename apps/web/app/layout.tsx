@@ -32,24 +32,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "getissues - Stop Searching, Start Contributing",
   description:
-    "Autonomous AI agents find issues for you, so you can contribute",
+    "Autonomous AI agents find issues for you based on your skills and interests",
   icons: {
     icon: "/favicon.svg",
   },
   openGraph: {
     title: "getissues - Stop Searching, Start Contributing",
     description:
-      "Autonomous AI agents find issues for you, so you can contribute",
+      "Autonomous AI agents find issues for you based on your skills and interests",
     type: "website",
-    images: "https://getissues.tech/getissues.png",
+    images: "https://getissues.tech/opengraph-image",
     url: "https://getissues.tech",
   },
   twitter: {
     card: "summary_large_image",
     title: "getissues - Stop Searching, Start Contributing",
     description:
-      "Autonomous AI agents find issues for you, so you can contribute",
-    images: "https://getissues.tech/getissues.png",
+      "Autonomous AI agents find issues for you based on your skills and interests",
+    images: "https://getissues.tech/opengraph-image",
     site: "https://getissues.tech",
     creator: "@_sayyed_mustafa",
   },
