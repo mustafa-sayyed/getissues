@@ -1,0 +1,80 @@
+name: build and deploy backend using serverless framework
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+
+  workflow_dispatch:
+
+env:
+  NODE_ENV: production
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  CORS_ORIGIN: https://getissues.tech
+  BETTER_AUTH_COOKIE_DOMAIN: getissues.tech
+  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+  BETTER_AUTH_URL: https://api.getissues.tech/api/v1/auth
+  GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+  GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+  GITHUB_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+  VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  COGNEE_API_KEY: ${{ secrets.COGNEE_API_KEY }}
+  COGNEE_BASE_URL: ${{ secrets.COGNEE_BASE_URL }}
+  COGNEE_ENABLED: true
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+  CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  ACM_CERTIFICATE_ARN: ${{ secrets.ACM_CERTIFICATE_ARN }}
+  OTEL_SERVICE_NAME: ${env:OTEL_SERVICE_NAME}
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${env:OTEL_EXPORTER_OTLP_ENDPOINT}
+  OTEL_EXPORTER_OTLP_HEADERS: ${env:OTEL_EXPORTER_OTLP_HEADERS}
+
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: apps/api
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Deploy backend          
+        run: npx serverless deploy --stage production
