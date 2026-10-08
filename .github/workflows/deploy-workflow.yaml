@@ -1,29 +1,23 @@
-name: Deploy backend using serverless framework
+name: Deploy workflows using serverless framework
 
 on:
   push:
     branches:
       - main
     paths:
-      - "apps/api/**"
+      - "apps/workflows/**"
 
   pull_request:
     branches:
       - main
     paths:
-      - "apps/api/**"
+      - "apps/workflows/**"
 
   workflow_dispatch:
 
 env:
   NODE_ENV: production
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  CORS_ORIGIN: https://getissues.tech
-  BETTER_AUTH_COOKIE_DOMAIN: getissues.tech
-  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-  BETTER_AUTH_URL: https://api.getissues.tech/api/v1/auth
-  GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-  GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
   GITHUB_ACCESS_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
   VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
   GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -33,10 +27,12 @@ env:
   GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
   CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-  ACM_CERTIFICATE_ARN: ${{ secrets.ACM_CERTIFICATE_ARN }}
   OTEL_SERVICE_NAME: ${{ secrets.OTEL_SERVICE_NAME }}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
   OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+  INNGEST_SIGNING_KEY: ${{ secrets.INNGEST_SIGNING_KEY }}
+  INNGEST_EVENT_KEY: ${{ secrets.INNGEST_EVENT_KEY }}
+  INNGEST_DEV: 0
 
 
 
@@ -74,9 +70,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Deploy backend
+      - name: Deploy workflow
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}          
         run: |
-          cd apps/api
+          cd apps/workflows
           npx serverless deploy --stage production
