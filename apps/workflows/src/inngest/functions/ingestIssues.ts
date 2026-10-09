@@ -54,17 +54,24 @@ export const ingestIssuesWorkflow = inngest.createFunction(
           const searchRes = await octokit.rest.search.issuesAndPullRequests({
             q: searchQuery.query,
             per_page: searchQuery.limit,
+            sort: "updated",
+            order: "desc",
           });
+
+          const issues = searchRes.data.items.filter(
+            (issue) =>
+              !issue.pull_request && issue.state === "open" && !issue.assignee,
+          );
 
           logger.info(
             {
-              issueCount: searchRes.data.items.length,
+              issueCount: issues.length,
               query: searchQuery.query,
             },
             "Fetched label-search issues.",
           );
 
-          return searchRes.data.items;
+          return issues;
         },
       );
 

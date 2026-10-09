@@ -1,29 +1,35 @@
-const since7days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-const since14days = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+const daysAgo = (n: number) =>
+  new Date(Date.now() - n * 1000 * 60 * 60 * 24).toISOString().split("T")[0];
+
+const base = "is:issue is:open no:assignee archived:false";
 
 export const SEARCH_QUERIES = [
   {
-    query: 'is:issue is:open label:"good first issue" no:assignee',
+    query: `${base} label:"bug" updated:>${daysAgo(30)}`,
+    limit: 100,
+  },
+  {
+    query: `${base} label:"good first issue" updated:>${daysAgo(30)}`,
     limit: 50,
   },
   {
-    query: 'is:issue is:open label:"help wanted" no:assignee',
+    query: `${base} label:"help wanted" updated:>${daysAgo(30)}`,
     limit: 50,
   },
   {
-    query: 'is:issue is:open label:"up-for-grabs" no:assignee',
+    query: `${base} label:"up-for-grabs" updated:>${daysAgo(60)}`,
     limit: 20,
   },
   {
-    query: 'is:issue is:open label:"good first issue" label:"bug" no:assignee',
+    query: `${base} label:"good first issue" label:"bug" updated:>${daysAgo(60)}`,
     limit: 20,
   },
   {
-    query: `is:issue is:open label:"good first issue" no:assignee created:>${since7days}`,
-    limit: 30,
+    query: `${base} label:"good first issue" created:>${daysAgo(7)}`,
+    limit: 20,
   },
   {
-    query: `is:issue is:open label:"help wanted" no:assignee stars:>200 created:>${since14days}`,
-    limit: 25,
+    query: `${base} label:"help wanted" created:>${daysAgo(14)}`,
+    limit: 20,
   },
 ];
