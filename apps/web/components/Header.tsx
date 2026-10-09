@@ -27,9 +27,7 @@ function Header() {
           <Link href="/#features" className="transition hover:text-primary">
             Features
           </Link>
-          {isPending ? (
-            <Skeleton className="rounded-none w-25 h-9" />
-          ) : data ? (
+          {!isPending && data ? (
             <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
               <Button className="text-white dark:text-black p-4 rounded-none">
                 Dashboard
@@ -72,9 +70,7 @@ function Header() {
             >
               Features
             </Link>
-            {isPending ? (
-              <Skeleton className="rounded-none w-full h-9" />
-            ) : data ? (
+            {!isPending && data ? (
               <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
                 <Button className="text-white dark:text-black p-4 rounded-none">
                   Dashboard
