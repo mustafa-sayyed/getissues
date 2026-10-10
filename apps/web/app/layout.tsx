@@ -4,7 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
-import StoreProvider from "@/lib/StoreProvider";
 import { Toaster } from "sonner";
 import { PHProvider } from "@/components/posthog/PostHogProvider";
 
@@ -75,14 +74,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <StoreProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-            <TooltipProvider>
-              <PHProvider>{children}</PHProvider>
-              <Toaster richColors />
-            </TooltipProvider>
-          </ThemeProvider>
-        </StoreProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <TooltipProvider>
+            <PHProvider>{children}</PHProvider>
+            <Toaster richColors />
+          </TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
