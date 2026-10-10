@@ -19,7 +19,7 @@ export default function LoginPage() {
     setIsSignInError(false);
 
     try {
-      const baseUrl = window.location.origin;
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
 
       const res = await authClient.signIn.social({
         provider: "github",
@@ -28,15 +28,14 @@ export default function LoginPage() {
         newUserCallbackURL: `${baseUrl}/onboarding`,
       });
 
-      if (res.error) {
+      if (res?.error) {
         setIsSigningIn(false);
         setIsSignInError(true);
       }
     } catch (error) {
-      console.log("Sign in errro: ", error);
-      setIsSignInError(true);
-    } finally {
+      console.log("Sign in error: ", error);
       setIsSigningIn(false);
+      setIsSignInError(true);
     }
   };
 

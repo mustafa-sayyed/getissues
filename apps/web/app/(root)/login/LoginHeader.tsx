@@ -1,27 +1,36 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
 
 function LoginHeader() {
   const params = useSearchParams();
   const hasAuthError = params.has("error");
   const isSuccess = params.get("success") === "true";
-  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
-    if (isSuccess) {
-      router.replace("/dashboard");
+    // Only leave /login?success=true once the session is confirmed.
+    // Hard navigation ensures the fresh cross-subdomain cookie is sent
+    // on the first dashboard request.
+    if (isSuccess && !hasAuthError && !isPending && session?.user) {
+      window.location.href = "/dashboard";
     }
-  });
+  }, [isSuccess, hasAuthError, isPending, session]);
+
+  // Show the success state while the session is settling or confirmed.
+  if (isSuccess && !hasAuthError && (isPending || session?.user)) {
+    return (
+      <h2 className="text-2xl font-semibold text-primary">
+        Authentication successful! Redirecting to dashboard...
+      </h2>
+    );
+  }
 
   return hasAuthError ? (
     <h2 className="text-2xl font-semibold text-destructive">
       Error while signing in with GitHub. Please try again.
-    </h2>
-  ) : isSuccess ? (
-    <h2 className="text-2xl font-semibold text-primary">
-      Authentication successful! Redirecting to dashboard...
     </h2>
   ) : (
     <h2 className="text-2xl font-semibold text-foreground">

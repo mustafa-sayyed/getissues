@@ -14,6 +14,9 @@ const cookieDomain = process.env.BETTER_AUTH_COOKIE_DOMAIN;
 
 export const auth = betterAuth({
   baseURL: authBaseURL,
+  onAPIError: {
+    errorURL: trustedOrigins[0] ? `${trustedOrigins[0]}/login` : undefined,
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
