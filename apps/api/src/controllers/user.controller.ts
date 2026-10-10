@@ -210,25 +210,6 @@ const updateUserPreferences = asyncHandler(async (req, res) => {
   return res.status(httpStatusCodes.OK).json(userPreferences);
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
-  }
-
-  const result = await auth.api.signOut({
-    headers: fromNodeHeaders(req.headers),
-  });
-
-  if (!result.success) {
-    throw new ApiError(
-      httpStatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to log out user",
-    );
-  }
-
-  return res.status(httpStatusCodes.OK).json({ success: true });
-});
-
 const deleteAccount = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
@@ -259,6 +240,5 @@ export {
   createUserSkills,
   updateUserSkills,
   updateUserPreferences,
-  logoutUser,
   deleteAccount,
 };

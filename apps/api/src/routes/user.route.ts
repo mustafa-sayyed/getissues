@@ -7,7 +7,6 @@ import {
   createUserSkills,
   updateUserSkills,
   updateUserPreferences,
-  logoutUser,
   deleteAccount,
 } from "../controllers/user.controller.ts";
 import { requireAuth } from "../middlewares/auth.middleware.ts";
@@ -41,7 +40,6 @@ router.put(
   validate(updateUserSkillsSchema),
   updateUserSkills,
 );
-router.post("/logout", requireAuth, logoutUser);
 router.delete("/account", requireAuth, deleteAccount);
 router.get("/github/:userId", requireAuth, getGithubUserData);
 
