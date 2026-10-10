@@ -1,13 +1,16 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 
 function LoginHeader() {
   const params = useSearchParams();
   const hasAuthError = params.has("error");
   const isSuccess = params.get("success") === "true";
+  const isDeleted = params.get("deleted") === "true";
+  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
@@ -18,6 +21,14 @@ function LoginHeader() {
       window.location.href = "/dashboard";
     }
   }, [isSuccess, hasAuthError, isPending, session]);
+
+  useEffect(() => {
+    // Show confirmation when redirected after account deletion, then clear the flag.
+    if (isDeleted) {
+      toast.success("Your account has been deleted.");
+      router.replace("/login");
+    }
+  }, [isDeleted, router]);
 
   // Show the success state while the session is settling or confirmed.
   if (isSuccess && !hasAuthError && (isPending || session?.user)) {

@@ -26,6 +26,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
 import ThemeSwitcher from "../ThemeSwitcher";
 
 const routeLabels: Record<string, string> = {
@@ -48,16 +49,28 @@ export function DashboardNavbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    if (isLoggingOut) return;
     setIsLoggingOut(true);
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/login");
+    try {
+      const res = await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/login");
+          },
+          onError: () => {
+            toast.error("Failed to sign out. Please try again.");
+          },
         },
-      },
-    });
-    setIsLoggingOut(false);
-    setShowLogoutDialog(false);
+      });
+      if (res?.error) {
+        toast.error("Failed to sign out. Please try again.");
+      }
+    } catch {
+      toast.error("Failed to sign out. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutDialog(false);
+    }
   };
 
   return (

@@ -226,8 +226,8 @@ export default function SettingsPage() {
         withCredentials: true,
       });
 
-      window.location.assign("/login");
-      toast.success("Account deleted.");
+      // Login page confirms the deletion via the deleted flag.
+      window.location.assign("/login?deleted=true");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast.error("Failed to delete account.");
