@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi";
-
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 import { authClient } from "@/lib/auth-client";
-import { Spinner } from "./ui/spinner";
+import { FaGithub } from "react-icons/fa6";
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +24,13 @@ function Header() {
           </Link>
           <Link href="/#features" className="transition hover:text-primary">
             Features
+          </Link>
+          <Link
+            href="https://github.com/mustafa-sayyed/getissues"
+            className="transition hover:text-primary flex items-center gap-2"
+          >
+            <FaGithub />
+            Github
           </Link>
           <AuthButton />
         </nav>
@@ -57,6 +63,14 @@ function Header() {
             >
               Features
             </Link>
+            <Link
+              href="https://github.com/mustafa-sayyed/getissues"
+              className="transition hover:text-primary flex items-center gap-2"
+              onClick={() => setIsOpen(false)}
+            >
+              <FaGithub />
+              Github
+            </Link>
             <AuthButton onNavigate={() => setIsOpen(false)} />
           </div>
         </div>
@@ -70,13 +84,13 @@ function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
 
   return !isPending && data ? (
     <Link href={"/dashboard"} onClick={onNavigate}>
-      <Button className="min-w-[120px] text-white dark:text-black p-4 rounded-none">
+      <Button className="min-w-[120px] text-sm text-white dark:text-black px-6 py-5 cursor-pointer rounded-none">
         Dashboard
       </Button>
     </Link>
   ) : (
     <Link href={"/login"} onClick={onNavigate}>
-      <Button className="min-w-[120px] text-white dark:text-black p-4 rounded-none">
+      <Button className="min-w-[120px] text-sm text-white dark:text-black px-6 py-5 cursor-pointer rounded-none">
         Login
       </Button>
     </Link>
