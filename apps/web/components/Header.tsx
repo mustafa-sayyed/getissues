@@ -7,11 +7,10 @@ import { FiMenu, FiX } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 import { authClient } from "@/lib/auth-client";
-import { Skeleton } from "./ui/skeleton";
+import { Spinner } from "./ui/spinner";
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const { data, isPending } = authClient.useSession();
 
   return (
     <header className="border-b border-border/60 bg-background/90 backdrop-blur">
@@ -27,19 +26,7 @@ function Header() {
           <Link href="/#features" className="transition hover:text-primary">
             Features
           </Link>
-          {!isPending && data ? (
-            <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
-              <Button className="text-white dark:text-black p-4 rounded-none">
-                Dashboard
-              </Button>
-            </Link>
-          ) : (
-            <Link href={"/login"} onClick={() => setIsOpen(false)}>
-              <Button className="text-white dark:text-black-4 p-4 rounded-none">
-                Login
-              </Button>
-            </Link>
-          )}
+          <AuthButton />
         </nav>
 
         <Button
@@ -70,23 +57,29 @@ function Header() {
             >
               Features
             </Link>
-            {!isPending && data ? (
-              <Link href={"/dashboard"} onClick={() => setIsOpen(false)}>
-                <Button className="text-white dark:text-black p-4 rounded-none">
-                  Dashboard
-                </Button>
-              </Link>
-            ) : (
-              <Link href={"/login"} onClick={() => setIsOpen(false)}>
-                <Button className="text-white dark:text-black-4 p-4 rounded-none">
-                  Login
-                </Button>
-              </Link>
-            )}
+            <AuthButton onNavigate={() => setIsOpen(false)} />
           </div>
         </div>
       )}
     </header>
+  );
+}
+
+function AuthButton({ onNavigate }: { onNavigate?: () => void }) {
+  const { data, isPending } = authClient.useSession();
+
+  return !isPending && data ? (
+    <Link href={"/dashboard"} onClick={onNavigate}>
+      <Button className="min-w-[120px] text-white dark:text-black p-4 rounded-none">
+        Dashboard
+      </Button>
+    </Link>
+  ) : (
+    <Link href={"/login"} onClick={onNavigate}>
+      <Button className="min-w-[120px] text-white dark:text-black p-4 rounded-none">
+        Login
+      </Button>
+    </Link>
   );
 }
 
