@@ -54,5 +54,4 @@ provider:
 functions:
   api:
     handler: src/lambda/index.handler
-    events:
-      - httpApi: "*"
+    url: true
