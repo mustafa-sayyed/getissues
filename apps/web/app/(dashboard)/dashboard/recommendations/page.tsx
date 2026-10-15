@@ -9,25 +9,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Bot,
   Bookmark,
   ChevronDown,
   CircleDot,
-  RefreshCw,
   Star,
   Dot,
   ThumbsDown,
+  Undo2,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -39,7 +37,11 @@ import {
 } from "@/components/dashboard/recommendation-feedback";
 
 type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "notinterested";
+type RecommendationStatus =
+  | "notviewed"
+  | "viewed"
+  | "bookmarked"
+  | "notinterested";
 
 type Recommendation = {
   id: string;
@@ -73,10 +75,12 @@ type RecommendationsResponse = {
   recommendations: Recommendation[];
   meta?: {
     limit: number;
+    hasMore?: boolean;
+    nextCursor?: string | null;
   };
 };
 
-const limits = [10, 25, 50, 100] as const;
+type RecommendationTab = "all" | "new" | "bookmarked" | "hidden";
 
 const statusColor: Record<IssueStatus, string> = {
   open: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-0",
@@ -144,8 +148,11 @@ const formatScore = (score: number | null) => {
 
 export default function RecommendationsPage() {
   const router = useRouter();
-  const [limit, setLimit] = useState<(typeof limits)[number]>(25);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [hiddenRecommendations, setHiddenRecommendations] = useState<
+    Recommendation[]
+  >([]);
+  const [tab, setTab] = useState<RecommendationTab>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -164,12 +171,18 @@ export default function RecommendationsPage() {
     setError(null);
 
     try {
-      const params = new URLSearchParams({ limit: String(limit) });
-      const { data } = await axios.get<RecommendationsResponse>(
-        `${apiUrl}/recommendations?${params.toString()}`,
-        { withCredentials: true },
-      );
-      setRecommendations(data.recommendations);
+      const [visible, hidden] = await Promise.all([
+        axios.get<RecommendationsResponse>(
+          `${apiUrl}/recommendations?limit=100`,
+          { withCredentials: true },
+        ),
+        axios.get<RecommendationsResponse>(
+          `${apiUrl}/recommendations?status=notinterested&limit=100`,
+          { withCredentials: true },
+        ),
+      ]);
+      setRecommendations(visible.data.recommendations);
+      setHiddenRecommendations(hidden.data.recommendations);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch recommendations.",
@@ -177,11 +190,65 @@ export default function RecommendationsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [limit]);
+  }, []);
 
   useEffect(() => {
-    fetchRecommendations();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchRecommendations();
   }, [fetchRecommendations]);
+
+  const counts = useMemo(
+    () => ({
+      all: recommendations.length,
+      new: recommendations.filter((r) => r.status === "notviewed").length,
+      bookmarked: recommendations.filter((r) => r.status === "bookmarked")
+        .length,
+      hidden: hiddenRecommendations.length,
+    }),
+    [recommendations, hiddenRecommendations],
+  );
+
+  const insertSorted = (list: Recommendation[], item: Recommendation) =>
+    [...list, item].sort((a, b) =>
+      (b.recommendedAt ?? "").localeCompare(a.recommendedAt ?? ""),
+    );
+
+  const restoreRecommendation = useCallback(
+    async (recommendationId: string) => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl || updatingId) return;
+
+      const item = hiddenRecommendations.find(
+        (recommendation) => recommendation.id === recommendationId,
+      );
+
+      setUpdatingId(recommendationId);
+      try {
+        await axios.patch(
+          `${apiUrl}/recommendations/${recommendationId}/status`,
+          { status: "viewed" },
+          { withCredentials: true },
+        );
+
+        setHiddenRecommendations((current) =>
+          current.filter(
+            (recommendation) => recommendation.id !== recommendationId,
+          ),
+        );
+        if (item) {
+          setRecommendations((current) =>
+            insertSorted(current, { ...item, status: "viewed" }),
+          );
+        }
+        toast.success("Recommendation restored.");
+      } catch {
+        toast.error("Failed to restore recommendation.");
+      } finally {
+        setUpdatingId(null);
+      }
+    },
+    [hiddenRecommendations, updatingId],
+  );
 
   const updateRecommendationStatus = async (
     recommendationId: string,
@@ -203,6 +270,10 @@ export default function RecommendationsPage() {
         },
       );
 
+      const dismissed = recommendations.find(
+        (recommendation) => recommendation.id === recommendationId,
+      );
+
       setRecommendations((current) =>
         status === "notinterested"
           ? current.filter(
@@ -215,12 +286,27 @@ export default function RecommendationsPage() {
             ),
       );
 
-      toast.success(
-        successMessage ??
-          (status === "bookmarked"
-            ? "Recommendation bookmarked."
-            : "Recommendation hidden."),
-      );
+      if (status === "notinterested" && dismissed) {
+        setHiddenRecommendations((current) =>
+          insertSorted(current, { ...dismissed, status }),
+        );
+      }
+
+      if (status === "notinterested") {
+        toast.success(successMessage ?? "Recommendation hidden.", {
+          action: {
+            label: "Undo",
+            onClick: () => void restoreRecommendation(recommendationId),
+          },
+        });
+      } else {
+        toast.success(
+          successMessage ??
+            (status === "bookmarked"
+              ? "Recommendation bookmarked."
+              : "Recommendation hidden."),
+        );
+      }
     } catch (err) {
       console.error("Error updating recommendation:", err);
       toast.error("Failed to update recommendation.");
@@ -229,10 +315,26 @@ export default function RecommendationsPage() {
     }
   };
 
-  const visibleRecommendations = useMemo(
-    () => recommendations,
-    [recommendations],
+  const tabRecommendations = useMemo(() => {
+    if (tab === "hidden") return hiddenRecommendations;
+    if (tab === "new")
+      return recommendations.filter((r) => r.status === "notviewed");
+    if (tab === "bookmarked")
+      return recommendations.filter((r) => r.status === "bookmarked");
+    return recommendations;
+  }, [recommendations, hiddenRecommendations, tab]);
+
+  const freshRecommendations = useMemo(
+    () => tabRecommendations.filter((r) => r.issue.status === "open"),
+    [tabRecommendations],
   );
+
+  const staleRecommendations = useMemo(
+    () => tabRecommendations.filter((r) => r.issue.status !== "open"),
+    [tabRecommendations],
+  );
+
+  const visibleRecommendations = freshRecommendations;
 
   const handleFeedbackSaved = (
     recommendationId: string,
@@ -258,55 +360,13 @@ export default function RecommendationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            AI Recommendations
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Issues recommended by AI Agent based your skills and preferences
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-1.5">
-                Limit
-                <Badge className="ml-1 text-[10px] px-1 py-0 bg-muted text-muted-foreground border-0">
-                  {limit}
-                </Badge>
-                <ChevronDown className="size-3.5 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-28">
-              <DropdownMenuLabel className="text-xs">Results</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {limits.map((option) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => setLimit(option)}
-                  className={limit === option ? "bg-muted font-medium" : ""}
-                >
-                  {option}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 gap-1.5"
-            onClick={() => void fetchRecommendations()}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`size-3.5 ${isLoading ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">Refresh</span>
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">
+          AI Recommendations
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Issues recommended by AI Agent based your skills and preferences
+        </p>
       </div>
 
       <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -321,6 +381,32 @@ export default function RecommendationsPage() {
         </span>
       </div>
 
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as RecommendationTab)}
+      >
+        <TabsList>
+          <TabsTrigger value="all" className="cursor-pointer">
+            All
+            <span className="ml-1 text-[10px] opacity-70">{counts.all}</span>
+          </TabsTrigger>
+          <TabsTrigger value="new" className="cursor-pointer">
+            New
+            <span className="ml-1 text-[10px] opacity-70">{counts.new}</span>
+          </TabsTrigger>
+          <TabsTrigger value="bookmarked" className="cursor-pointer">
+            Bookmarked
+            <span className="ml-1 text-[10px] opacity-70">
+              {counts.bookmarked}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="hidden" className="cursor-pointer">
+            Hidden
+            <span className="ml-1 text-[10px] opacity-70">{counts.hidden}</span>
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 py-16 text-sm text-muted-foreground">
           <Spinner />
@@ -330,14 +416,21 @@ export default function RecommendationsPage() {
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-6 text-sm text-red-600 dark:text-red-400">
           {error}
         </div>
-      ) : visibleRecommendations.length === 0 ? (
+      ) : visibleRecommendations.length === 0 &&
+        staleRecommendations.length === 0 ? (
         <div className="rounded-lg border border-border/60 p-10 text-center">
           <Bot className="mx-auto size-8 text-muted-foreground" />
           <h2 className="mt-3 text-sm font-semibold text-foreground">
-            No AI recommendations yet
+            {tab === "hidden"
+              ? "Nothing hidden"
+              : tab === "bookmarked"
+                ? "No bookmarks yet"
+                : "No AI recommendations yet"}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your agent recommendations will appear here after a successful run.
+            {tab === "hidden"
+              ? "Items you dismiss will appear here, where you can restore them."
+              : "Your agent recommendations will appear here after a successful run."}
           </p>
         </div>
       ) : (
@@ -426,43 +519,53 @@ export default function RecommendationsPage() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-1 self-start sm:self-auto">
-                      <FeedbackButtons
-                        recommendationId={recommendation.id}
-                        feedback={recommendation.feedback}
-                        disabled={updatingId === recommendation.id}
-                        onSaved={(feedback) =>
-                          handleFeedbackSaved(recommendation.id, feedback)
-                        }
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 gap-1.5"
-                        disabled={updatingId === recommendation.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void updateRecommendationStatus(
-                            recommendation.id,
-                            "bookmarked",
-                          );
-                        }}
-                      >
-                        <Bookmark className="size-3.5" />
-                        Bookmark
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
-                        disabled={updatingId === recommendation.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setDismissId(recommendation.id);
-                        }}
-                      >
-                        <ThumbsDown className="size-3.5" />
-                        Not interested
-                      </Button>
+                      {tab === "hidden" ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5 cursor-pointer"
+                          disabled={updatingId === recommendation.id}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void restoreRecommendation(recommendation.id);
+                          }}
+                        >
+                          <Undo2 className="size-3.5" />
+                          Restore
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5"
+                            disabled={updatingId === recommendation.id}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void updateRecommendationStatus(
+                                recommendation.id,
+                                "bookmarked",
+                              );
+                            }}
+                          >
+                            <Bookmark className="size-3.5" />
+                            Bookmark
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                            disabled={updatingId === recommendation.id}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDismissId(recommendation.id);
+                            }}
+                          >
+                            <ThumbsDown className="size-3.5" />
+                            Not interested
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -470,6 +573,38 @@ export default function RecommendationsPage() {
             );
           })}
         </div>
+      )}
+
+      {staleRecommendations.length > 0 && (
+        <Collapsible className="rounded-lg border border-border/60">
+          <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between gap-2 px-4 py-3 text-sm">
+            <span className="text-muted-foreground">
+              No longer available ({staleRecommendations.length}) — closed or
+              assigned on GitHub
+            </span>
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2 px-4 pb-4">
+            {staleRecommendations.map((recommendation) => (
+              <button
+                key={recommendation.id}
+                onClick={() =>
+                  router.push(`/dashboard/recommendations/${recommendation.id}`)
+                }
+                className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md bg-muted/40 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/70"
+              >
+                <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                  {recommendation.issue.title}
+                </span>
+                <Badge
+                  className={`shrink-0 px-2 py-0.5 text-[10px] ${statusColor[recommendation.issue.status]}`}
+                >
+                  {formatIssueStatus(recommendation.issue.status)}
+                </Badge>
+              </button>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {dismissId && (
