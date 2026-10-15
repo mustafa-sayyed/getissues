@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import {
   createUIMessageStream,
   pipeUIMessageStreamToResponse,
@@ -33,64 +33,15 @@ const buildSystemPrompt = async (userId: string): Promise<string> => {
     .where(eq(schema.skills.userId, userId))
     .limit(1);
 
-  const recentRecommendations = await db
-    .select({
-      title: schema.issue.title,
-      url: schema.issue.url,
-      status: schema.recommendations.status,
-      matchScore: schema.recommendations.matchScore,
-      repoName: schema.repoAnalysis.name,
-    })
-    .from(schema.recommendations)
-    .innerJoin(
-      schema.issue,
-      eq(schema.recommendations.issueId, schema.issue.id),
-    )
-    .leftJoin(
-      schema.repoAnalysis,
-      eq(schema.issue.githubRepoId, schema.repoAnalysis.githubRepoId),
-    )
-    .where(eq(schema.recommendations.userId, userId))
-    .orderBy(desc(schema.recommendations.recommendedAt))
-    .limit(10);
-
-  const [runStats] = await db
-    .select({
-      total: sql<number>`count(*)::int`,
-      successful: sql<number>`count(*) filter (where ${schema.agentRuns.status} = 'success')::int`,
-      running: sql<number>`count(*) filter (where ${schema.agentRuns.status} = 'running')::int`,
-    })
-    .from(schema.agentRuns)
-    .where(eq(schema.agentRuns.userId, userId));
-
   const skillsSection = skills
     ? `Languages: ${skills.languages.join(", ") || "None set"}\nInterests: ${skills.interests || "None set"}`
     : "No skills saved yet.";
-
-  const recommendationsSection = recentRecommendations.length
-    ? recentRecommendations
-        .map(
-          (rec) =>
-            `- [${rec.matchScore?.toFixed(2) ?? "?"}] ${rec.title} (${rec.repoName ?? "unknown repo"}) - ${rec.status}`,
-        )
-        .join("\n")
-    : "No recommendations yet.";
-
-  const statsSection = runStats
-    ? `${runStats.total} total runs, ${runStats.successful} successful, ${runStats.running} currently running`
-    : "No agent runs yet.";
 
   return `
     You are the GetIssues AI Assistant. You help developers discover open-source GitHub issues that match their skills and interests.
 
     ## About the user
     ${skillsSection}
-
-    ## Recent recommendations given to the user
-    ${recommendationsSection}
-
-    ## Recommendation agent runs
-    ${statsSection}
 
     ## Your capabilities (via tools)
     - get_recommendations: show issues already recommended to the user.
@@ -211,7 +162,8 @@ const getOrCreateSession = async (
   return session.id;
 };
 
-const isClientDisconnect = (error: unknown) => {  const code =
+const isClientDisconnect = (error: unknown) => {
+  const code =
     typeof error === "object" && error !== null && "code" in error
       ? (error as { code?: string }).code
       : undefined;
@@ -224,6 +176,9 @@ const isClientDisconnect = (error: unknown) => {  const code =
   );
 };
 
+const DEFAULT_HISTORY_LIMIT = 100;
+const MAX_HISTORY_LIMIT = 200;
+
 const getChatSessionMessages = asyncHandler(async (req, res) => {
   if (!req.user) {
     throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
@@ -232,7 +187,29 @@ const getChatSessionMessages = asyncHandler(async (req, res) => {
   const sessionId = req.params.sessionId as string;
   await assertSessionOwnership(sessionId, req.user!.id);
 
-  const messages = await db
+  const limit = Math.min(
+    Number(req.query.limit) || DEFAULT_HISTORY_LIMIT,
+    MAX_HISTORY_LIMIT,
+  );
+  const cursor = typeof req.query.cursor === "string" ? req.query.cursor : null;
+
+  // Cursor is a message id: page backwards from its timestamp.
+  let cursorTime: Date | null = null;
+  if (cursor) {
+    const [cursorRow] = await db
+      .select({ createdAt: schema.chatMessages.createdAt })
+      .from(schema.chatMessages)
+      .where(
+        and(
+          eq(schema.chatMessages.id, cursor),
+          eq(schema.chatMessages.sessionId, sessionId),
+        ),
+      )
+      .limit(1);
+    cursorTime = cursorRow?.createdAt ?? null;
+  }
+
+  const rows = await db
     .select({
       id: schema.chatMessages.id,
       role: schema.chatMessages.role,
@@ -240,10 +217,28 @@ const getChatSessionMessages = asyncHandler(async (req, res) => {
       createdAt: schema.chatMessages.createdAt,
     })
     .from(schema.chatMessages)
-    .where(eq(schema.chatMessages.sessionId, sessionId))
-    .orderBy(schema.chatMessages.createdAt);
+    .where(
+      cursorTime
+        ? and(
+            eq(schema.chatMessages.sessionId, sessionId),
+            lt(schema.chatMessages.createdAt, cursorTime),
+          )
+        : eq(schema.chatMessages.sessionId, sessionId),
+    )
+    .orderBy(desc(schema.chatMessages.createdAt))
+    .limit(limit + 1);
 
-  return res.status(httpStatusCodes.OK).json({ messages });
+  const hasMore = rows.length > limit;
+  const page = (hasMore ? rows.slice(0, limit) : rows).reverse();
+
+  return res.status(httpStatusCodes.OK).json({
+    messages: page,
+    meta: {
+      limit,
+      hasMore,
+      nextCursor: hasMore ? (page[0]?.id ?? null) : null,
+    },
+  });
 });
 
 const deleteChatSession = asyncHandler(async (req, res) => {
@@ -292,19 +287,21 @@ const streamChatResponse = asyncHandler(async (req, res) => {
     .orderBy(schema.chatMessages.createdAt)
     .limit(MAX_HISTORY_MESSAGES);
 
-  await db.insert(schema.chatMessages).values({
-    sessionId: activeSessionId,
-    userId,
-    role: "user",
-    content: userText,
-  });
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.chatMessages).values({
+      sessionId: activeSessionId,
+      userId,
+      role: "user",
+      content: userText,
+    });
 
-  if (!history.length) {
-    await db
-      .update(schema.chatSessions)
-      .set({ title: userText.slice(0, 80) })
-      .where(eq(schema.chatSessions.id, activeSessionId));
-  }
+    if (!history.length) {
+      await tx
+        .update(schema.chatSessions)
+        .set({ title: userText.slice(0, 80) })
+        .where(eq(schema.chatSessions.id, activeSessionId));
+    }
+  });
 
   const systemPrompt = await buildSystemPrompt(userId);
 
