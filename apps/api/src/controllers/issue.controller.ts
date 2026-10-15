@@ -131,4 +131,42 @@ const getIssues = asyncHandler(async (req, res) => {
   });
 });
 
-export { getIssues };
+const getIssue = asyncHandler(async (req, res) => {
+  const issueId = req.params.id as string;
+
+  const [issue] = await db
+    .select({
+      id: schema.issue.id,
+      title: schema.issue.title,
+      description: schema.issue.description,
+      body: schema.issue.body,
+      status: schema.issue.status,
+      url: schema.issue.url,
+      isAssigned: schema.issue.isAssigned,
+      createdAt: schema.issue.createdAt,
+      updatedAt: schema.issue.updatedAt,
+      repo: {
+        githubRepoId: schema.repoAnalysis.githubRepoId,
+        name: schema.repoAnalysis.name,
+        repoUrl: schema.repoAnalysis.repoUrl,
+        languages: schema.repoAnalysis.languages,
+        stars: schema.repoAnalysis.stars,
+        description: schema.repoAnalysis.description,
+      },
+    })
+    .from(schema.issue)
+    .leftJoin(
+      schema.repoAnalysis,
+      eq(schema.issue.githubRepoId, schema.repoAnalysis.githubRepoId),
+    )
+    .where(eq(schema.issue.id, issueId))
+    .limit(1);
+
+  if (!issue) {
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "Issue not found");
+  }
+
+  return res.status(httpStatusCodes.OK).json({ issue });
+});
+
+export { getIssues, getIssue };
