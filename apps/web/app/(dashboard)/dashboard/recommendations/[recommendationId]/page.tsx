@@ -34,7 +34,11 @@ import {
 } from "@/components/dashboard/recommendation-feedback";
 
 type IssueStatus = "open" | "closed" | "assigned";
-type RecommendationStatus = "notviewed" | "viewed" | "bookmarked" | "notinterested";
+type RecommendationStatus =
+  | "notviewed"
+  | "viewed"
+  | "bookmarked"
+  | "notinterested";
 
 type Recommendation = {
   id: string;
@@ -285,6 +289,7 @@ export default function RecommendationDetailPage() {
   }, [recommendationId, updateRecommendationStatus]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchRecommendation();
   }, [fetchRecommendation]);
 
@@ -367,11 +372,50 @@ export default function RecommendationDetailPage() {
             )
             .finally(() => {
               setIsDismissOpen(false);
-              toast.success("Noted — you'll see fewer like this.");
+              toast.success("Noted — you'll see fewer like this.", {
+                action: {
+                  label: "Undo",
+                  onClick: () => {
+                    const restoreUrl = process.env.NEXT_PUBLIC_API_URL;
+                    void axios
+                      .patch(
+                        `${restoreUrl}/recommendations/${recommendationId}/status`,
+                        { status: "viewed" },
+                        { withCredentials: true },
+                      )
+                      .then(() => {
+                        toast.success("Recommendation restored.");
+                        router.push(
+                          `/dashboard/recommendations/${recommendationId}`,
+                        );
+                      })
+                      .catch(() =>
+                        toast.error("Failed to restore recommendation."),
+                      );
+                  },
+                },
+              });
               router.push("/dashboard/recommendations");
             });
         }}
       />
+
+      {recommendation && recommendation.issue.status !== "open" && (
+        <div className="flex flex-col gap-2 rounded-lg border-2 border-amber-500/30 bg-amber-400/5 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between font-medium">
+          <p className="text-muted-foreground">
+            {recommendation.issue.status === "closed"
+              ? "This issue is now closed on GitHub, so it may no longer be available."
+              : "This issue is now assigned to someone on GitHub."}{" "}
+            Here is what was recommended and why.
+          </p>
+          <Link
+            href="/dashboard/issues"
+            className="shrink-0 font-medium text-primary hover:underline"
+          >
+            Find similar issues
+          </Link>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 rounded-lg border border-border/60 py-16 text-sm text-muted-foreground">
