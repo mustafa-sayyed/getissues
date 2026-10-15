@@ -10,7 +10,7 @@ import {
   deleteAccount,
 } from "../controllers/user.controller.ts";
 import { requireAuth } from "../middlewares/auth.middleware.ts";
-import { validate } from "../middlewares/validate.middleware.ts";
+import { validateBody } from "../middlewares/validate.middleware.ts";
 import {
   createUserSkillsSchema,
   updateUserSkillsSchema,
@@ -25,19 +25,19 @@ router.get("/preferences", requireAuth, getUserPreferences);
 router.patch(
   "/preferences",
   requireAuth,
-  validate(updateUserPreferencesSchema),
+  validateBody(updateUserPreferencesSchema),
   updateUserPreferences,
 );
 router.post(
   "/skills",
   requireAuth,
-  validate(createUserSkillsSchema),
+  validateBody(createUserSkillsSchema),
   createUserSkills,
 );
 router.put(
   "/skills",
   requireAuth,
-  validate(updateUserSkillsSchema),
+  validateBody(updateUserSkillsSchema),
   updateUserSkills,
 );
 router.delete("/account", requireAuth, deleteAccount);
