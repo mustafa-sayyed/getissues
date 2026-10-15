@@ -10,9 +10,7 @@ import { embedText } from "@packages/shared";
 import ApiError from "../utils/ApiError.ts";
 
 const buildSkillsEmbedding = async (languages: string[], interests: string) => {
-  const embedding = await embedText(
-    languages.join(", ") + "\n\n" + interests,
-  );
+  const embedding = await embedText(languages.join(", ") + "\n\n" + interests);
 
   if (!embedding) {
     logger.error("Failed to build skills embedding");
@@ -43,23 +41,23 @@ const getGithubUserData = asyncHandler(async (req, res) => {
     .json({ ...data.data, pullRequests: pulls.data });
 });
 
-  const getOnboardingProfile = asyncHandler(async (req, res) => {
-    if (!req.user) {
-      throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
-    }
+const getOnboardingProfile = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    throw new ApiError(httpStatusCodes.UNAUTHORIZED, "Unauthorized");
+  }
 
-    const { accessToken } = await auth.api.getAccessToken({
-      body: {
-        providerId: "github",
-        userId: req.user.id,
-      },
-    });
-
-    const octokit = getOctokit(accessToken ?? process.env.GITHUB_ACCESS_TOKEN!);
-    const profile = await fetchOnboardingProfile(octokit);
-
-    return res.status(httpStatusCodes.OK).json(profile);
+  const { accessToken } = await auth.api.getAccessToken({
+    body: {
+      providerId: "github",
+      userId: req.user.id,
+    },
   });
+
+  const octokit = getOctokit(accessToken ?? process.env.GITHUB_ACCESS_TOKEN!);
+  const profile = await fetchOnboardingProfile(octokit);
+
+  return res.status(httpStatusCodes.OK).json(profile);
+});
 
 const getUserSkills = asyncHandler(async (req, res) => {
   const { includeEmbedding = null } = req.query as { includeEmbedding: string };
@@ -94,25 +92,31 @@ const createUserSkills = asyncHandler(async (req, res) => {
 
   const { languages, interests } = req.body;
 
+  const embedding = await buildSkillsEmbedding(languages, interests);
+
+  if (!embedding) {
+    throw new ApiError(
+      httpStatusCodes.INTERNAL_SERVER_ERROR,
+      "Failed to save User Skills",
+    );
+  }
+
   const existingSkills = await db
     .select({ userId: schema.skills.userId })
     .from(schema.skills)
     .where(eq(schema.skills.userId, req.user.id))
     .limit(1);
 
+  // update skills if they already exist
   if (existingSkills.length > 0) {
+    await db
+      .update(schema.skills)
+      .set({ languages, interests, embedding })
+      .where(eq(schema.skills.userId, req.user.id));
+
     return res
-      .status(httpStatusCodes.BAD_REQUEST)
-      .json({ error: "Skills already exist. Use the update endpoint." });
-  }
-
-  const embedding = await buildSkillsEmbedding(languages, interests);
-
-  if (!embedding) {
-    throw new ApiError(
-      httpStatusCodes.INTERNAL_SERVER_ERROR,
-      "Failed to create User Skills",
-    );
+      .status(httpStatusCodes.OK)
+      .json({ success: true, updated: true });
   }
 
   await db.insert(schema.skills).values({

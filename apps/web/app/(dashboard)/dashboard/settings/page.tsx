@@ -24,7 +24,7 @@ import {
   Trash2,
   Check,
   SlidersHorizontal,
-  User
+  User,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -151,19 +151,23 @@ export default function SettingsPage() {
     setIsSavingSkills(true);
 
     try {
-      await axios.request({
-        method: hasSkills ? "PUT" : "POST",
-        url: `${apiUrl}/users/skills`,
-        data: {
+      const { data } = await axios.post<{
+        success: boolean;
+        updated?: boolean;
+      }>(
+        `${apiUrl}/users/skills`,
+        {
           languages,
           interests: interests.trim(),
         },
-        withCredentials: true,
-      });
+        {
+          withCredentials: true,
+        },
+      );
 
       setHasSkills(true);
       setIsEditingSkills(false);
-      toast.success(hasSkills ? "Skills updated." : "Skills saved.");
+      toast.success(data.updated ? "Skills updated." : "Skills saved.");
     } catch (error) {
       console.error("Error saving user skills:", error);
       toast.error("Failed to save skills.");
