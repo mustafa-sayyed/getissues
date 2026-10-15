@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm";
 import { ApiLogger as logger } from "@packages/shared";
 import { db, schema } from "../lib/db.ts";
 import { asyncHandler } from "../utils/asyncRequest.ts";
@@ -69,10 +69,15 @@ const getRecommendations = asyncHandler(async (req, res) => {
   }
 
   const status = typeof req.query.status === "string" ? req.query.status : "";
+  const issueStatus =
+    typeof req.query.issueStatus === "string" ? req.query.issueStatus : "";
+
   const requestedLimit = Number(req.query.limit);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(Math.trunc(requestedLimit), 1), 100)
     : 50;
+    
+  const cursor = typeof req.query.cursor === "string" ? req.query.cursor : null;
 
   const statusFilter = recommendationStatuses.includes(
     status as RecommendationStatus,
@@ -83,6 +88,45 @@ const getRecommendations = asyncHandler(async (req, res) => {
         "viewed",
         "bookmarked",
       ]);
+
+  const issueStatusFilter =
+    issueStatus === "open" ||
+    issueStatus === "closed" ||
+    issueStatus === "assigned"
+      ? eq(schema.issue.status, issueStatus)
+      : undefined;
+
+  // Cursor is a recommendation id: page backwards from its timestamp.
+  let cursorTime: Date | null = null;
+  let cursorId: string | null = null;
+  if (cursor) {
+    const [cursorRow] = await db
+      .select({
+        id: schema.recommendations.id,
+        recommendedAt: schema.recommendations.recommendedAt,
+      })
+      .from(schema.recommendations)
+      .where(
+        and(
+          eq(schema.recommendations.id, cursor),
+          eq(schema.recommendations.userId, req.user.id),
+        ),
+      )
+      .limit(1);
+    cursorTime = cursorRow?.recommendedAt ?? null;
+    cursorId = cursorRow?.id ?? null;
+  }
+
+  const cursorFilter =
+    cursorTime && cursorId
+      ? or(
+          lt(schema.recommendations.recommendedAt, cursorTime),
+          and(
+            eq(schema.recommendations.recommendedAt, cursorTime),
+            lt(schema.recommendations.id, cursorId),
+          ),
+        )
+      : undefined;
 
   const recommendations = await db
     .select({
@@ -121,13 +165,30 @@ const getRecommendations = asyncHandler(async (req, res) => {
       schema.repoAnalysis,
       eq(schema.issue.githubRepoId, schema.repoAnalysis.githubRepoId),
     )
-    .where(and(eq(schema.recommendations.userId, req.user.id), statusFilter))
-    .orderBy(desc(schema.recommendations.recommendedAt))
-    .limit(limit);
+    .where(
+      and(
+        eq(schema.recommendations.userId, req.user.id),
+        statusFilter,
+        issueStatusFilter,
+        cursorFilter,
+      ),
+    )
+    .orderBy(
+      desc(schema.recommendations.recommendedAt),
+      desc(schema.recommendations.id),
+    )
+    .limit(limit + 1);
+
+  const hasMore = recommendations.length > limit;
+  const page = hasMore ? recommendations.slice(0, limit) : recommendations;
 
   return res.status(httpStatusCodes.OK).json({
-    recommendations,
-    meta: { limit },
+    recommendations: page,
+    meta: {
+      limit,
+      hasMore,
+      nextCursor: hasMore ? (page[page.length - 1]?.id ?? null) : null,
+    },
   });
 });
 
@@ -155,11 +216,24 @@ const getRecommendationStats = asyncHandler(async (req, res) => {
       ),
     );
 
+  const [hidden] = await db
+    .select({
+      notInterestedCount: sql<number>`count(*)::int`,
+    })
+    .from(schema.recommendations)
+    .where(
+      and(
+        eq(schema.recommendations.userId, req.user.id),
+        eq(schema.recommendations.status, "notinterested"),
+      ),
+    );
+
   return res.status(httpStatusCodes.OK).json({
     stats: {
       total: stats?.total ?? 0,
       newCount: stats?.newCount ?? 0,
       bookmarkedCount: stats?.bookmarkedCount ?? 0,
+      notInterestedCount: hidden?.notInterestedCount ?? 0,
       averageMatchScore: stats?.averageMatchScore ?? null,
     },
   });
@@ -263,10 +337,7 @@ const updateRecommendationStatus = asyncHandler(async (req, res) => {
     });
 
   if (!recommendation) {
-    throw new ApiError(
-      httpStatusCodes.NOT_FOUND,
-      "Recommendation not found",
-    );
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "Recommendation not found");
   }
 
   const decisionSnapshot = await getRecommendationDecisionSnapshot(
@@ -291,7 +362,10 @@ const updateRecommendationStatus = asyncHandler(async (req, res) => {
       repoLanguages: decisionSnapshot.repo?.languages ?? null,
       repoDescription: decisionSnapshot.repo?.description ?? null,
     }).catch((error) => {
-      logger.error({ error }, "Failed to capture recommendation decision in Cognee.");
+      logger.error(
+        { error },
+        "Failed to capture recommendation decision in Cognee.",
+      );
     });
   }
 
@@ -305,7 +379,9 @@ const updateRecommendationFeedback = asyncHandler(async (req, res) => {
 
   const recommendationId = req.params.recommendationId as string;
   const feedback =
-    req.body.feedback === null ? null : (req.body.feedback as RecommendationFeedback);
+    req.body.feedback === null
+      ? null
+      : (req.body.feedback as RecommendationFeedback);
   const dismissReason =
     typeof req.body.dismissReason === "string" && req.body.dismissReason.trim()
       ? req.body.dismissReason.trim().slice(0, 200)
@@ -337,10 +413,7 @@ const updateRecommendationFeedback = asyncHandler(async (req, res) => {
     });
 
   if (!recommendation) {
-    throw new ApiError(
-      httpStatusCodes.NOT_FOUND,
-      "Recommendation not found",
-    );
+    throw new ApiError(httpStatusCodes.NOT_FOUND, "Recommendation not found");
   }
 
   const decisionSnapshot = await getRecommendationDecisionSnapshot(
@@ -365,7 +438,10 @@ const updateRecommendationFeedback = asyncHandler(async (req, res) => {
       repoLanguages: decisionSnapshot.repo?.languages ?? null,
       repoDescription: decisionSnapshot.repo?.description ?? null,
     }).catch((error) => {
-      logger.error({ error }, "Failed to capture recommendation decision in Cognee.");
+      logger.error(
+        { error },
+        "Failed to capture recommendation decision in Cognee.",
+      );
     });
   }
 
