@@ -54,7 +54,7 @@ provider:
 
 functions:
   api:
-    handler: src/server.handler
+    handler: src/lambda/index.handler
     url:
       invokeMode: RESPONSE_STREAM
     events:
