@@ -60,23 +60,11 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
 
       const startedAt = Date.now();
       try {
-        try {
-          await axios.post(
-            `${apiUrl}/users/skills`,
-            { languages, interests },
-            { withCredentials: true },
-          );
-        } catch (postErr) {
-          if (axios.isAxiosError(postErr) && postErr.response?.status === 400) {
-            await axios.put(
-              `${apiUrl}/users/skills`,
-              { languages, interests },
-              { withCredentials: true },
-            );
-          } else {
-            throw postErr;
-          }
-        }
+        await axios.post(
+          `${apiUrl}/users/skills`,
+          { languages, interests },
+          { withCredentials: true },
+        );
 
         const query = [...languages.slice(0, 5), interests]
           .join(" ")
@@ -104,9 +92,23 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
         setPhase("done");
         track("onboarding_first_match_shown", { count: preview.length });
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Something went wrong.",
-        );
+        if (axios.isAxiosError(err) && err.response?.status === 400) {
+          const data = err.response.data as {
+            msg?: string;
+            errors?: Record<string, string[]>;
+          };
+          const details = Object.values(data.errors ?? {})
+            .flat()
+            .join(" ");
+          setError(
+            [data.msg, details].filter(Boolean).join(": ") ||
+              "Please check your skills and try again.",
+          );
+        } else {
+          setError(
+            err instanceof Error ? err.message : "Something went wrong.",
+          );
+        }
         setPhase("error");
       }
     };
@@ -123,12 +125,12 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
   if (phase === "working") {
     return (
       <div className="space-y-6">
-      <StepLede>
-        All saved.{" "}
-        <span className="font-semibold text-foreground">
-          Give us a moment —
-        </span>
-      </StepLede>
+        <StepLede>
+          All saved.{" "}
+          <span className="font-semibold text-foreground">
+            Give us a moment —
+          </span>
+        </StepLede>
 
         <div className="flex flex-col items-center rounded-3xl border border-border/60 bg-card/60 px-6 py-12 text-center backdrop-blur-sm">
           <span className="relative flex size-3">
@@ -172,9 +174,7 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
     <div className="space-y-6">
       <div>
         <h2 className="font-heading text-3xl font-black tracking-tight">
-          {issues.length > 0
-            ? "3 things picked for you."
-            : "You are all set."}
+          {issues.length > 0 ? "3 things picked for you." : "You are all set."}
         </h2>
         <p className="mt-1 leading-relaxed text-muted-foreground">
           {issues.length > 0
@@ -200,7 +200,11 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
               }
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.15 + i * 0.12, ease: EASE }}
+              transition={{
+                duration: 0.45,
+                delay: 0.15 + i * 0.12,
+                ease: EASE,
+              }}
               className="group block overflow-hidden rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5"
             >
               <div className="p-4 sm:p-5">
@@ -246,7 +250,10 @@ export function StepSearch({ languages, interests, onBack }: StepSearchProps) {
                         key={lang}
                         className="flex items-center gap-1 rounded-full border border-border/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
                       >
-                        <SkillIcon name={lang} className="size-3 text-foreground" />
+                        <SkillIcon
+                          name={lang}
+                          className="size-3 text-foreground"
+                        />
                         {lang}
                       </span>
                     ))}

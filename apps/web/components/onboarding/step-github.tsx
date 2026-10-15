@@ -68,13 +68,36 @@ export function StepGithub({
     }
   };
 
+  const detectedCount = profile?.detectedLanguages.length ?? 0;
+  const hasDetected = detectedCount > 0;
+  const isFreshAccount =
+    !!profile && !hasDetected && profile.publicRepos === 0;
+
   return (
     <div className="space-y-7">
       <StepLede>
-        We picked these from your public repos.{" "}
-        <span className="font-semibold text-foreground">
-          Tap to change them.
-        </span>
+        {hasDetected ? (
+          <>
+            We picked these from your public repos.{" "}
+            <span className="font-semibold text-foreground">
+              Tap to change them.
+            </span>
+          </>
+        ) : isFreshAccount ? (
+          <>
+            Your GitHub is new — no public repos to learn from yet.{" "}
+            <span className="font-semibold text-foreground">
+              Tell us what you work with.
+            </span>
+          </>
+        ) : (
+          <>
+            We could not pick skills from your repos.{" "}
+            <span className="font-semibold text-foreground">
+              Add what you work with.
+            </span>
+          </>
+        )}
       </StepLede>
 
       {!profile ? (
@@ -100,7 +123,7 @@ export function StepGithub({
             )}
           </Button>
         </div>
-      ) : (
+      ) : hasDetected ? (
           <div className="flex flex-wrap gap-2.5">
             {profile.detectedLanguages.map((lang) => {
               const active = languages.some(
@@ -129,10 +152,20 @@ export function StepGithub({
             );
           })}
         </div>
+      ) : (
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-sm">
+          <p className="text-sm text-muted-foreground">
+            {isFreshAccount
+              ? "No public repos to learn from — add your skills below and we will find work that fits."
+              : "Nothing detected in your repos — add what you work with below."}
+          </p>
+        </div>
       )}
 
       <div className="space-y-2.5">
-        <StepLabel>Missing anything? Add it here</StepLabel>
+        <StepLabel>
+          {hasDetected ? "Missing anything? Add it here" : "Add your skills here"}
+        </StepLabel>
         <LanguageCombobox
           value={languages}
           onChange={onLanguagesChange}

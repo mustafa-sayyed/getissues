@@ -30,9 +30,12 @@ function buildStatements(
     ];
   }
 
-  const statements = [
-    `Hi ${firstName} — we found ${profile.publicRepos} public ${profile.publicRepos === 1 ? "repo" : "repos"} on your GitHub.`,
-  ];
+  const statements =
+    profile.publicRepos === 0
+      ? [`Hi ${firstName} — your GitHub is fresh, no public repos yet.`]
+      : [
+          `Hi ${firstName} — we found ${profile.publicRepos} public ${profile.publicRepos === 1 ? "repo" : "repos"} on your GitHub.`,
+        ];
 
   const topLangs = profile.detectedLanguages.slice(0, 2).map((l) => l.name);
   if (topLangs.length > 0) {
