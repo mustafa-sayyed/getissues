@@ -59,7 +59,7 @@ type Evaluation = {
     githubId: number | null;
     title: string;
     description: string | null;
-    state: IssueStatus;
+    status: IssueStatus;
     url: string;
     isAssigned: boolean | null;
   };
@@ -79,7 +79,8 @@ type AgentRunResponse = {
 const formatScore = (score: number) => `${Math.round(score * 100)}%`;
 
 const scoreColor = (score: number) => {
-  if (score >= 0.8) return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400";
+  if (score >= 0.8)
+    return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400";
   if (score >= 0.5) return "bg-amber-500/15 text-amber-600 dark:text-amber-400";
   return "bg-muted text-muted-foreground";
 };
@@ -108,6 +109,7 @@ export default function AgentRunDetailPage() {
   }, [runId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchRun();
   }, [fetchRun]);
 

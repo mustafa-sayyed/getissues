@@ -51,10 +51,7 @@ export function OnboardingForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <label
-          htmlFor="skills"
-          className="text-sm font-medium text-foreground"
-        >
+        <label htmlFor="skills" className="text-sm font-medium text-foreground">
           Your Skills
         </label>
         <LanguageCombobox
@@ -84,9 +81,7 @@ export function OnboardingForm() {
 
       <Button
         type="submit"
-        disabled={
-          isSubmitting
-        }
+        disabled={isSubmitting}
         className="w-full mt-2 p-4 cursor-pointer"
       >
         {isSubmitting ? (

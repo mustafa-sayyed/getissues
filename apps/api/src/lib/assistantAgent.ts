@@ -1,4 +1,4 @@
-﻿import { Agent } from "@mastra/core/agent";
+import { Agent } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -35,7 +35,7 @@ const createRecommendationsTool = (userId: string) =>
             title: schema.issue.title,
             description: schema.issue.description,
             url: schema.issue.url,
-            state: schema.issue.status,
+            status: schema.issue.status,
           },
           repo: {
             name: schema.repoAnalysis.name,
@@ -94,7 +94,7 @@ const createSearchIssuesTool = (userId: string) =>
           title: schema.issue.title,
           description: schema.issue.description,
           url: schema.issue.url,
-          state: schema.issue.status,
+          status: schema.issue.status,
           similarity: sql<number>`1 - (${schema.issue.embedding} <=> ${queryVector}::vector)`,
           repo: {
             name: schema.repoAnalysis.name,
@@ -108,7 +108,12 @@ const createSearchIssuesTool = (userId: string) =>
           schema.repoAnalysis,
           eq(schema.issue.githubRepoId, schema.repoAnalysis.githubRepoId),
         )
-        .where(sql`${schema.issue.embedding} IS NOT NULL`)
+        .where(
+          and(
+            sql`${schema.issue.embedding} IS NOT NULL`,
+            eq(schema.issue.status, "open"),
+          ),
+        )
         .orderBy(sql`${schema.issue.embedding} <=> ${queryVector}::vector`)
         .limit(context.limit ?? 8);
 
@@ -119,8 +124,7 @@ const createSearchIssuesTool = (userId: string) =>
 const createAgentRunStatsTool = (userId: string) =>
   createTool({
     id: "get-agent-run-stats",
-    description:
-      "Get statistics about the user's recommendation agent runs.",
+    description: "Get statistics about the user's recommendation agent runs.",
     inputSchema: z.object({}),
     execute: async () => {
       const [stats] = await db
@@ -146,17 +150,49 @@ const createUpdatePreferencesTool = (userId: string) =>
   createTool({
     id: "update-preferences",
     description:
-      "Save the user's programming languages and interests. Call this whenever the user shares their preferences.",
-    inputSchema: z.object({
-      languages: z
-        .array(z.string())
-        .min(1)
-        .describe("Programming languages / technologies"),
-      interests: z.string().describe("Free-form description of interests"),
-    }),
+      "Save the user's programming languages and interests. Call this whenever the user shares their preferences. Only include what the user actually shared — anything omitted is kept as-is.",
+    inputSchema: z
+      .object({
+        languages: z
+          .array(z.string())
+          .min(1)
+          .optional()
+          .describe("Programming languages / technologies the user mentioned"),
+        interests: z
+          .string()
+          .optional()
+          .describe("Free-form description of interests the user mentioned"),
+      })
+      .refine((input) => input.languages ?? input.interests, {
+        message: "Provide at least languages or interests",
+      }),
     execute: async (context) => {
+      const [existing] = await db
+        .select({
+          languages: schema.skills.languages,
+          interests: schema.skills.interests,
+        })
+        .from(schema.skills)
+        .where(eq(schema.skills.userId, userId))
+        .limit(1);
+
+      // Merge with stored preferences so a partial update ("I like Python")
+      // never wipes what the user shared before.
+      const languages = context.languages ?? existing?.languages ?? [];
+      const interests = context.interests ?? existing?.interests ?? "";
+
+      if (!languages.length || !interests.trim()) {
+        return {
+          success: false,
+          message:
+            "Not enough preference info yet — ask what is missing before saving.",
+          languages,
+          interests,
+        };
+      }
+
       const embedding = await embedText(
-        context.languages.join(", ") + "\n\n" + context.interests,
+        languages.join(", ") + "\n\n" + interests,
       );
 
       if (!embedding) {
@@ -167,23 +203,22 @@ const createUpdatePreferencesTool = (userId: string) =>
         .insert(schema.skills)
         .values({
           userId,
-          languages: context.languages,
-          interests: context.interests,
+          languages,
+          interests,
           embedding,
         })
         .onConflictDoUpdate({
           target: schema.skills.userId,
           set: {
-            languages: context.languages,
-            interests: context.interests,
+            languages,
+            interests,
             embedding,
           },
         });
 
-      return { success: true, languages: context.languages, interests: context.interests };
+      return { success: true, languages, interests };
     },
   });
-
 
 export const createAssistantAgent = (options: {
   userId: string;

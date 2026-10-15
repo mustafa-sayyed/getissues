@@ -127,7 +127,7 @@ const getAgentRun = asyncHandler(async (req, res) => {
         githubId: schema.issue.githubId,
         title: schema.issue.title,
         description: schema.issue.description,
-        state: schema.issue.status,
+        status: schema.issue.status,
         url: schema.issue.url,
         isAssigned: schema.issue.isAssigned,
       },
@@ -151,7 +151,10 @@ const getAgentRun = asyncHandler(async (req, res) => {
       schema.recommendations,
       and(
         eq(schema.recommendations.issueId, schema.agentIssueEvaluation.issueId),
-        eq(schema.recommendations.agentRunId, schema.agentIssueEvaluation.agentId),
+        eq(
+          schema.recommendations.agentRunId,
+          schema.agentIssueEvaluation.agentId,
+        ),
       ),
     )
     .where(
