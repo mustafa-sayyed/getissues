@@ -3,7 +3,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { Thread } from "@/components/assistant-ui/thread";
@@ -15,13 +29,14 @@ import {
   BotMessageSquare,
   CircleDot,
   GitBranch,
-  Sparkles,
+  MessageSquare,
   Star,
   Trash2,
   Plus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 type ChatSession = {
   id: string;
@@ -41,7 +56,7 @@ type ToolIssue = {
   title: string;
   description?: string | null;
   url: string;
-  state?: string;
+  status?: string | null;
   similarity?: number | null;
   matchScore?: number | null;
   repo?: {
@@ -51,17 +66,53 @@ type ToolIssue = {
   } | null;
 };
 
+type RecommendationResult = {
+  matchScore?: number | null;
+  reason?: string | null;
+  issue?: {
+    title?: string;
+    description?: string | null;
+    url?: string;
+    status?: string | null;
+  } | null;
+  repo?: ToolIssue["repo"];
+};
+
+const toToolIssue = (item: unknown): ToolIssue | null => {
+  if (typeof item !== "object" || item === null) return null;
+  const record = item as Record<string, unknown>;
+  // Flat shape (search_issues tool): { title, url, … }
+  if (typeof record.title === "string" && typeof record.url === "string") {
+    return item as ToolIssue;
+  }
+  // Nested shape (get_recommendations tool): { issue: {…}, repo, matchScore }
+  const nested = item as RecommendationResult;
+  if (
+    nested.issue &&
+    typeof nested.issue.title === "string" &&
+    typeof nested.issue.url === "string"
+  ) {
+    return {
+      title: nested.issue.title,
+      description: nested.issue.description ?? null,
+      url: nested.issue.url,
+      status: nested.issue.status ?? null,
+      matchScore: nested.matchScore ?? null,
+      repo: nested.repo ?? null,
+    };
+  }
+  return null;
+};
+
 const isIssuesOutput = (output: unknown): ToolIssue[] | null => {
   if (typeof output !== "object" || output === null) return null;
   const record = output as Record<string, unknown>;
   const list = record.issues ?? record.recommendations;
   if (!Array.isArray(list)) return null;
-  return list.filter(
-    (item): item is ToolIssue =>
-      typeof item === "object" &&
-      item !== null &&
-      typeof (item as ToolIssue).title === "string",
-  );
+  const issues = list
+    .map(toToolIssue)
+    .filter((item): item is ToolIssue => item !== null);
+  return issues.length > 0 ? issues : null;
 };
 
 const formatScore = (score: number | null | undefined) => {
@@ -158,7 +209,9 @@ function AssistantChat({
   initialMessages: UIMessage[];
   onNewSessionId: (sessionId: string) => void;
 }) {
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionId);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
+    sessionId,
+  );
 
   const transport = useMemo(
     () =>
@@ -211,6 +264,12 @@ export default function AssistantPage() {
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyReload, setHistoryReload] = useState(0);
+  const [chatKey, setChatKey] = useState(0);
+  const [isChatsMenuOpen, setIsChatsMenuOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatSession | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const newSessionId = useRef<string | null>(null);
 
   const fetchSessions = useCallback(async () => {
@@ -228,136 +287,272 @@ export default function AssistantPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchSessions();
   }, [fetchSessions]);
 
   useEffect(() => {
     if (!activeSessionId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInitialMessages([]);
+      setHistoryError(null);
       return;
     }
+    const controller = new AbortController();
     setIsLoadingHistory(true);
+    setHistoryError(null);
 
     api
       .get<{ messages: StoredMessage[] }>(
-        `/chats/sessions/${activeSessionId ?? newSessionId.current}/messages`,
+        `/chats/sessions/${activeSessionId}/messages`,
+        { signal: controller.signal },
       )
       .then(({ data }) =>
         setInitialMessages(
-          data.messages.map((message) => ({
-            id: message.id,
-            role: message.role === "assistant" ? "assistant" : "user",
-            parts: [{ type: "text" as const, text: message.content }],
-          })),
+          data.messages
+            .filter((message) => message.role !== "system")
+            .map((message) => ({
+              id: message.id,
+              role: message.role === "assistant" ? "assistant" : "user",
+              parts: [{ type: "text" as const, text: message.content }],
+            })),
         ),
       )
-      .catch(() => toast.error("Failed to load chat history."))
-      .finally(() => setIsLoadingHistory(false));
-  }, [activeSessionId]);
+      .catch((error: unknown) => {
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          (error as { code?: string }).code === "ERR_CANCELED"
+        ) {
+          return;
+        }
+        setHistoryError("Could not load this chat's messages.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoadingHistory(false);
+      });
+
+    return () => controller.abort();
+  }, [activeSessionId, historyReload]);
 
   const handleNewSessionId = useCallback((sessionId: string) => {
     if (newSessionId.current === sessionId) return;
-
     newSessionId.current = sessionId;
+
+    setSessions((current) => {
+      if (current.some((session) => session.id === sessionId)) return current;
+      const now = new Date().toISOString();
+      return [
+        { id: sessionId, title: "New chat", createdAt: now, updatedAt: now },
+        ...current,
+      ];
+    });
   }, []);
 
   const startNewChat = () => {
+    newSessionId.current = null;
     setActiveSessionId(null);
     setInitialMessages([]);
+    setHistoryError(null);
+    setIsChatsMenuOpen(false);
+    setChatKey((n) => n + 1);
   };
 
-  const deleteSession = async (event: React.MouseEvent, sessionId: string) => {
-    event.stopPropagation();
+  const confirmDeleteSession = async () => {
+    if (!deleteTarget || isDeleting) return;
+    const sessionId = deleteTarget.id;
+    setIsDeleting(true);
     try {
       await api.delete(`/chats/sessions/${sessionId}`);
       toast.success("Chat deleted.");
       setSessions((current) => current.filter((s) => s.id !== sessionId));
+      if (newSessionId.current === sessionId) newSessionId.current = null;
       if (activeSessionId === sessionId) startNewChat();
+      setDeleteTarget(null);
     } catch {
       toast.error("Failed to delete chat.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-foreground">
-          AI Assistant
-          <Sparkles className="size-5 text-primary" />
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Chat about your preferences and discover recommended issues
-        </p>
-      </div>
+  const renderSessionList = (onSelect?: () => void) => {
+    if (isLoadingSessions) {
+      return (
+        <div className="space-y-2 pt-1">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-9 w-full rounded-md" />
+          ))}
+        </div>
+      );
+    }
 
-      <div className="grid h-[calc(100vh-190px)] min-h-[520px] grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="hidden flex-col gap-2 lg:flex">
+    if (sessions.length === 0) {
+      return (
+        <p className="py-6 text-center text-xs text-muted-foreground">
+          No chats yet
+        </p>
+      );
+    }
+
+    return (
+      <div className="space-y-1">
+        {sessions.map((session) => (
+          <button
+            key={session.id}
+            onClick={() => {
+              setActiveSessionId(session.id);
+              onSelect?.();
+            }}
+            className={`group flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors cursor-pointer ${
+              activeSessionId === session.id
+                ? "bg-muted font-medium text-foreground"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            }`}
+          >
+            <span className="min-w-0 flex-1 truncate">{session.title}</span>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Delete chat ${session.title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteTarget(session);
+                onSelect?.();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDeleteTarget(session);
+                  onSelect?.();
+                }
+              }}
+              className="shrink-0 rounded p-1 opacity-60 hover:bg-red-500/10 hover:text-red-500 hover:opacity-100 focus-visible:opacity-100"
+            >
+              <Trash2 className="size-3.5" />
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="h-full w-full space-y-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex shrink-0 items-center gap-2">
+          <DropdownMenu
+            open={isChatsMenuOpen}
+            onOpenChange={setIsChatsMenuOpen}
+          >
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2 cursor-pointer">
+                <MessageSquare className="size-4" />
+                Chats
+                {sessions.length > 0 && (
+                  <Badge className="ml-1 border-0 bg-muted px-1.5 text-[10px] text-muted-foreground">
+                    {sessions.length}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-73">
+              <DropdownMenuLabel>Recent chats</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <ScrollArea>
+                <div className="max-h-[50vh] w-72 p-1">
+                  {renderSessionList(() => setIsChatsMenuOpen(false))}
+                </div>
+                <ScrollBar orientation="vertical" />
+              </ScrollArea>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
-            className="justify-start gap-2 p-4 rounded-lg cursor-pointer"
+            className="gap-2 cursor-pointer"
             onClick={startNewChat}
           >
             <Plus className="size-4" />
             New chat
           </Button>
-          <div className="text-xs font-medium text-muted-foreground">
-            Recent
-          </div>
-          <ScrollArea className="-mr-2 flex-1 pr-2">
-            {isLoadingSessions ? (
-              <div className="space-y-2 pt-1">
-                {[0, 1, 2].map((i) => (
-                  <Skeleton key={i} className="h-9 w-full rounded-md" />
-                ))}
-              </div>
-            ) : sessions.length === 0 ? (
-              <p className="py-6 text-center text-xs text-muted-foreground">
-                No chats yet
-              </p>
-            ) : (
-              <div className="space-y-1">
-                {sessions.map((session) => (
-                  <button
-                    key={session.id}
-                    onClick={() => setActiveSessionId(session.id)}
-                    className={`group flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors cursor-pointer ${
-                      activeSessionId === session.id
-                        ? "bg-muted font-medium text-foreground"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="min-w-0 overflow-x-visible">
-                      {session.title}
-                    </span>
-                    <Trash2
-                      className="hidden size-3.5 shrink-0 group-hover:block hover:text-red-500"
-                      onClick={(e) => void deleteSession(e, session.id)}
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </aside>
+        </div>
+      </div>
 
-        <main className="min-h-0">
-          {activeSessionId && isLoadingHistory ? (
-            <div className="flex h-full flex-col gap-4 rounded-lg border border-border/60 p-6">
+      <main className="h-[calc(100dvh-150px)] w-full :bg-transparent">
+        {activeSessionId && isLoadingHistory ? (
+          <div className="h-full w-full flex justify-center border border-border/60">
+            <div className="max-w-3xl w-full flex flex-col gap-4 rounded-lg p-6">
               <Skeleton className="ml-auto h-12 w-2/5 rounded-2xl" />
               <Skeleton className="h-20 w-4/5 rounded-xl" />
               <Skeleton className="ml-auto h-10 w-1/3 rounded-2xl" />
               <Skeleton className="h-16 w-3/4 rounded-xl" />
             </div>
-          ) : (
-            <AssistantChat
-              key={activeSessionId ?? "new"}
-              sessionId={activeSessionId}
-              initialMessages={initialMessages}
-              onNewSessionId={handleNewSessionId}
-            />
-          )}
-        </main>
-      </div>
+          </div>
+        ) : activeSessionId && historyError ? (
+          <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-border/60 p-6 text-center">
+            <BotMessageSquare className="size-8 text-muted-foreground" />
+            <p className="text-sm font-medium text-foreground">
+              {historyError}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Your messages are safe — this is just a loading problem.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="cursor-pointer"
+              onClick={() => setHistoryReload((n) => n + 1)}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <AssistantChat
+            key={activeSessionId ?? `new-${chatKey}`}
+            sessionId={activeSessionId}
+            initialMessages={initialMessages}
+            onNewSessionId={handleNewSessionId}
+          />
+        )}
+      </main>
+
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this chat?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `“${deleteTarget.title}” and all its messages will be permanently removed. This cannot be undone.`
+                : "This chat and all its messages will be permanently removed."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              disabled={isDeleting}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="cursor-pointer"
+              disabled={isDeleting}
+              onClick={() => void confirmDeleteSession()}
+            >
+              {isDeleting ? "Deleting…" : "Delete chat"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

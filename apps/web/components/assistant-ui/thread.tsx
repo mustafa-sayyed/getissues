@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  ComposerAddAttachment,
-  ComposerAttachments,
-  UserMessageAttachments,
-} from "@/components/assistant-ui/attachment";
 import { File } from "@/components/assistant-ui/file";
 import { ThreadFollowupSuggestions } from "@/components/assistant-ui/follow-up-suggestions";
 import { Image } from "@/components/assistant-ui/image";
@@ -27,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
-  ActionBarMorePrimitive,
   ActionBarPrimitive,
   AuiIf,
   type AssistantState,
@@ -50,9 +44,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
-  DownloadIcon,
   MicIcon,
-  MoreHorizontalIcon,
   PencilIcon,
   RefreshCwIcon,
   SquareIcon,
@@ -64,6 +56,7 @@ import {
   type FC,
   type PropsWithChildren,
 } from "react";
+import * as motion from "framer-motion/client";
 
 export type ThreadGroupPart = MessagePrimitive.GroupedParts.GroupPart;
 
@@ -162,7 +155,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
       <ThreadPrimitive.Viewport
         turnAnchor="top"
         data-slot="aui_thread-viewport"
-        className="relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
+        className="thread-scroll relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll scroll-smooth"
       >
         <div
           className={cn(
@@ -458,10 +451,30 @@ const AssistantMessage: FC = () => {
                 return (
                   <span
                     data-slot="aui_assistant-message-indicator"
-                    className="animate-pulse font-sans"
-                    aria-label="Assistant is working"
+                    className="flex items-center gap-2 py-1 font-sans"
+                    role="status"
+                    aria-label="Assistant is thinking"
                   >
-                    {"●"}
+                    <span
+                      className="flex items-center gap-0.5"
+                      aria-hidden="true"
+                    >
+                      {[0, 1, 2].map((dot) => (
+                        <motion.span
+                          key={dot}
+                          className="size-1 rounded-full bg-primary"
+                          animate={{ opacity: [0.2, 1, 0.2] }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 1,
+                            delay: dot * 0.2,
+                          }}
+                        />
+                      ))}
+                    </span>
+                    <span className="shimmer text-xs font-medium text-muted-foreground motion-reduce:animate-none">
+                      Thinking…
+                    </span>
                   </span>
                 );
               default:
