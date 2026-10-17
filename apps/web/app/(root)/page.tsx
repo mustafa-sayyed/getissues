@@ -537,6 +537,15 @@ export default function Home() {
               <a href="/login" className="transition hover:text-primary">
                 Get Started
               </a>
+              <a href="/terms" className="transition hover:text-primary">
+                Terms
+              </a>
+              <a
+                href="/privacy-policy"
+                className="transition hover:text-primary"
+              >
+                Privacy
+              </a>
               <a
                 href="https://github.com/mustafa-sayyed/getissues"
                 target="_blank"
