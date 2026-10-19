@@ -9,6 +9,7 @@ import {
   updateUserPreferences,
   deleteAccount,
 } from "../controllers/user.controller.ts";
+import { runOnboarding } from "../controllers/onboarding.controller.ts";
 import { requireAuth } from "../middlewares/auth.middleware.ts";
 import { validateBody } from "../middlewares/validate.middleware.ts";
 import {
@@ -33,6 +34,12 @@ router.post(
   requireAuth,
   validateBody(createUserSkillsSchema),
   createUserSkills,
+);
+router.post(
+  "/onboarding/run",
+  requireAuth,
+  validateBody(createUserSkillsSchema),
+  runOnboarding,
 );
 router.put(
   "/skills",

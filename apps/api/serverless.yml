@@ -23,7 +23,6 @@ provider:
   runtime: nodejs22.x
   region: ap-south-1
   stage: production
-  timeout: 29
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${env:DATABASE_URL}
