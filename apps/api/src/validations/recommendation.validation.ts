@@ -19,6 +19,11 @@ export const recommendationsQuerySchema = z.object({
   cursor: z.uuid("Invalid cursor").optional(),
 });
 
+export const agentRunsQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+  cursor: z.uuid("Invalid cursor").optional(),
+});
+
 export const updateRecommendationStatusSchema = z.object({
   status: z.enum(["notviewed", "viewed", "bookmarked", "notinterested"]),
 });
