@@ -127,6 +127,13 @@
       "when": 1789235588913,
       "tag": "0017_add unique constraint in agent config table",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793034570824,
+      "tag": "0018_add github_profile_url field",
+      "breakpoints": true
     }
   ]
 }

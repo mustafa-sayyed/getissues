@@ -28,7 +28,7 @@ export const user = pgTable(
       .default("day"),
     avatarUrl: t.text("avatar_url").notNull(),
     emailVerified: t.boolean("email_verified").notNull(),
-    githubId: t.text("github_id"),
+    githubProfileUrl: t.text("github_profile_url"),
     lastActiveAt: t.timestamp("last_active_at", { withTimezone: true }),
     createdAt: t.timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: t

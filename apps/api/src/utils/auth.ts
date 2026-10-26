@@ -44,6 +44,13 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
     },
+    additionalFields: {
+      githubProfileUrl: {
+        type: "string",
+        required: false,
+        input: true,
+      }
+    }
   },
   socialProviders: {
     github: {
@@ -51,6 +58,7 @@ export const auth = betterAuth({
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
       mapProfileToUser: (profile) => ({
         avatarUrl: profile.avatar_url,
+        githubProfileUrl: profile.html_url,
       }),
     },
   },
